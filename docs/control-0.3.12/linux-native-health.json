@@ -1,0 +1,13 @@
+{
+  "active": 0,
+  "maxRssMiB": 22.93359375,
+  "models": {
+    "layout": "models/koharu-layout-rfdetr-768-fullmask/koharu-768-fullmask.onnx",
+    "ocr": "models/genshiai-daichi__baberu-ocr",
+    "ocrBackend": "baberu-fp16",
+    "translation": "gemma"
+  },
+  "native": true,
+  "ok": true,
+  "version": "0.3.8-native"
+}

@@ -161,7 +161,7 @@ func archiveSource(project, path string) error {
 	gz := gzip.NewWriter(f)
 	tw := tar.NewWriter(gz)
 	// Explicit source allowlist: never package models, config, jobs or backups.
-	for _, name := range []string{"AGENTS.md", "README.md", "THIRD_PARTY_NOTICES.md", ".gitignore", "Makefile", "build.sh", "build.ps1", "control", "native", "extension", "tests", "docs/model-provenance", "docs/control-0.3.9", "docs/control-0.3.10", "docs/control-0.3.11", "docs/baberu-evaluation/RESULTS.txt", "docs/baberu-evaluation/summary.json", "docs/baberu-evaluation/provider-summary.json", "docs/baberu-evaluation/parity.json", "docs/baberu-evaluation/model-manifest.json", "docs/baberu-evaluation/weights.json", "docs/baberu-evaluation/fixtures/samples.json", "docs/baberu-evaluation/fixtures/validation.json", "deployment/orangepi/services"} {
+	for _, name := range []string{"AGENTS.md", "README.md", "THIRD_PARTY_NOTICES.md", ".gitignore", "Makefile", "build.sh", "build.ps1", "control", "native", "extension", "tests", "docs/model-provenance", "docs/control-0.3.9", "docs/control-0.3.10", "docs/control-0.3.11", "docs/control-0.3.12", "docs/baberu-evaluation/RESULTS.txt", "docs/baberu-evaluation/summary.json", "docs/baberu-evaluation/provider-summary.json", "docs/baberu-evaluation/parity.json", "docs/baberu-evaluation/model-manifest.json", "docs/baberu-evaluation/weights.json", "docs/baberu-evaluation/fixtures/samples.json", "docs/baberu-evaluation/fixtures/validation.json", "deployment/orangepi/services"} {
 		if name == "THIRD_PARTY_NOTICES.md" {
 			if _, err := os.Stat(filepath.Join(project, name)); os.IsNotExist(err) {
 				continue // Individual dependency notices are included under control/.

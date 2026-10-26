@@ -112,6 +112,14 @@ func TestRuntimeUpgradeWithDifferentInstallLayout(t *testing.T) {
 			if err != nil || !strings.Contains(string(raw), "runtime/litert-9.8.7/nested libraries/") {
 				t.Fatal(string(raw), err)
 			}
+			var cfg map[string]any
+			if err = json.Unmarshal(raw, &cfg); err != nil {
+				t.Fatal(err)
+			}
+			ort := m.runtimeForSettings("ort", m.settings)
+			if ort == nil || cfg["ort_library"] != ort.Library || !strings.Contains(ort.Library, "ort-9.8.7/nested libraries/") {
+				t.Fatalf("selected ORT library did not follow relocated runtime: %v", cfg["ort_library"])
+			}
 			if platform == "windows-amd64" {
 				files := prerequisiteFiles(m.selectedArtifacts())
 				if len(files) != 8 {
@@ -253,5 +261,42 @@ func TestPinnedRuntimeArchives(t *testing.T) {
 				}
 			})
 		}
+	}
+}
+
+// The selected Windows runtime must name an exact DLL, including when only one
+// ONNX stage uses DirectML. PATH alone can resolve an older system DLL.
+func TestWindowsORTLibrarySelection(t *testing.T) {
+	c, err := loadCatalog(os.DirFS("../assets/bundle"), "windows-amd64")
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, tc := range []struct {
+		name, layout, ocr, want string
+	}{
+		{"CPU", "cpu", "cpu", "ort"},
+		{"DirectML", "directml", "directml", "ort-directml"},
+		{"layout only", "directml", "cpu", "ort-directml"},
+		{"OCR only", "cpu", "directml", "ort-directml"},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			m := &Manager{catalog: c, platform: "windows-amd64"}
+			s := Settings{OCR: "hayai-onnx-fp32-kv", LayoutExecution: tc.layout, OCRExecution: tc.ocr}
+			r := m.runtimeForSettings("ort", s)
+			if r == nil || r.ID != tc.want || path.Base(r.Library) != "onnxruntime.dll" {
+				t.Fatalf("wrong selected ORT library: %#v", r)
+			}
+			found := false
+			for _, a := range m.runtimeArtifacts(*r) {
+				for _, f := range a.Files {
+					if f.Path == r.Library {
+						found = true
+					}
+				}
+			}
+			if !found {
+				t.Fatalf("selected DLL is not a verified runtime artifact: %s", r.Library)
+			}
+		})
 	}
 }

@@ -569,6 +569,9 @@ func (m *Manager) writeNativeConfig() error {
 	cfg["llm_execution"] = execution(settings.LLMExecution)
 	cfg["layout_execution"] = execution(settings.LayoutExecution)
 	cfg["ocr_execution"] = execution(settings.OCRExecution)
+	if ort := m.runtimeForSettings("ort", settings); ort != nil && ort.Library != "" {
+		cfg["ort_library"] = ort.Library
+	}
 	cfg["ocr_encoder_execution"] = execution(settings.OCRExecution)
 	cfg["ocr_decoder_execution"] = execution(settings.OCRExecution)
 	if backend := m.selectedOCRBackend(); backend == "baberu-int4" || backend == "baberu-fp16" {

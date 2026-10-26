@@ -8,7 +8,7 @@ From the project root:
 Or: ./build.sh (Linux), ./build.ps1 (Windows PowerShell).
 Arguments are passed to the Go packager, e.g. ./build.sh --output /absolute/path.
 
-This builds Svelte, runs Go tests/vet, builds the Linux ARM64 and Windows x64
+This builds Svelte, runs Go tests/vet, builds the Linux ARM64/x64 and Windows x64
 launchers, and writes standalone folders, ZIPs, source tar.gz and SHA256SUMS under dist/. It uses the
 verified native binaries already embedded in the source bundle. Configuration,
 installed models, private jobs and research archives are never copied into a ZIP.
@@ -26,6 +26,12 @@ LiteRT C headers and libwebp 1.6.0 source. End users need none of these tools.
 For Windows AMD64, additionally pass the supplied/appropriate Windows cross-
 compiler toolchain. The tested Linux-hosted compiler is llvm-mingw 20261020 UCRT.
 LiteRT is loaded only when selected, so no LiteRT import library is linked.
+Windows ONNX Runtime is also loaded explicitly: native_api.json ort_library
+names the selected catalog DLL, resolved beneath the portable root. No
+onnxruntime.dll import is linked into the Windows engine; PATH is insufficient
+because Windows may otherwise choose an older system/application DLL first.
+Startup checks API 24 and logs the loaded runtime version and absolute path.
+DirectML provider entry points are resolved from that same module handle.
 
 Pass the rebuilt binaries to the same Go packager:
 

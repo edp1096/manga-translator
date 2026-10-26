@@ -15,7 +15,7 @@ import (
 	"strings"
 )
 
-const Version = "0.3.11"
+const Version = "0.3.12"
 const ControlPort = 8794
 const VisionPort = 8793
 const LLMPort = 8792

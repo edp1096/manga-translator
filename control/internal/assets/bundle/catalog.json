@@ -171,6 +171,7 @@
       "platform": "linux-arm64",
       "artifact": "ort-linux-arm64",
       "releaseUrl": "https://github.com/microsoft/onnxruntime/releases/tag/v1.31.0",
+      "library": "runtime/onnxruntime-linux-aarch64-1.31.0/lib/libonnxruntime.so.1",
       "libraryDirs": [
         "runtime/onnxruntime-linux-aarch64-1.31.0/lib"
       ],
@@ -210,6 +211,7 @@
       "platform": "windows-amd64",
       "artifact": "ort-windows-amd64",
       "releaseUrl": "https://github.com/microsoft/onnxruntime/releases/tag/v1.31.0",
+      "library": "runtime/onnxruntime-win-x64-1.31.0/lib/onnxruntime.dll",
       "libraryDirs": [
         "runtime/onnxruntime-win-x64-1.31.0/lib"
       ],
@@ -291,6 +293,7 @@
       "platform": "linux-amd64",
       "artifact": "ort-linux-amd64",
       "releaseUrl": "https://github.com/microsoft/onnxruntime/releases",
+      "library": "runtime/onnxruntime-linux-x64-1.31.0/lib/libonnxruntime.so.1",
       "libraryDirs": [
         "runtime/onnxruntime-linux-x64-1.31.0/lib"
       ],
@@ -303,6 +306,7 @@
       "platform": "linux-amd64",
       "artifact": "ort-cuda-linux-amd64",
       "releaseUrl": "https://github.com/microsoft/onnxruntime/releases",
+      "library": "runtime/onnxruntime-linux-x64-gpu_cuda12-1.31.0/lib/libonnxruntime.so.1",
       "libraryDirs": [
         "runtime/onnxruntime-linux-x64-gpu_cuda12-1.31.0/lib",
         "runtime/cuda12/lib"
@@ -324,6 +328,7 @@
       "platform": "windows-amd64",
       "artifact": "ort-directml-windows-amd64",
       "releaseUrl": "https://github.com/microsoft/onnxruntime/releases",
+      "library": "runtime/onnxruntime-directml-1.24.4/onnxruntime.dll",
       "libraryDirs": [
         "runtime/onnxruntime-directml-1.24.4"
       ],
@@ -352,6 +357,7 @@
       "platform": "linux-arm64",
       "artifact": "ort-cuda-linux-arm64",
       "releaseUrl": "https://pypi.org/project/onnxruntime-gpu/1.31.0/",
+      "library": "runtime/onnxruntime-cuda13-1.31.0/libonnxruntime.so.1",
       "libraryDirs": [
         "runtime/onnxruntime-cuda13-1.31.0",
         "runtime/cuda13/lib"
@@ -368,7 +374,7 @@
       ]
     }
   ],
-  "version": "0.3.11",
+  "version": "0.3.12",
   "artifacts": [
     {
       "id": "ort-linux-arm64",
@@ -532,14 +538,14 @@
       "group": "application",
       "platform": "linux-arm64",
       "url": "embedded:engine/linux-arm64.gz",
-      "sha256": "9eade9a25f4b9ac4d4bfd17b31823c62788fc23cef594fcb11c3a50591f6a022",
-      "size": 722626,
+      "sha256": "a576a7cb0c68f239ad8b92001b353609fc632b02cba7a62de0c6777783c33ddb",
+      "size": 724093,
       "format": "gzip",
       "files": [
         {
           "path": "bin/manga-translator-server",
-          "sha256": "7cccc98bf82d0f24713c3fac24eb21febea7d68d361cc08994ff2503e659ea9f",
-          "size": 1613984,
+          "sha256": "7df73a0cf07fe07ac6062d38032fd3bc21b94c7c2b4a4679ad8e545752df1923",
+          "size": 1614704,
           "executable": true
         }
       ]
@@ -869,14 +875,14 @@
       "group": "application",
       "platform": "windows-amd64",
       "url": "embedded:engine/windows-amd64.gz",
-      "sha256": "df3f93855cb59e29040358a9a0cb85f9c6e91c73bcebe9a138bf8ccf6f60645b",
-      "size": 1208975,
+      "sha256": "fa7423584d9a94508d1f4c5ecdde4d12ba5ae5e8dee74f790961b8f4dec4c5a8",
+      "size": 1212861,
       "format": "gzip",
       "files": [
         {
           "path": "bin/manga-translator-server.exe",
-          "sha256": "5f91766ad1501bf99c7d720d71e87b74bc9d4d0d96d436798b187ccc41ed47ea",
-          "size": 3340288,
+          "sha256": "8557bea60df2d14fac77bd139ba063a299c60fd29b7cf0d15f196c0e0db72b46",
+          "size": 3346944,
           "executable": true
         }
       ]
@@ -2119,14 +2125,14 @@
       "group": "application",
       "platform": "linux-amd64",
       "url": "embedded:engine/linux-amd64.gz",
-      "sha256": "0353ff7824fea33b31e4a45152189de1b9701abde59352e5fb1ffc97561c250e",
-      "size": 4981296,
+      "sha256": "636cade94be7e3748479401c0eaaa4877539767d9f75401eb09c4bf203b11a2a",
+      "size": 4988245,
       "format": "gzip",
       "files": [
         {
           "path": "bin/manga-translator-server",
-          "sha256": "3a129ffa729ab5023b625fc0e55733e3e593fd50ceb28605978ffe1f3efe4566",
-          "size": 20086560,
+          "sha256": "fe979e70bce12dc4b800b39a6762e7f59529a857c77485a8c39c84093e8e127b",
+          "size": 20109936,
           "executable": true
         }
       ]

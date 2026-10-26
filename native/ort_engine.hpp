@@ -6,8 +6,42 @@
 #include <cstdlib>
 #ifdef _WIN32
 #include <windows.h>
+#else
+#include <dlfcn.h>
 #endif
-inline Ort::Env private_ort_env(const char* name){static std::once_flag init;std::call_once(init,[]{auto api=OrtGetApiBase()->GetApi(24);require(api,"ONNX Runtime API 24 is required");Ort::InitApi(api);});Ort::Env env(ORT_LOGGING_LEVEL_WARNING,name);env.DisableTelemetryEvents();return env;}
+// Windows must not import onnxruntime.dll at process startup: System32 is
+// searched before PATH and can contain an unrelated, older ONNX Runtime.
+namespace manga_ort {
+inline fs::path library_path,loaded_path;
+inline std::string runtime_version;
+#ifdef _WIN32
+inline HMODULE module_handle=nullptr;
+#endif
+inline void initialize(){
+ static std::once_flag initialized;
+ std::call_once(initialized,[]{
+  const OrtApiBase* base=nullptr;
+#ifdef _WIN32
+  require(!library_path.empty()&&library_path.is_absolute(),"Selected ONNX Runtime DLL path was not configured; start through the updated control app");
+  require(fs::is_regular_file(library_path),"Selected ONNX Runtime DLL is missing: "+library_path.u8string());
+  module_handle=LoadLibraryExW(library_path.c_str(),nullptr,LOAD_LIBRARY_SEARCH_DLL_LOAD_DIR|LOAD_LIBRARY_SEARCH_APPLICATION_DIR|LOAD_LIBRARY_SEARCH_SYSTEM32);
+  require(module_handle!=nullptr,"Cannot load selected ONNX Runtime DLL: "+library_path.u8string()+" (Windows error "+std::to_string(GetLastError())+")");
+  auto get_base=reinterpret_cast<decltype(&::OrtGetApiBase)>(GetProcAddress(module_handle,"OrtGetApiBase"));
+  require(get_base!=nullptr,"OrtGetApiBase is missing in selected DLL: "+library_path.u8string());base=get_base();
+  std::vector<wchar_t> filename(32768);DWORD length=GetModuleFileNameW(module_handle,filename.data(),static_cast<DWORD>(filename.size()));
+  loaded_path=length&&length<filename.size()?fs::path(filename.data(),filename.data()+length):library_path;
+#else
+  base=OrtGetApiBase();Dl_info info{};if(dladdr(reinterpret_cast<const void*>(&OrtGetApiBase),&info)&&info.dli_fname)loaded_path=fs::path(info.dli_fname);
+#endif
+  require(base&&base->GetApi&&base->GetVersionString,"Invalid ONNX Runtime API base");runtime_version=base->GetVersionString();
+  const auto* api=base->GetApi(24);
+  require(api,"ONNX Runtime API 24 is required; loaded "+runtime_version+" from "+loaded_path.u8string());
+  Ort::InitApi(api);std::cerr<<"ONNX Runtime "<<runtime_version<<" | API 24 | "<<loaded_path.u8string()<<std::endl;
+ });
+}
+}
+inline Ort::Env private_ort_env(const char* name){manga_ort::initialize();Ort::Env env(ORT_LOGGING_LEVEL_WARNING,name);env.DisableTelemetryEvents();return env;}
+
 struct OrtExecution {std::string backend="cpu";int device=0;};
 inline OrtExecution ort_execution(const json& config,const char* stage){return {config.value(std::string(stage)+"_execution",std::string("cpu")),config.value("gpu_index",0)};}
 inline Ort::SessionOptions ort_options(int threads,OrtExecution execution={}){
@@ -17,7 +51,7 @@ inline Ort::SessionOptions ort_options(int threads,OrtExecution execution={}){
   try{std::string device=std::to_string(execution.device);const char* keys[]={"device_id","cudnn_conv_algo_search"};const char* values[]={device.c_str(),"HEURISTIC"};Ort::ThrowOnError(Ort::GetApi().UpdateCUDAProviderOptions(options,keys,values,2));Ort::ThrowOnError(Ort::GetApi().SessionOptionsAppendExecutionProvider_CUDA_V2(o,options));}catch(...){Ort::GetApi().ReleaseCUDAProviderOptions(options);throw;}Ort::GetApi().ReleaseCUDAProviderOptions(options);
  }else if(execution.backend=="directml"){
 #ifdef _WIN32
-  using AppendDML=OrtStatus*(ORT_API_CALL*)(OrtSessionOptions*,int);auto append=reinterpret_cast<AppendDML>(GetProcAddress(GetModuleHandleW(L"onnxruntime.dll"),"OrtSessionOptionsAppendExecutionProvider_DML"));require(append,"DirectML provider is unavailable");o.DisableMemPattern();Ort::ThrowOnError(append(o,execution.device));
+  using AppendDML=OrtStatus*(ORT_API_CALL*)(OrtSessionOptions*,int);auto append=reinterpret_cast<AppendDML>(GetProcAddress(manga_ort::module_handle,"OrtSessionOptionsAppendExecutionProvider_DML"));require(append,"DirectML provider is unavailable");o.DisableMemPattern();Ort::ThrowOnError(append(o,execution.device));
 #else
   throw std::runtime_error("DirectML requires Windows");
 #endif

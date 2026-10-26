@@ -23,6 +23,15 @@ static bool token_equal(const std::string&a,const std::string&b){size_t diff=a.s
 int run(int argc,char**argv){try{
  require(argc==3&&std::string(argv[1])=="--root","Usage: manga-translator-server --root ABSOLUTE_DATA_DIRECTORY");fs::path root=fs::u8path(argv[2]);require(root.is_absolute(),"Data directory must be absolute");root=root.lexically_normal();
  auto config=read_json(root/"config/native_api.json");
+#ifdef _WIN32
+ require(config.contains("ort_library"),"Missing selected ONNX Runtime DLL path; update and start through the control app");
+ fs::path ort_relative=fs::u8path(config.at("ort_library").get<std::string>());
+ require(!ort_relative.empty()&&!ort_relative.is_absolute()&&!ort_relative.has_root_name(),"ONNX Runtime path must be relative to the app folder");
+ for(const auto& part:ort_relative)require(part!="..","ONNX Runtime path leaves the app folder");
+ manga_ort::library_path=root/ort_relative;
+#endif
+ manga_ort::initialize();
+
  if(config.value("ocr_backend",std::string("litert"))=="litert"){
   require(config.value("ocr_execution",std::string("cpu"))=="cpu","Hayai INT8 requires CPU; select the ONNX FP32 model for GPU OCR");
   require(config.contains("litert_library"),"Missing LiteRT runtime path; start this engine through the matching control app");

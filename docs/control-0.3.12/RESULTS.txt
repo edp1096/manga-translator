@@ -1,0 +1,41 @@
+0.3.12 — Windows ONNX Runtime DLL selection hotfix
+
+The Windows user's GPU · Gemma E2B preset failed at model loading:
+requested API 24, actual ORT 1.17.1 supporting APIs 1..17.
+The selected catalog runtime is DirectML 1.24.4 and supports API 24.
+The exact location of the old 1.17.1 DLL was not present in the user's log.
+The former native executable imported onnxruntime.dll by basename; prepending
+the selected directory to PATH does not take precedence over application/system
+DLL locations in Windows' normal startup loader search order.
+
+Changes:
+- Catalog ORT entries name their exact verified library file.
+- Generated native config carries the selected ort_library, including DirectML.
+- Windows native engine has no implicit onnxruntime.dll import.
+- LoadLibraryExW loads the configured absolute DLL path beneath the app root.
+- DirectML functions resolve from the same loaded module handle.
+- API 24 is checked before the HTTP service becomes ready.
+- Startup logs actual runtime version/path; ABI errors include both.
+
+Verification on OP5P:
+- Native C++ builds passed: Linux ARM64, Linux x64, Windows x64.
+- PE import inspection confirms no onnxruntime.dll or OrtGetApiBase import;
+  explicit LoadLibraryExW and GetProcAddress are present.
+- Go tests and vet passed, including relocated ORT paths in generated config,
+  and CPU/DirectML selection when either or both vision stages use the GPU.
+- Linux ARM64 native startup passed with ORT 1.31.0, API 24, HTTP health OK.
+- Windows DirectML 1.24.4 DLL API support was checked in the official binary:
+  GetApi accepts versions 1..24 and GetVersionString returns 1.24.4.
+- No actual Windows or DirectML inference was run in this Linux environment.
+
+Windows update:
+Close the app, overlay the Windows 0.3.12 ZIP into the existing portable root,
+reopen MangaTranslator.exe, and run selected combination download/repair so
+the rebuilt embedded native engine is installed. Keep installed models/data.
+Start the same GPU preset. The beginning of logs/vision.log should report:
+ONNX Runtime 1.24.4 | API 24 | <app>/runtime/onnxruntime-directml-1.24.4/onnxruntime.dll
+
+References:
+https://learn.microsoft.com/en-us/windows/win32/dlls/dynamic-link-library-search-order
+https://onnxruntime.ai/docs/api/c/struct_ort_api_base.html
+https://www.nuget.org/packages/Microsoft.ML.OnnxRuntime.DirectML/1.24.4
