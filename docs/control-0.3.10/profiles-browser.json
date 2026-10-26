@@ -1,0 +1,12 @@
+{
+  "ok": true,
+  "fixture": "GPU hardware simulated; production UI bundle served unchanged",
+  "cpuOnlyOCRDisabledInGPUProfile": true,
+  "mixedProfileKeepsLiteRT": true,
+  "downloadsRemainExplicit": true,
+  "baberuCudaSelectable": true,
+  "baberuDirectMLDisabled": true,
+  "modelOrderLightToHeavy": true,
+  "mobileOverflow": false,
+  "consoleErrors": []
+}

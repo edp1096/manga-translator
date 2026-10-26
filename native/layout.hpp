@@ -1,0 +1,36 @@
+#pragma once
+#include "common.hpp"
+#include "ort_engine.hpp"
+struct PageImage{int width,height;std::vector<uint8_t> rgb;};
+inline PageImage load_page(const fs::path& path){
+ std::ifstream f(path,std::ios::binary|std::ios::ate);require(bool(f),"Cannot open page "+path.string());auto size=f.tellg();require(size>0&&size<=64*1024*1024,"Page file size limit");std::vector<uint8_t> bytes(size);f.seekg(0);f.read(reinterpret_cast<char*>(bytes.data()),bytes.size());require(bool(f),"Page read failed");int w,h,c;require(stbi_info_from_memory(bytes.data(),bytes.size(),&w,&h,&c),"Invalid page format");require(w>0&&h>0&&int64_t(w)*h<=40000000,"Page pixel limit");uint8_t* data=stbi_load_from_memory(bytes.data(),bytes.size(),&w,&h,&c,3);require(data,"Cannot decode page");PageImage im{w,h,std::vector<uint8_t>(data,data+size_t(w)*h*3)};stbi_image_free(data);return im;
+}
+inline std::vector<float> layout_input(const PageImage& im,bool nhwc=false,bool inverted=false,int side=768){
+ std::vector<uint8_t> inverted_rgb;if(inverted){inverted_rgb=im.rgb;for(auto& value:inverted_rgb)value=255-value;}auto pixels=resize_rgb(inverted?inverted_rgb.data():im.rgb.data(),im.width,im.height,side,side);constexpr float mean[]={.485f,.456f,.406f},scale[]={.229f,.224f,.225f};size_t count=size_t(side)*side;std::vector<float> input(count*3);
+ for(size_t i=0;i<count;++i)for(size_t c=0;c<3;++c){float v=float(pixels[i*3+c])/255.f;input[nhwc?i*3+c:c*count+i]=(v-mean[c])/scale[c];}return input;
+}
+struct LayoutRaw{std::vector<float> boxes,logits,masks;double inference_ms=0;int mask_side=192;};
+struct LayoutEngine{virtual ~LayoutEngine()=default;virtual LayoutRaw run(std::vector<float>&)=0;virtual bool nhwc()const{return false;}virtual int input_side()const=0;};
+inline Ort::SessionOptions layout_options(int threads,OrtExecution execution={}){auto o=ort_options(threads,execution);o.DisableMemPattern();o.DisableCpuMemArena();return o;}
+struct OnnxLayout:LayoutEngine{
+ Ort::Env env;Ort::SessionOptions options;Ort::Session session;int side=0,mask_side=0;
+ OnnxLayout(const fs::path& path,int threads,OrtExecution execution={}):env(private_ort_env("koharu-native")),options(layout_options(threads,execution)),session(env,path.c_str(),options){env.DisableTelemetryEvents();require(session.GetInputCount()==1&&session.GetOutputCount()==3,"Koharu must retain boxes, labels AND masks");auto type=session.GetInputTypeInfo(0);auto shape=type.GetTensorTypeAndShapeInfo().GetShape();require(shape.size()==4&&shape[0]==1&&shape[1]==3&&shape[2]==shape[3]&&(shape[2]==768||shape[2]==1152),"Unsupported Koharu input dimensions");side=int(shape[2]);auto mask_type=session.GetOutputTypeInfo(2);auto masks=mask_type.GetTensorTypeAndShapeInfo().GetShape();require(masks==std::vector<int64_t>({1,300,side/4,side/4}),"Wrong Koharu mask dimensions");mask_side=side/4;}
+ int input_side()const override{return side;}
+ LayoutRaw run(std::vector<float>& input)override{require(input.size()==size_t(3)*side*side,"Wrong layout input size");const char* inputs[]={"input"};const char* outputs[]={"dets","labels","masks"};auto in=tensor(input,{1,3,side,side});auto t=Clock::now();auto out=session.Run(Ort::RunOptions{nullptr},inputs,&in,1,outputs,3);LayoutRaw r;r.inference_ms=ms(t);r.mask_side=mask_side;std::vector<float>* destinations[]={&r.boxes,&r.logits,&r.masks};size_t counts[]={300*4,300*5,size_t(300)*mask_side*mask_side};for(int i=0;i<3;++i){require(out[i].GetTensorTypeAndShapeInfo().GetElementCount()==counts[i],"Wrong Koharu output size");auto p=out[i].GetTensorData<float>();destinations[i]->assign(p,p+counts[i]);}return r;}
+};
+struct Region{int query,cls;float score;std::array<int,4> box;std::vector<uint8_t> mask;int mask_side=192;};
+inline std::vector<Region> decode_regions(const LayoutRaw& raw,int w,int h){
+ constexpr float thresholds[]={.25f,.20f,.50f,.50f};std::vector<Region> regions;
+ for(int q=0;q<300;++q){int cls=0;for(int c=1;c<4;++c)if(raw.logits[q*5+c]>raw.logits[q*5+cls])cls=c;float v=raw.logits[q*5+cls];require(std::isfinite(v),"Nonfinite detection logit");float score=1.f/(1.f+std::exp(-std::clamp(v,-30.f,30.f)));if(score<thresholds[cls])continue;const float* b=raw.boxes.data()+q*4;for(int k=0;k<4;++k)require(std::isfinite(b[k]),"Nonfinite box");std::array<int,4> box{std::max(0,int((b[0]-b[2]/2)*w)),std::max(0,int((b[1]-b[3]/2)*h)),std::min(w,int((b[0]+b[2]/2)*w+1)),std::min(h,int((b[1]+b[3]/2)*h+1))};if(box[2]-box[0]<4||box[3]-box[1]<4)continue;
+  Region r{q,cls,score,box,{}};r.mask_side=raw.mask_side;r.mask.resize(size_t(raw.mask_side)*raw.mask_side);const float* mask=raw.masks.data()+q*r.mask.size();for(size_t i=0;i<r.mask.size();++i){require(std::isfinite(mask[i]),"Nonfinite mask");r.mask[i]=mask[i]>0;}regions.push_back(std::move(r));}return regions;
+}
+inline int area(const std::array<int,4>& b){return std::max(0,b[2]-b[0])*std::max(0,b[3]-b[1]);}
+inline int overlap(const std::array<int,4>& a,const std::array<int,4>& b){return std::max(0,std::min(a[2],b[2])-std::max(a[0],b[0]))*std::max(0,std::min(a[3],b[3])-std::max(a[1],b[1]));}
+inline size_t deduplicate(std::vector<Region>& regions){
+ std::vector<size_t> order(regions.size());std::iota(order.begin(),order.end(),0);std::stable_sort(order.begin(),order.end(),[&](size_t a,size_t b){return regions[a].score>regions[b].score;});std::vector<size_t> kept;std::set<size_t> removed;
+ for(size_t i:order){bool duplicate=false;if(regions[i].cls==0)for(size_t j:kept){if(regions[j].cls!=0)continue;int inter=overlap(regions[i].box,regions[j].box),un=area(regions[i].box)+area(regions[j].box)-inter;if(!un||double(inter)/un<.8)continue;size_t m_inter=0,m_union=0;for(size_t k=0;k<regions[i].mask.size();++k){m_inter+=regions[i].mask[k]&&regions[j].mask[k];m_union+=regions[i].mask[k]||regions[j].mask[k];}if(m_union&&double(m_inter)/m_union>=.95){duplicate=true;break;}}if(duplicate)removed.insert(i);else kept.push_back(i);}
+ auto parents=kept;std::stable_sort(parents.begin(),parents.end(),[&](size_t a,size_t b){return regions[a].score<regions[b].score;});
+ for(size_t parent:parents){if(regions[parent].cls!=0||removed.count(parent))continue;std::vector<size_t> children;for(size_t child:kept){if(child==parent||removed.count(child)||regions[child].cls!=0||regions[child].score<regions[parent].score+.05f)continue;int a=area(regions[child].box);if(!a||a>=area(regions[parent].box)*.8||double(overlap(regions[parent].box,regions[child].box))/a<.9)continue;bool conflict=false;for(size_t other:children)if(double(overlap(regions[other].box,regions[child].box))/std::min(area(regions[other].box),a)>.15){conflict=true;break;}if(!conflict)children.push_back(child);}if(children.size()<2)continue;size_t all=0,covered=0;for(size_t k=0;k<regions[parent].mask.size();++k)if(regions[parent].mask[k]){++all;for(auto child:children)if(regions[child].mask[k]){++covered;break;}}if(all&&double(covered)/all>=.95)removed.insert(parent);}
+ std::vector<Region> result;for(size_t i=0;i<regions.size();++i)if(!removed.count(i))result.push_back(std::move(regions[i]));regions=std::move(result);return removed.size();
+}
+inline json region_json(const Region& r){return {{"query",r.query},{"class_id",r.cls},{"score",r.score},{"bbox",r.box}};}

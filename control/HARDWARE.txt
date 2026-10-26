@@ -1,0 +1,46 @@
+Hardware information and automatic CPU threads
+
+The Go controller reads OS and driver APIs directly. Hardware detection does not
+launch hwinfo, lscpu, nvidia-smi, PowerShell or any helper executable. Release
+builds explicitly use CGO_ENABLED=0. No C source or C compiler is used for this
+feature. purego (Apache-2.0) calls optional OS-installed GPU driver libraries.
+
+Linux: procfs/sysfs, sched_getaffinity, physical-core SMT sibling groups, CPU
+capacity and cgroup v2 CPU quotas. ARM core_id can repeat across clusters; sibling
+groups avoid counting separate physical cores as SMT siblings. DRM supplies GPU
+information and AMD VRAM counters. Recognized SoC DRM drivers use shared RAM.
+Windows: processor topology / efficiency classes and registry names, DXGI for
+64-bit dedicated video-memory capacity, and D3D12 UMA information. No WMI shell
+commands are used. NVIDIA global VRAM usage comes from NVML; CUDA driver device
+attributes distinguish shared memory. Device-information calls do not create a
+CUDA context or run inference. GPU information is cached and refreshed in the
+background every 10 seconds so driver queries cannot block the control UI.
+
+Automatic threads use available physical cores, or the OS's performance-core
+class where available; CPU quota limits are respected. Linux capacity values are
+grouped across a substantial gap (>10% of maximum capacity) to avoid mistaking
+small per-core differences for a different core class. This is a topology-based
+starting point, not a benchmark-optimal guarantee. Manual selection is retained.
+Existing settings without threadsAuto keep their saved manual thread count.
+No '8 ARM CPUs means pin to CPU 4-7' heuristic remains; the OS schedules workers.
+
+RAM and VRAM are separate. Shared system memory is not added to RAM a second time.
+Unavailable memory usage is reported as unknown, never zero. Some drivers expose
+VRAM capacity but not global usage. Multiple GPUs are identified individually by
+PCI address or DXGI LUID. GPU execution is selected explicitly through profiles or stage settings.
+Vulkan physical devices are queried directly and mapped to PCI/LUID/UUID identities.
+Mali DRM and Vulkan records are merged rather than shown as two physical GPUs.
+LLM Vulkan selection uses GGML_VK_VISIBLE_DEVICES with the physical ordinal;
+CUDA and DirectML use their own mapped device ordinals. E2B also supports GPU.
+The controller remains CGO_ENABLED=0; inference is in separate native processes.
+
+Offline diagnostic (same application, no UI, API, downloads or data directory):
+  ./manga-control --hardware-info
+  MangaTranslator.exe --hardware-info
+
+Validation: actual Orange Pi 5 Plus (8 physical cores / 4 performance cores),
+actual NVIDIA GB10 system (20 physical cores / 10 performance cores, shared RAM),
+synthetic homogeneous 4-core and SMT topologies, Windows processor records and
+12 GiB VRAM decoding, missing usage values, shared-memory handling, and legacy
+manual settings. Windows cross-compilation is checked; Windows device probing
+has not yet been verified on a physical Windows host.

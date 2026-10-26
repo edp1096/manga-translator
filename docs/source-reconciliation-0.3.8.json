@@ -1,0 +1,8 @@
+{
+  "primaryHost": "192.168.100.25",
+  "primaryRoot": "/home/edp1096/workspace/manga_translator",
+  "auxiliaryHostRole": "DGX Spark: CUDA and Vulkan verification only",
+  "sourceBackup": "archive/source-before-0.3.8/source-before-transfer.tar.gz",
+  "backupSHA256": "6ed8026d5c37fbabe29e57fef95dfe76d5ead891c6baae6968e074e85fd73762",
+  "review": "Compared existing source files against pre-transfer backup. Changes are limited to GPU execution, runtime management, and panel tab scope. Live dist, models, configuration and translation data were not modified."
+}

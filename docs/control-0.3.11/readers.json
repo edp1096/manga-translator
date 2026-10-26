@@ -1,0 +1,93 @@
+{
+  "testedOn": "OP5P isolated Chromium 156",
+  "date": "2026-10-27",
+  "testAPI": "mocked local translation response; actual site DOM and images",
+  "taintedCanvasCaptureTest": "real browser screenshots through Playwright; production uses existing activeTab captureVisibleTab permission",
+  "sites": [
+    {
+      "name": "comicwalker",
+      "count": 18,
+      "samples": [
+        {
+          "index": 0,
+          "width": 1284,
+          "height": 1843,
+          "nonwhite": 1776
+        },
+        {
+          "index": 9,
+          "width": 1284,
+          "height": 1844,
+          "nonwhite": 1474
+        },
+        {
+          "index": 17,
+          "width": 1284,
+          "height": 1844,
+          "nonwhite": 1636
+        }
+      ],
+      "allPagesLoaded": true,
+      "overlayAligned": true,
+      "readingPositionRestored": true,
+      "errors": []
+    },
+    {
+      "name": "tonari",
+      "count": 38,
+      "samples": [
+        {
+          "index": 0,
+          "width": 800,
+          "height": 1137,
+          "nonwhite": 687
+        },
+        {
+          "index": 19,
+          "width": 800,
+          "height": 1137,
+          "nonwhite": 1398
+        },
+        {
+          "index": 37,
+          "width": 800,
+          "height": 1137,
+          "nonwhite": 1634
+        }
+      ],
+      "allPagesLoaded": true,
+      "overlayAligned": true,
+      "readingPositionRestored": true,
+      "errors": []
+    },
+    {
+      "name": "mangaz",
+      "count": 7,
+      "samples": [
+        {
+          "index": 0,
+          "width": 1062,
+          "height": 1500,
+          "nonwhite": 2691
+        },
+        {
+          "index": 3,
+          "width": 1062,
+          "height": 1500,
+          "nonwhite": 2679
+        },
+        {
+          "index": 6,
+          "width": 1062,
+          "height": 1500,
+          "nonwhite": 141
+        }
+      ],
+      "allPagesLoaded": true,
+      "overlayAligned": true,
+      "readingPositionRestored": true,
+      "errors": []
+    }
+  ],
+  "comicwalkerPartialVerticalScrollRestored": true
+}

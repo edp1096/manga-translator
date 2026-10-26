@@ -1,0 +1,366 @@
+{
+  "fp16": {
+    "sampleIds": [
+      "ja_a_02",
+      "en_a_06"
+    ],
+    "includesWarmup": true,
+    "timingsExcludedFromBenchmark": true,
+    "stages": {
+      "prefill": {
+        "providerNodeEvents": {
+          "CUDAExecutionProvider": 1353,
+          "CPUExecutionProvider": 204
+        },
+        "opsByProvider": {
+          "CUDAExecutionProvider": {
+            "Gather": 3,
+            "DequantizeLinear": 3,
+            "Concat": 39,
+            "SimplifiedLayerNormalization": 75,
+            "MemcpyToHost": 75,
+            "MemcpyFromHost": 204,
+            "Cast": 129,
+            "Mul": 351,
+            "Reshape": 108,
+            "Transpose": 72,
+            "Split": 36,
+            "Neg": 36,
+            "Add": 72,
+            "Unsqueeze": 36,
+            "Expand": 36,
+            "FusedMatMul": 18,
+            "BiasSoftmax": 18,
+            "MatMul": 18,
+            "QuickGelu": 18,
+            "Div": 3,
+            "Tanh": 3
+          },
+          "CPUExecutionProvider": {
+            "DynamicQuantizeLinear": 75,
+            "MatMulInteger": 129
+          }
+        },
+        "largestCpuOutputElements": 3759910,
+        "source": "profile-fp16/data/cache/baberu-prefill_2026-10-26_22-26-35_371.json"
+      },
+      "step": {
+        "providerNodeEvents": {
+          "CUDAExecutionProvider": 59381,
+          "CPUExecutionProvider": 29988
+        },
+        "opsByProvider": {
+          "CUDAExecutionProvider": {
+            "Gather": 357,
+            "DequantizeLinear": 357,
+            "Pow": 119,
+            "ReduceMean": 119,
+            "Add": 3689,
+            "Sqrt": 119,
+            "Div": 238,
+            "Mul": 14042,
+            "MemcpyToHost": 2975,
+            "MemcpyFromHost": 8092,
+            "Cast": 5117,
+            "Reshape": 4284,
+            "Transpose": 2856,
+            "Split": 1428,
+            "Neg": 1428,
+            "Concat": 2856,
+            "Unsqueeze": 1666,
+            "Shape": 1547,
+            "Expand": 1428,
+            "FusedMatMul": 714,
+            "ConstantOfShape": 119,
+            "Slice": 714,
+            "Softmax": 714,
+            "MatMul": 714,
+            "SimplifiedLayerNormalization": 2856,
+            "QuickGelu": 714,
+            "Tanh": 119
+          },
+          "CPUExecutionProvider": {
+            "DynamicQuantizeLinear": 2975,
+            "MatMulInteger": 5117,
+            "Gather": 5831,
+            "Unsqueeze": 7259,
+            "Concat": 2975,
+            "Reshape": 1428,
+            "Equal": 1428,
+            "Where": 1428,
+            "Mul": 1428,
+            "Add": 119
+          }
+        },
+        "largestCpuOutputElements": 14630,
+        "source": "profile-fp16/data/cache/baberu-step_2026-10-26_22-26-35_457.json"
+      },
+      "vision": {
+        "providerNodeEvents": {
+          "CUDAExecutionProvider": 1056
+        },
+        "opsByProvider": {
+          "CUDAExecutionProvider": {
+            "Cast": 6,
+            "Conv": 3,
+            "Reshape": 375,
+            "Transpose": 147,
+            "Concat": 3,
+            "Add": 3,
+            "LayerNormalization": 3,
+            "Gemm": 222,
+            "FusedMatMul": 36,
+            "Softmax": 36,
+            "MatMul": 36,
+            "Mul": 72,
+            "SkipLayerNormalization": 72,
+            "Gelu": 39,
+            "Slice": 3
+          }
+        },
+        "largestCpuOutputElements": 0,
+        "source": "profile-fp16/data/cache/baberu-vision_2026-10-26_22-26-35_191.json"
+      }
+    }
+  },
+  "int4": {
+    "sampleIds": [
+      "ja_a_02",
+      "en_a_06"
+    ],
+    "includesWarmup": true,
+    "timingsExcludedFromBenchmark": true,
+    "stages": {
+      "prefill": {
+        "providerNodeEvents": {
+          "CUDAExecutionProvider": 1353,
+          "CPUExecutionProvider": 204
+        },
+        "opsByProvider": {
+          "CUDAExecutionProvider": {
+            "Gather": 3,
+            "DequantizeLinear": 3,
+            "Concat": 39,
+            "SimplifiedLayerNormalization": 75,
+            "MemcpyToHost": 75,
+            "MemcpyFromHost": 204,
+            "Cast": 129,
+            "Mul": 351,
+            "Reshape": 108,
+            "Transpose": 72,
+            "Split": 36,
+            "Neg": 36,
+            "Add": 72,
+            "Unsqueeze": 36,
+            "Expand": 36,
+            "FusedMatMul": 18,
+            "BiasSoftmax": 18,
+            "MatMul": 18,
+            "QuickGelu": 18,
+            "Div": 3,
+            "Tanh": 3
+          },
+          "CPUExecutionProvider": {
+            "DynamicQuantizeLinear": 75,
+            "MatMulInteger": 129
+          }
+        },
+        "largestCpuOutputElements": 3759910,
+        "source": "profile-int4/data/cache/baberu-prefill_2026-10-26_22-26-49_821.json"
+      },
+      "step": {
+        "providerNodeEvents": {
+          "CUDAExecutionProvider": 59381,
+          "CPUExecutionProvider": 29988
+        },
+        "opsByProvider": {
+          "CUDAExecutionProvider": {
+            "Gather": 357,
+            "DequantizeLinear": 357,
+            "Pow": 119,
+            "ReduceMean": 119,
+            "Add": 3689,
+            "Sqrt": 119,
+            "Div": 238,
+            "Mul": 14042,
+            "MemcpyToHost": 2975,
+            "MemcpyFromHost": 8092,
+            "Cast": 5117,
+            "Reshape": 4284,
+            "Transpose": 2856,
+            "Split": 1428,
+            "Neg": 1428,
+            "Concat": 2856,
+            "Unsqueeze": 1666,
+            "Shape": 1547,
+            "Expand": 1428,
+            "FusedMatMul": 714,
+            "ConstantOfShape": 119,
+            "Slice": 714,
+            "Softmax": 714,
+            "MatMul": 714,
+            "SimplifiedLayerNormalization": 2856,
+            "QuickGelu": 714,
+            "Tanh": 119
+          },
+          "CPUExecutionProvider": {
+            "DynamicQuantizeLinear": 2975,
+            "MatMulInteger": 5117,
+            "Gather": 5831,
+            "Unsqueeze": 7259,
+            "Concat": 2975,
+            "Reshape": 1428,
+            "Equal": 1428,
+            "Where": 1428,
+            "Mul": 1428,
+            "Add": 119
+          }
+        },
+        "largestCpuOutputElements": 14630,
+        "source": "profile-int4/data/cache/baberu-step_2026-10-26_22-26-49_920.json"
+      },
+      "vision": {
+        "providerNodeEvents": {
+          "CUDAExecutionProvider": 891
+        },
+        "opsByProvider": {
+          "CUDAExecutionProvider": {
+            "Conv": 3,
+            "Reshape": 147,
+            "Transpose": 147,
+            "Concat": 3,
+            "Add": 72,
+            "LayerNormalization": 72,
+            "MatMulNBits": 222,
+            "FusedMatMul": 36,
+            "Softmax": 36,
+            "MatMul": 36,
+            "Mul": 72,
+            "BiasGelu": 39,
+            "SkipLayerNormalization": 3,
+            "Slice": 3
+          }
+        },
+        "largestCpuOutputElements": 0,
+        "source": "profile-int4/data/cache/baberu-vision_2026-10-26_22-26-49_677.json"
+      }
+    }
+  },
+  "hayai": {
+    "sampleIds": [
+      "ja_a_02",
+      "en_a_06"
+    ],
+    "includesWarmup": true,
+    "timingsExcludedFromBenchmark": true,
+    "stages": {
+      "prefill": {
+        "providerNodeEvents": {
+          "CUDAExecutionProvider": 2562,
+          "CPUExecutionProvider": 831
+        },
+        "opsByProvider": {
+          "CUDAExecutionProvider": {
+            "Gather": 3,
+            "MatMul": 333,
+            "BiasGelu": 3,
+            "Add": 183,
+            "Concat": 81,
+            "SimplifiedLayerNormalization": 147,
+            "Shape": 219,
+            "Unsqueeze": 294,
+            "Reshape": 288,
+            "Slice": 147,
+            "Mul": 468,
+            "Sub": 72,
+            "MemcpyFromHost": 36,
+            "Tile": 72,
+            "Transpose": 144,
+            "Softmax": 36,
+            "QuickGelu": 36
+          },
+          "CPUExecutionProvider": {
+            "Gather": 111,
+            "Unsqueeze": 75,
+            "Concat": 249,
+            "Slice": 252,
+            "Cast": 36,
+            "Sqrt": 72,
+            "Div": 36
+          }
+        },
+        "largestCpuOutputElements": 4,
+        "source": "profile-hayai/data/cache/ocr-prefill_2026-10-26_22-31-20_574.json"
+      },
+      "step": {
+        "providerNodeEvents": {
+          "CUDAExecutionProvider": 52980,
+          "CPUExecutionProvider": 16500
+        },
+        "opsByProvider": {
+          "CUDAExecutionProvider": {
+            "Gather": 1500,
+            "SimplifiedLayerNormalization": 2940,
+            "Shape": 4320,
+            "Unsqueeze": 5880,
+            "MatMul": 6540,
+            "Reshape": 5760,
+            "Slice": 2880,
+            "Mul": 9360,
+            "Add": 2880,
+            "Sub": 1440,
+            "Concat": 3000,
+            "MemcpyFromHost": 720,
+            "Tile": 1440,
+            "Transpose": 2880,
+            "Softmax": 720,
+            "QuickGelu": 720
+          },
+          "CPUExecutionProvider": {
+            "Gather": 2160,
+            "Unsqueeze": 1440,
+            "Concat": 4980,
+            "Slice": 5040,
+            "Cast": 720,
+            "Sqrt": 1440,
+            "Div": 720
+          }
+        },
+        "largestCpuOutputElements": 4,
+        "source": "profile-hayai/data/cache/ocr-step_2026-10-26_22-31-21_036.json"
+      },
+      "vision": {
+        "providerNodeEvents": {
+          "CUDAExecutionProvider": 1461,
+          "CPUExecutionProvider": 222
+        },
+        "opsByProvider": {
+          "CUDAExecutionProvider": {
+            "Shape": 39,
+            "MatMul": 255,
+            "Add": 396,
+            "LayerNormalization": 72,
+            "Reshape": 216,
+            "Transpose": 180,
+            "FusedMatMul": 36,
+            "Equal": 3,
+            "Cast": 3,
+            "Mul": 147,
+            "Unsqueeze": 3,
+            "Softmax": 36,
+            "Pow": 36,
+            "Tanh": 36,
+            "SkipLayerNormalization": 3
+          },
+          "CPUExecutionProvider": {
+            "Concat": 78,
+            "Gather": 36,
+            "Slice": 108
+          }
+        },
+        "largestCpuOutputElements": 4,
+        "source": "profile-hayai/data/cache/ocr-vision_2026-10-26_22-31-20_337.json"
+      }
+    }
+  }
+}

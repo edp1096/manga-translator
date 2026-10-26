@@ -1,0 +1,28 @@
+{
+  "name": "tonari",
+  "count": 38,
+  "samples": [
+    {
+      "index": 0,
+      "width": 800,
+      "height": 1137,
+      "nonwhite": 687
+    },
+    {
+      "index": 19,
+      "width": 800,
+      "height": 1137,
+      "nonwhite": 1398
+    },
+    {
+      "index": 37,
+      "width": 800,
+      "height": 1137,
+      "nonwhite": 1634
+    }
+  ],
+  "allPagesLoaded": true,
+  "overlayAligned": true,
+  "readingPositionRestored": true,
+  "errors": []
+}

@@ -1,0 +1,144 @@
+const defaults = {server:'http://127.0.0.1:8793',token:'',target:'Korean',selector:'',captureFallback:true};
+importScripts('panel_scope.js','readers.js');
+async function settings(){return {...defaults,...await chrome.storage.local.get(Object.keys(defaults))};}
+async function api(path, options={}) {
+  const s=await settings();
+  if(!s.token) throw Error('관리 앱의 크롬 확장에서 ‘확장 연결하기’를 먼저 누르세요. 토큰은 자동으로 전달됩니다.');
+  const response=await fetch(s.server.replace(/\/$/,'')+path,{...options,headers:{...options.headers,Authorization:`Bearer ${s.token}`},signal:AbortSignal.timeout(25000)});
+  if(!response.ok) throw Error(`서버 ${response.status}: ${(await response.text()).slice(0,250)}`);
+  return response;
+}
+// Service workers have no FileReader. Convert in bounded chunks instead.
+async function encoded(blob){
+  const bytes=new Uint8Array(await blob.arrayBuffer());
+  let binary=''; for(let i=0;i<bytes.length;i+=32768)binary+=String.fromCharCode(...bytes.subarray(i,i+32768));
+  return `data:${blob.type||'image/png'};base64,${btoa(binary)}`;
+}
+let imageChain=Promise.resolve();
+function browserImage(url,referrer){
+  const task=imageChain.catch(()=>{}).then(async()=>{
+    if(!/^https?:/.test(url))throw Error('이미지 URL을 읽을 수 없습니다.');
+    // Apply the page's Referer only to this extension's own image request.
+    const id=913701;
+    await chrome.declarativeNetRequest.updateSessionRules({removeRuleIds:[id],addRules:[{id,priority:1,action:{type:'modifyHeaders',requestHeaders:[{header:'referer',operation:'set',value:referrer}]},condition:{urlFilter:'|'+url+'|',initiatorDomains:[chrome.runtime.id],resourceTypes:['xmlhttprequest']}}]});
+    try {
+      const r=await fetch(url,{credentials:'include',signal:AbortSignal.timeout(20000)});
+      if(!r.ok)throw Error(`이미지 HTTP ${r.status}`);
+      const blob=await r.blob();
+      if(blob.size>24*1024*1024)throw Error('이미지가 24 MiB를 넘습니다.');
+      if(!blob.type.startsWith('image/'))throw Error('이미지 대신 접근 차단 응답을 받았습니다.');
+      return await encoded(blob);
+    } finally {await chrome.declarativeNetRequest.updateSessionRules({removeRuleIds:[id]});}
+  });
+  imageChain=task;return task;
+}
+const pageCacheKey=url=>'page:'+MangaReaders.pageIdentity(url);
+let cacheWrites=Promise.resolve();
+function rememberPage(msg,sender){
+ const task=cacheWrites.catch(()=>{}).then(async()=>{
+  if(!sender.tab?.url||typeof msg.sourceURL!=='string'||msg.sourceURL.length>8192||!msg.result||!Array.isArray(msg.result.regions)||msg.result.regions.length>150)return false;
+  const key=pageCacheKey(sender.tab.url),server=(await settings()).server,all=await chrome.storage.local.get(null),now=Date.now();
+  const prior=all[key]?.server===server?all[key].items||[]:[];
+  const items=prior.filter(x=>x.sourceURL!==msg.sourceURL&&now-x.updated<86400000);
+  items.push({sourceURL:msg.sourceURL,key:msg.key,id:msg.id,result:msg.result,updated:now});
+  all[key]={server,updated:now,items:items.slice(-200)};
+  const pages=Object.entries(all).filter(([k])=>k.startsWith('page:')).sort((a,b)=>(a[1].updated||0)-(b[1].updated||0));
+  let total=pages.reduce((n,[,value])=>n+new TextEncoder().encode(JSON.stringify(value)).length,0);const remove=[];
+  for(const [k,value]of pages){if(k===key)continue;if(now-(value.updated||0)>86400000||total>4*1024*1024){remove.push(k);total-=new TextEncoder().encode(JSON.stringify(value)).length;}}
+  while(new TextEncoder().encode(JSON.stringify(all[key])).length>4*1024*1024&&all[key].items.length)all[key].items.shift();
+  if(remove.length)await chrome.storage.local.remove(remove);await chrome.storage.local.set({[key]:all[key]});return true;
+ });cacheWrites=task;return task;
+}
+chrome.runtime.onMessage.addListener((msg,sender,respond)=>{
+  (async()=>{
+    switch(msg.type){
+      case 'settings':return settings();
+      case 'connect':{
+        if(!Number.isInteger(msg.tabId)||msg.tabId<0)throw Error('만화 페이지를 선택한 뒤 새로고침을 눌러주세요.');
+        await chrome.scripting.executeScript({target:{tabId:msg.tabId},files:['render.js','readers.js','content.js']});
+        return chrome.tabs.sendMessage(msg.tabId,{type:'control',action:'scan'});
+      }
+      case 'control':{
+        if(!Number.isInteger(msg.tabId)||msg.tabId<0)throw Error('만화 페이지를 선택한 뒤 새로고침을 눌러주세요.');
+        const command={type:'control',action:msg.action,keys:msg.keys,key:msg.key,sourceURL:msg.sourceURL};
+        if(msg.action==='locate')await chrome.tabs.update(msg.tabId,{active:true});
+        try{return await chrome.tabs.sendMessage(msg.tabId,command);}
+        catch(error){
+          if(!/Receiving end does not exist|Could not establish connection|message port closed/i.test(error.message||''))throw error;
+          const tab=await chrome.tabs.get(msg.tabId);
+          if(!/^https?:/.test(tab.url||''))throw Error('만화 페이지를 연 뒤 다시 연결하세요.');
+          await chrome.scripting.executeScript({target:{tabId:msg.tabId},files:['render.js','readers.js','content.js']});
+          const state=await chrome.tabs.sendMessage(msg.tabId,{type:'control',action:'scan'});
+          if(['status','scan'].includes(msg.action))return state;
+          if(msg.action==='locate'&&msg.sourceURL)return chrome.tabs.sendMessage(msg.tabId,command);
+          return {...state,message:'페이지에 다시 연결했습니다. 새 목록에서 작업을 다시 선택하세요.'};
+        }
+      }
+      case 'remember':return rememberPage(msg,sender);
+      case 'restore':{
+        if(!sender.tab?.url)return [];
+        const key=pageCacheKey(sender.tab.url),saved=(await chrome.storage.local.get(key))[key];
+        if(saved?.server!==(await settings()).server)return [];
+        return (saved.items||[]).filter(x=>Date.now()-x.updated<86400000);
+      }
+      case 'openOptions':await chrome.runtime.openOptionsPage();return true;
+      case 'thumbnail':{
+        const data=await browserImage(msg.url,msg.referrer);
+        const bitmap=await createImageBitmap(await (await fetch(data)).blob());
+        const scale=Math.min(1,120/bitmap.width,170/bitmap.height);
+        const c=new OffscreenCanvas(Math.max(1,Math.round(bitmap.width*scale)),Math.max(1,Math.round(bitmap.height*scale)));
+        c.getContext('2d').drawImage(bitmap,0,0,c.width,c.height);bitmap.close();
+        return encoded(await c.convertToBlob({type:'image/jpeg',quality:0.7}));
+      }
+      case 'fetchImage':return browserImage(msg.url,sender.tab?.url || msg.referrer);
+      case 'capture':{
+        const tab=await chrome.tabs.get(sender.tab.id);
+        const [active]=await chrome.tabs.query({active:true,windowId:tab.windowId});
+        if(active?.id!==tab.id)throw Error('화면 캡처를 위해 이 탭을 활성화하세요.');
+        await new Promise(r=>setTimeout(r,550));
+        return chrome.tabs.captureVisibleTab(tab.windowId,{format:'png'});
+      }
+      case 'submit':{
+        const blob=await (await fetch(msg.data)).blob(), form=new FormData();
+        form.append('image',blob,'page.png');form.append('target',(await settings()).target);
+        return (await api('/api/jobs',{method:'POST',body:form})).json();
+      }
+      case 'status':return (await api(`/api/jobs/${msg.id}`)).json();
+      case 'asset':{
+        if(!['original.png','cleaned.png','mask.png','result.json'].includes(msg.name))throw Error('Invalid asset');
+        return encoded(await (await api(`/api/jobs/${msg.id}/${msg.name}`)).blob());
+      }
+      case 'edit':{
+        await chrome.storage.local.set({['edit:'+msg.id]:{tabId:sender.tab.id,key:msg.key,result:msg.result}});
+        await chrome.tabs.create({url:chrome.runtime.getURL('editor.html')+'?job='+encodeURIComponent(msg.id)});return true;
+      }
+      case 'apply':{
+        const key='edit:'+msg.id, saved=(await chrome.storage.local.get(key))[key];
+        if(!saved)throw Error('원본 탭 정보가 없습니다.');
+        await chrome.storage.local.set({[key]:{...saved,result:msg.result}});
+        const applied=await chrome.tabs.sendMessage(saved.tabId,{type:'applyEdited',key:saved.key,result:msg.result});if(applied?.error)throw Error(applied.error);return true;
+      }
+    }
+    throw Error('Unknown request');
+  })().then(value=>respond({ok:true,value}),error=>respond({ok:false,error:String(error.message||error)}));
+  return true;
+});
+// Only the local control app may request pairing. The access token stays in the
+// extension; it is never returned to the management page.
+chrome.runtime.onMessageExternal.addListener((msg,sender,respond)=>{
+ let origin;try{origin=new URL(sender.url).origin;}catch{return false;}
+ if(!['http://127.0.0.1:8794','http://localhost:8794'].includes(origin))return false;
+ (async()=>{
+  if(msg.type==='control-pair'){
+   if(typeof msg.code!=='string'||!/^[a-f0-9]{64}$/.test(msg.code))throw Error('연결 코드가 올바르지 않습니다.');
+   const response=await fetch('http://127.0.0.1:8794/api/extension/pair',{method:'POST',headers:{'Content-Type':'application/json','X-Manga-Extension':chrome.runtime.id},body:JSON.stringify({code:msg.code}),signal:AbortSignal.timeout(10000)});
+   const data=await response.json();if(!response.ok)throw Error(data.error||'관리 앱에 연결하지 못했습니다.');
+   if(data.server!=='http://127.0.0.1:8793'||typeof data.token!=='string'||data.token.length<32)throw Error('관리 앱의 연결 정보가 올바르지 않습니다.');
+   await chrome.storage.local.set({server:data.server,token:data.token});
+  }else if(msg.type!=='control-status')throw Error('지원하지 않는 관리 요청입니다.');
+  const s=await settings();let connected=false,error='';
+  try{if(s.server!=='http://127.0.0.1:8793')throw Error('다른 API에 연결되어 있습니다.');if(!s.token)throw Error('API 연결 설정이 필요합니다.');await api('/api/ping');connected=true;}catch(e){error=e.message;}
+  return {installed:true,version:chrome.runtime.getManifest().version,server:s.server,connected,error};
+ })().then(value=>respond({ok:true,value}),e=>respond({ok:false,error:e.message}));
+ return true;
+});

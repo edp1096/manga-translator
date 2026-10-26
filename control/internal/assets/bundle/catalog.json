@@ -1,0 +1,2569 @@
+{
+  "models": [
+    {
+      "inputSize": 768,
+      "visionLimitMiB": 1536,
+      "minAvailableMiB": 3072,
+      "group": "layout",
+      "artifacts": [
+        "layout"
+      ],
+      "dependencies": [
+        "ort",
+        "vcredist"
+      ],
+      "path": "models/koharu-layout-rfdetr-768-fullmask/koharu-768-fullmask.onnx",
+      "id": "koharu-768",
+      "name": "Koharu 768 · 전체 마스크",
+      "memoryGiB": 2,
+      "note": "말풍선·글자 탐지 · 현재 엔진에서 지원하는 탐지 모델"
+    },
+    {
+      "inputSize": 1152,
+      "visionLimitMiB": 6144,
+      "minAvailableMiB": 8192,
+      "group": "layout",
+      "artifacts": [
+        "layout-1152"
+      ],
+      "dependencies": [
+        "ort",
+        "vcredist"
+      ],
+      "path": "models/koharu-layout-rfdetr-1152-fullmask/rfdetr-seg-2xlarge.onnx",
+      "id": "koharu-1152",
+      "name": "Koharu 2XL 1152 · 원본 전체 마스크",
+      "memoryGiB": 8,
+      "note": "Spark에서 사용한 원본 해상도 · 고메모리 환경용 · 288×288 전체 마스크"
+    },
+    {
+      "backend": "baberu-int4",
+      "group": "ocr",
+      "artifacts": [
+        "ocr-baberu-license",
+        "ocr-baberu-readme-md",
+        "ocr-baberu-tokenizer-vocab-json",
+        "ocr-baberu-onnx-decoder-prefill-int8-onnx",
+        "ocr-baberu-onnx-decoder-step-int8-onnx",
+        "ocr-baberu-onnx-vision-int4-onnx"
+      ],
+      "dependencies": [
+        "ort",
+        "vcredist"
+      ],
+      "path": "models/genshiai-daichi__baberu-ocr",
+      "id": "baberu-int4",
+      "name": "Baberu · INT4 / INT8",
+      "memoryGiB": 1,
+      "note": "Apache-2.0 공개 모델 · 인코더 INT4, 디코더 INT8 · CPU 또는 CUDA 인코더 + CPU 디코더 자동 병행. 일본어·중국어·영어 인식."
+    },
+    {
+      "backend": "litert",
+      "group": "ocr",
+      "artifacts": [
+        "ocr-hayai_decoder_decode_dynamic_wi8",
+        "ocr-hayai_decoder_prefill_dynamic_wi8",
+        "ocr-hayai_encoder_dynamic_wi8",
+        "ocr-position_base",
+        "ocr-tokenizer"
+      ],
+      "dependencies": [
+        "litert",
+        "vcredist"
+      ],
+      "path": "models/JustANormalTinkerer__hayai-ocr-v2-tflite/litert_exports/dynamic_wi8",
+      "id": "hayai-int8",
+      "name": "Hayai v2 · Dynamic INT8",
+      "memoryGiB": 1,
+      "note": "CPU용 INT8 · 낮은 메모리 사용. GPU OCR에는 ONNX FP32 모델을 선택하세요."
+    },
+    {
+      "backend": "baberu-fp16",
+      "group": "ocr",
+      "artifacts": [
+        "ocr-baberu-license",
+        "ocr-baberu-readme-md",
+        "ocr-baberu-tokenizer-vocab-json",
+        "ocr-baberu-onnx-decoder-prefill-int8-onnx",
+        "ocr-baberu-onnx-decoder-step-int8-onnx",
+        "ocr-baberu-onnx-vision-fp16-onnx"
+      ],
+      "dependencies": [
+        "ort",
+        "vcredist"
+      ],
+      "path": "models/genshiai-daichi__baberu-ocr",
+      "id": "baberu-fp16",
+      "name": "Baberu · FP16 / INT8",
+      "memoryGiB": 1,
+      "note": "Apache-2.0 공개 모델 · 인코더 FP16, 디코더 INT8 · CPU 또는 CUDA 인코더 + CPU 디코더 자동 병행. 일본어·중국어·영어 인식."
+    },
+    {
+      "backend": "onnx-v2-kv",
+      "group": "ocr",
+      "artifacts": [
+        "ocr-kv-fp32-hayai_decoder_kv_prefill_onnx",
+        "ocr-kv-fp32-hayai_decoder_kv_step_onnx",
+        "ocr-kv-fp32-hayai_encoder_onnx",
+        "ocr-kv-fp32-hayai_encoder_onnx_data",
+        "ocr-kv-fp32-position_base_npy",
+        "ocr-kv-fp32-tokenizer_json"
+      ],
+      "dependencies": [
+        "ort",
+        "vcredist"
+      ],
+      "path": "models/vadik82__hayai-ocr-v2-onnx/onnx",
+      "id": "hayai-onnx-fp32-kv",
+      "name": "Hayai v2 · ONNX FP32 + KV",
+      "memoryGiB": 2,
+      "note": "이전 선정 후보 · FP32 원본 정밀도, KV 캐시 사용 · 메모리가 더 필요합니다"
+    },
+    {
+      "group": "translation",
+      "artifacts": [
+        "gemma"
+      ],
+      "dependencies": [
+        "llama",
+        "vcredist"
+      ],
+      "path": "models/gemma-4-E2B-it-GGUF/gemma-4-E2B-it-Q4_0.gguf",
+      "id": "gemma",
+      "name": "Gemma 4 E2B · Q4_0",
+      "memoryGiB": 8,
+      "note": "가벼운 기본 모델 · Orange Pi 추론 검증 완료"
+    },
+    {
+      "group": "translation",
+      "artifacts": [
+        "gemma-e4b"
+      ],
+      "dependencies": [
+        "llama",
+        "vcredist"
+      ],
+      "path": "models/gemma-4-E4B-it-GGUF/gemma-4-E4B-it-Q4_0.gguf",
+      "id": "gemma-e4b",
+      "name": "Gemma 4 E4B · Q4_0",
+      "memoryGiB": 12,
+      "note": "더 큰 번역 모델 · 메모리와 처리 시간이 더 필요합니다"
+    }
+  ],
+  "runtimes": [
+    {
+      "id": "llama",
+      "version": "0.7.0",
+      "platform": "linux-arm64",
+      "artifact": "llama-linux-arm64",
+      "releaseUrl": "https://github.com/ggml-org/llama.cpp/releases/tag/v0.7.0",
+      "buildTag": "b11669",
+      "executable": "runtime/llama-0.7.0/llama-server",
+      "libraryDirs": [
+        "runtime/llama-0.7.0"
+      ],
+      "family": "llama",
+      "backend": "cpu"
+    },
+    {
+      "id": "ort",
+      "version": "1.31.0",
+      "platform": "linux-arm64",
+      "artifact": "ort-linux-arm64",
+      "releaseUrl": "https://github.com/microsoft/onnxruntime/releases/tag/v1.31.0",
+      "libraryDirs": [
+        "runtime/onnxruntime-linux-aarch64-1.31.0/lib"
+      ],
+      "family": "ort",
+      "backend": "cpu"
+    },
+    {
+      "id": "litert",
+      "version": "2.3.1",
+      "platform": "linux-arm64",
+      "artifact": "litert-linux-arm64",
+      "releaseUrl": "https://developers.google.com/edge/litert/next/cpp_sdk",
+      "library": "runtime/litert-2.3.1/libLiteRt.so",
+      "libraryDirs": [
+        "runtime/litert-2.3.1"
+      ],
+      "family": "litert",
+      "backend": "cpu"
+    },
+    {
+      "id": "llama",
+      "version": "0.7.0",
+      "platform": "windows-amd64",
+      "artifact": "llama-windows-amd64",
+      "releaseUrl": "https://github.com/ggml-org/llama.cpp/releases/tag/v0.7.0",
+      "buildTag": "b11669",
+      "executable": "runtime/llama-0.7.0/llama-server.exe",
+      "libraryDirs": [
+        "runtime/llama-0.7.0"
+      ],
+      "family": "llama",
+      "backend": "cpu"
+    },
+    {
+      "id": "ort",
+      "version": "1.31.0",
+      "platform": "windows-amd64",
+      "artifact": "ort-windows-amd64",
+      "releaseUrl": "https://github.com/microsoft/onnxruntime/releases/tag/v1.31.0",
+      "libraryDirs": [
+        "runtime/onnxruntime-win-x64-1.31.0/lib"
+      ],
+      "family": "ort",
+      "backend": "cpu"
+    },
+    {
+      "id": "litert",
+      "version": "2.3.1",
+      "platform": "windows-amd64",
+      "artifact": "litert-windows-amd64",
+      "releaseUrl": "https://developers.google.com/edge/litert/next/cpp_sdk",
+      "library": "runtime/litert-2.3.1/libLiteRt.dll",
+      "libraryDirs": [
+        "runtime/litert-2.3.1"
+      ],
+      "family": "litert",
+      "backend": "cpu"
+    },
+    {
+      "id": "llama-vulkan",
+      "version": "0.7.0",
+      "platform": "linux-arm64",
+      "artifact": "llama-vulkan-linux-arm64",
+      "releaseUrl": "https://github.com/ggml-org/llama.cpp/releases/tag/v0.7.0",
+      "buildTag": "b11669",
+      "executable": "runtime/llama-vulkan-0.7.0/llama-server",
+      "libraryDirs": [
+        "runtime/llama-vulkan-0.7.0"
+      ],
+      "family": "llama",
+      "backend": "vulkan"
+    },
+    {
+      "id": "llama-vulkan",
+      "version": "0.7.0",
+      "platform": "linux-amd64",
+      "artifact": "llama-vulkan-linux-amd64",
+      "releaseUrl": "https://github.com/ggml-org/llama.cpp/releases/tag/v0.7.0",
+      "buildTag": "b11669",
+      "executable": "runtime/llama-vulkan-0.7.0/llama-server",
+      "libraryDirs": [
+        "runtime/llama-vulkan-0.7.0"
+      ],
+      "family": "llama",
+      "backend": "vulkan"
+    },
+    {
+      "id": "llama-vulkan",
+      "version": "0.7.0",
+      "platform": "windows-amd64",
+      "artifact": "llama-vulkan-windows-amd64",
+      "releaseUrl": "https://github.com/ggml-org/llama.cpp/releases/tag/v0.7.0",
+      "buildTag": "b11669",
+      "executable": "runtime/llama-vulkan-0.7.0/llama-server.exe",
+      "libraryDirs": [
+        "runtime/llama-vulkan-0.7.0"
+      ],
+      "family": "llama",
+      "backend": "vulkan"
+    },
+    {
+      "id": "llama",
+      "version": "0.7.0",
+      "platform": "linux-amd64",
+      "artifact": "llama-linux-amd64",
+      "releaseUrl": "https://github.com/ggml-org/llama.cpp/releases/tag/v0.7.0",
+      "buildTag": "b11669",
+      "executable": "runtime/llama-0.7.0/llama-server",
+      "libraryDirs": [
+        "runtime/llama-0.7.0"
+      ],
+      "family": "llama",
+      "backend": "cpu"
+    },
+    {
+      "id": "ort",
+      "version": "1.31.0",
+      "platform": "linux-amd64",
+      "artifact": "ort-linux-amd64",
+      "releaseUrl": "https://github.com/microsoft/onnxruntime/releases",
+      "libraryDirs": [
+        "runtime/onnxruntime-linux-x64-1.31.0/lib"
+      ],
+      "family": "ort",
+      "backend": "cpu"
+    },
+    {
+      "id": "ort-cuda",
+      "version": "1.31.0",
+      "platform": "linux-amd64",
+      "artifact": "ort-cuda-linux-amd64",
+      "releaseUrl": "https://github.com/microsoft/onnxruntime/releases",
+      "libraryDirs": [
+        "runtime/onnxruntime-linux-x64-gpu_cuda12-1.31.0/lib",
+        "runtime/cuda12/lib"
+      ],
+      "family": "ort",
+      "backend": "cuda",
+      "additionalArtifacts": [
+        "nvidia-cublas-cu12-linux-amd64",
+        "nvidia-cuda-runtime-cu12-linux-amd64",
+        "nvidia-curand-cu12-linux-amd64",
+        "nvidia-cudnn-cu12-linux-amd64",
+        "nvidia-cuda-nvrtc-cu12-linux-amd64",
+        "nvidia-nvjitlink-cu12-linux-amd64"
+      ]
+    },
+    {
+      "id": "ort-directml",
+      "version": "1.24.4",
+      "platform": "windows-amd64",
+      "artifact": "ort-directml-windows-amd64",
+      "releaseUrl": "https://github.com/microsoft/onnxruntime/releases",
+      "libraryDirs": [
+        "runtime/onnxruntime-directml-1.24.4"
+      ],
+      "family": "ort",
+      "backend": "directml",
+      "additionalArtifacts": [
+        "directml-windows-amd64"
+      ]
+    },
+    {
+      "id": "litert",
+      "version": "2.3.1",
+      "platform": "linux-amd64",
+      "artifact": "litert-linux-amd64",
+      "releaseUrl": "https://developers.google.com/edge/litert/next/cpp_sdk",
+      "library": "runtime/litert-2.3.1/libLiteRt.so",
+      "libraryDirs": [
+        "runtime/litert-2.3.1"
+      ],
+      "family": "litert",
+      "backend": "cpu"
+    },
+    {
+      "id": "ort-cuda",
+      "version": "1.31.0",
+      "platform": "linux-arm64",
+      "artifact": "ort-cuda-linux-arm64",
+      "releaseUrl": "https://pypi.org/project/onnxruntime-gpu/1.31.0/",
+      "libraryDirs": [
+        "runtime/onnxruntime-cuda13-1.31.0",
+        "runtime/cuda13/lib"
+      ],
+      "family": "ort",
+      "backend": "cuda",
+      "additionalArtifacts": [
+        "nvidia-cublas-linux-arm64",
+        "nvidia-cuda-runtime-linux-arm64",
+        "nvidia-curand-linux-arm64",
+        "nvidia-cudnn-cu13-linux-arm64",
+        "nvidia-cuda-nvrtc-linux-arm64",
+        "nvidia-nvjitlink-linux-arm64"
+      ]
+    }
+  ],
+  "version": "0.3.11",
+  "artifacts": [
+    {
+      "id": "ort-linux-arm64",
+      "name": "ONNX Runtime 1.31.0",
+      "group": "runtime",
+      "platform": "linux-arm64",
+      "url": "https://github.com/microsoft/onnxruntime/releases/download/v1.31.0/onnxruntime-linux-aarch64-1.31.0.tgz",
+      "sha256": "c5b8b3cca31f3d643a3b313b8f42e2d0f16a4fcefd02cda343d97bd5306afaab",
+      "size": 10331104,
+      "format": "tgz",
+      "files": [
+        {
+          "entry": "onnxruntime-linux-aarch64-1.31.0/lib/libonnxruntime.so.1.31.0",
+          "path": "runtime/onnxruntime-linux-aarch64-1.31.0/lib/libonnxruntime.so.1",
+          "sha256": "595c7f7a6775f5c7b3d567c3ed94c04f722092575abcc092560f5208a54daf99",
+          "size": 25266408
+        },
+        {
+          "entry": "onnxruntime-linux-aarch64-1.31.0/LICENSE",
+          "path": "runtime/onnxruntime-linux-aarch64-1.31.0/LICENSE",
+          "sha256": "2f07c72751aed99790b8a4869cf2311df85a860b22ded05fa22803587a48922c",
+          "size": 1073
+        },
+        {
+          "entry": "onnxruntime-linux-aarch64-1.31.0/ThirdPartyNotices.txt",
+          "path": "runtime/onnxruntime-linux-aarch64-1.31.0/ThirdPartyNotices.txt",
+          "sha256": "143764b952fdb1a7c69ce653bfba74a7744d6a8a573bfb73e235fba356c83de3",
+          "size": 338088
+        }
+      ]
+    },
+    {
+      "id": "litert-linux-arm64",
+      "name": "LiteRT 2.3.1",
+      "group": "runtime",
+      "platform": "linux-arm64",
+      "url": "https://storage.googleapis.com/litert/binaries/2.3.1/linux_arm64/libLiteRt.so",
+      "sha256": "f5dd262601c88f4ae5d1f8be868e1233d07a551baed3327c762ada384d83ded8",
+      "size": 8980040,
+      "format": "raw",
+      "files": [
+        {
+          "path": "runtime/litert-2.3.1/libLiteRt.so",
+          "sha256": "f5dd262601c88f4ae5d1f8be868e1233d07a551baed3327c762ada384d83ded8",
+          "size": 8980040
+        }
+      ]
+    },
+    {
+      "id": "llama-linux-arm64",
+      "name": "llama.cpp 0.7.0",
+      "group": "runtime",
+      "platform": "linux-arm64",
+      "url": "https://github.com/ggml-org/llama.cpp/releases/download/b11669/llama-b11669-bin-ubuntu-vulkan-arm64.tar.gz",
+      "sha256": "d283522e479c0d532e3a04d715dd852ffb2d95925caa6d41ef2ba53a65e46a51",
+      "size": 24187561,
+      "format": "tgz",
+      "files": [
+        {
+          "entry": "llama-b11669/llama-server",
+          "path": "runtime/llama-0.7.0/llama-server",
+          "sha256": "b319c96bfd668ea1825600415275beaffcf14e76edb303bce521a818b0b00aa5",
+          "size": 72448,
+          "executable": true
+        },
+        {
+          "entry": "llama-b11669/libllama-server-impl.so",
+          "path": "runtime/llama-0.7.0/libllama-server-impl.so",
+          "sha256": "cc3a8ff2ca7a2840424634d66367a30323f73fb1228a7c623871874f4c1d1964",
+          "size": 6891304
+        },
+        {
+          "entry": "llama-b11669/libllama.so.0.7.0",
+          "path": "runtime/llama-0.7.0/libllama.so.0",
+          "sha256": "d5568269dbc18479cc7361e2ee516a99b57bfaab4c01e58bc20d22726f6ee6fa",
+          "size": 4801520
+        },
+        {
+          "entry": "llama-b11669/libllama-common.so.0.7.0",
+          "path": "runtime/llama-0.7.0/libllama-common.so.0",
+          "sha256": "50d0b0b9ccccc1d270c3dc06a5ed8cdd57af4c71900d5e44543a5e6f4c48723f",
+          "size": 5693232
+        },
+        {
+          "entry": "llama-b11669/libmtmd.so.0.7.0",
+          "path": "runtime/llama-0.7.0/libmtmd.so.0",
+          "sha256": "9c8dd28c13166f934e7d96714c4670b8519929079bc8bacf91b2bf05c5186ac9",
+          "size": 1893920
+        },
+        {
+          "entry": "llama-b11669/libggml.so.0.27.0",
+          "path": "runtime/llama-0.7.0/libggml.so.0",
+          "sha256": "6be1305cdda55f0001e87fae600f1148b2f0b9c8b3f98f60c33b4fdfe3cfaf64",
+          "size": 77528
+        },
+        {
+          "entry": "llama-b11669/libggml-base.so.0.27.0",
+          "path": "runtime/llama-0.7.0/libggml-base.so.0",
+          "sha256": "094d810465713b5b7bad2718c4bd884312e6cb3bdae7cfa13e8ff4f958d59bf1",
+          "size": 802072
+        },
+        {
+          "entry": "llama-b11669/LICENSE",
+          "path": "runtime/llama-0.7.0/LICENSE",
+          "sha256": "94f29bbed6a22c35b992c5c6ebf0e7c92f13b836b90f36f461c9cf2f0f1d010d",
+          "size": 1078
+        },
+        {
+          "entry": "llama-b11669/libggml-cpu-armv9.2_2.so",
+          "path": "runtime/llama-0.7.0/libggml-cpu-armv9.2_2.so",
+          "sha256": "826288cba28f27c9a32b600c9fb93452ac0f2caad1ea56617ac8005eec75bd41",
+          "size": 1069816
+        },
+        {
+          "entry": "llama-b11669/libggml-cpu-armv8.0_1.so",
+          "path": "runtime/llama-0.7.0/libggml-cpu-armv8.0_1.so",
+          "sha256": "801f370ba5d872cfa6aaa5a2cce696153cc51b94d31cfcef53f258c2c0fc87ad",
+          "size": 1002088
+        },
+        {
+          "entry": "llama-b11669/libggml-cpu-armv9.2_1.so",
+          "path": "runtime/llama-0.7.0/libggml-cpu-armv9.2_1.so",
+          "sha256": "c5bb9e856d207bc55d3a4ebeaac19d4d6d8e150f18059800d4e80834c551e888",
+          "size": 1069816
+        },
+        {
+          "entry": "llama-b11669/libggml-cpu-armv8.2_1.so",
+          "path": "runtime/llama-0.7.0/libggml-cpu-armv8.2_1.so",
+          "sha256": "547f1fe937e31c192a47e16488a318978646b9b05009bed3f72db47bf5a713a0",
+          "size": 1068992
+        },
+        {
+          "entry": "llama-b11669/libggml-cpu-armv8.2_2.so",
+          "path": "runtime/llama-0.7.0/libggml-cpu-armv8.2_2.so",
+          "sha256": "4ba86d67010d29da42b61fd21bac405652d641b28ca0470f41d7361dfb6d9f90",
+          "size": 1068992
+        },
+        {
+          "entry": "llama-b11669/libggml-cpu-armv8.2_3.so",
+          "path": "runtime/llama-0.7.0/libggml-cpu-armv8.2_3.so",
+          "sha256": "63ecf98e196a06e58e976256f5c839144054a48e5f5f2689b9b86949f15c2017",
+          "size": 1003936
+        },
+        {
+          "entry": "llama-b11669/libggml-cpu-armv8.6_1.so",
+          "path": "runtime/llama-0.7.0/libggml-cpu-armv8.6_1.so",
+          "sha256": "8cd090f0ea7c6f8176facf48e183f8402aa4c40a04764aa828b5879a8a182628",
+          "size": 1069720
+        },
+        {
+          "entry": "llama-b11669/libggml-cpu-armv8.6_2.so",
+          "path": "runtime/llama-0.7.0/libggml-cpu-armv8.6_2.so",
+          "sha256": "eea821102b3e571eb3ef41a835e2cf8e7f986fac7f694908e441d5c1803ce332",
+          "size": 1069720
+        }
+      ]
+    },
+    {
+      "id": "engine-linux-arm64",
+      "name": "Manga 이미지 API",
+      "group": "application",
+      "platform": "linux-arm64",
+      "url": "embedded:engine/linux-arm64.gz",
+      "sha256": "9eade9a25f4b9ac4d4bfd17b31823c62788fc23cef594fcb11c3a50591f6a022",
+      "size": 722626,
+      "format": "gzip",
+      "files": [
+        {
+          "path": "bin/manga-translator-server",
+          "sha256": "7cccc98bf82d0f24713c3fac24eb21febea7d68d361cc08994ff2503e659ea9f",
+          "size": 1613984,
+          "executable": true
+        }
+      ]
+    },
+    {
+      "id": "ort-windows-amd64",
+      "name": "ONNX Runtime 1.31.0",
+      "group": "runtime",
+      "platform": "windows-amd64",
+      "url": "https://github.com/microsoft/onnxruntime/releases/download/v1.31.0/onnxruntime-win-x64-1.31.0.zip",
+      "sha256": "3958d8a44984160692c1b4ffd0de3cb48f8c39f9d34bb31e433db06e30b82195",
+      "size": 82887349,
+      "format": "zip",
+      "files": [
+        {
+          "entry": "onnxruntime-win-x64-1.31.0/lib/onnxruntime.dll",
+          "path": "runtime/onnxruntime-win-x64-1.31.0/lib/onnxruntime.dll",
+          "sha256": "0c42dc4e278f0968fdf9ebf1b1e54a74c657a9942e70803e453c91993451cf4c",
+          "size": 17253176
+        },
+        {
+          "entry": "onnxruntime-win-x64-1.31.0/lib/onnxruntime_providers_shared.dll",
+          "path": "runtime/onnxruntime-win-x64-1.31.0/lib/onnxruntime_providers_shared.dll",
+          "sha256": "e45d471ea2a842b268c51291b96d53568b0dae10807f43d1fb7dc0eb84e83723",
+          "size": 21816
+        },
+        {
+          "entry": "onnxruntime-win-x64-1.31.0/LICENSE",
+          "path": "runtime/onnxruntime-win-x64-1.31.0/LICENSE",
+          "sha256": "c250d6278f0b47a6439fb7592b08b58a55eb9f535aa49a1db63211c3f982b674",
+          "size": 1094
+        },
+        {
+          "entry": "onnxruntime-win-x64-1.31.0/ThirdPartyNotices.txt",
+          "path": "runtime/onnxruntime-win-x64-1.31.0/ThirdPartyNotices.txt",
+          "sha256": "c53a76501ef60db6f865f20599f220761201ac4057683acefdab37d861b86622",
+          "size": 344457
+        }
+      ]
+    },
+    {
+      "id": "litert-windows-amd64",
+      "name": "LiteRT 2.3.1",
+      "group": "runtime",
+      "platform": "windows-amd64",
+      "url": "https://storage.googleapis.com/litert/binaries/2.3.1/windows_x86_64/libLiteRt.dll",
+      "sha256": "30fcb695ce8c2d8da5416337b6f4dc4407f04823b331cf6782a4894a82ee2ebb",
+      "size": 12173824,
+      "format": "raw",
+      "files": [
+        {
+          "path": "runtime/litert-2.3.1/libLiteRt.dll",
+          "sha256": "30fcb695ce8c2d8da5416337b6f4dc4407f04823b331cf6782a4894a82ee2ebb",
+          "size": 12173824
+        }
+      ]
+    },
+    {
+      "id": "llama-windows-amd64",
+      "name": "llama.cpp 0.7.0",
+      "group": "runtime",
+      "platform": "windows-amd64",
+      "url": "https://github.com/ggml-org/llama.cpp/releases/download/b11669/llama-b11669-bin-win-cpu-x64.zip",
+      "sha256": "37b3efcf962847ca869745fd4ccf7f5e7e8dacfeff9fa3523b4ca8cdc66d632b",
+      "size": 19537886,
+      "format": "zip",
+      "files": [
+        {
+          "entry": "ggml-base.dll",
+          "path": "runtime/llama-0.7.0/ggml-base.dll",
+          "sha256": "0a259689ea3c105a8122159eb97fb53733f2531fadd3e9739689961cdab27600",
+          "size": 803840
+        },
+        {
+          "entry": "ggml-cpu-alderlake.dll",
+          "path": "runtime/llama-0.7.0/ggml-cpu-alderlake.dll",
+          "sha256": "98b3bd12a84e848f57686f6d5f0969654ec79cda0c7636498933ea1063d14aa6",
+          "size": 1420288
+        },
+        {
+          "entry": "ggml-cpu-cannonlake.dll",
+          "path": "runtime/llama-0.7.0/ggml-cpu-cannonlake.dll",
+          "sha256": "fef636daea23b26f935cf5983be9a29b79f0541cd148b9d64a32bc9ea0cec704",
+          "size": 1598976
+        },
+        {
+          "entry": "ggml-cpu-cascadelake.dll",
+          "path": "runtime/llama-0.7.0/ggml-cpu-cascadelake.dll",
+          "sha256": "b32ee94fa0a366886cd03be48f80f1d8c1bbb338d71fc734a263753ec46aa8fd",
+          "size": 1583616
+        },
+        {
+          "entry": "ggml-cpu-cooperlake.dll",
+          "path": "runtime/llama-0.7.0/ggml-cpu-cooperlake.dll",
+          "sha256": "e67357a558e71b834360b6f6d62abc6b9fe19930f6f7dd21ee0339e7b144306e",
+          "size": 1593344
+        },
+        {
+          "entry": "ggml-cpu-haswell.dll",
+          "path": "runtime/llama-0.7.0/ggml-cpu-haswell.dll",
+          "sha256": "d33deb9bf3dd25427404f0f94a13c6b3da92b9b57b794199a9f354c3a327efb6",
+          "size": 1425408
+        },
+        {
+          "entry": "ggml-cpu-icelake.dll",
+          "path": "runtime/llama-0.7.0/ggml-cpu-icelake.dll",
+          "sha256": "41abb00a64bbf099c137cdb3b9547c7eb90bcd9c1d7b83238cbf10a74f97addd",
+          "size": 1590272
+        },
+        {
+          "entry": "ggml-cpu-ivybridge.dll",
+          "path": "runtime/llama-0.7.0/ggml-cpu-ivybridge.dll",
+          "sha256": "d674c12b3f40d657b0989801699560e68247dbe9509823651b055ac3816ba37c",
+          "size": 1301504
+        },
+        {
+          "entry": "ggml-cpu-piledriver.dll",
+          "path": "runtime/llama-0.7.0/ggml-cpu-piledriver.dll",
+          "sha256": "bb5215c806397adf56e986f52aa0c75b04b3b5b33203a722f647254eae2b94b2",
+          "size": 1294336
+        },
+        {
+          "entry": "ggml-cpu-sandybridge.dll",
+          "path": "runtime/llama-0.7.0/ggml-cpu-sandybridge.dll",
+          "sha256": "55d5659b45afcbe7a1d7611ab1914d2888476fc3024933e4b82122cdc58d6fd5",
+          "size": 1291264
+        },
+        {
+          "entry": "ggml-cpu-sapphirerapids.dll",
+          "path": "runtime/llama-0.7.0/ggml-cpu-sapphirerapids.dll",
+          "sha256": "83af3cacf3bf32b98626791358f950da4b45a22af85bde63afe537fe51e60848",
+          "size": 1869824
+        },
+        {
+          "entry": "ggml-cpu-skylakex.dll",
+          "path": "runtime/llama-0.7.0/ggml-cpu-skylakex.dll",
+          "sha256": "20722299dc5e4703056ff95b7ef329c223390ab87469c822721c1e67e4cc2a24",
+          "size": 1592320
+        },
+        {
+          "entry": "ggml-cpu-sse42.dll",
+          "path": "runtime/llama-0.7.0/ggml-cpu-sse42.dll",
+          "sha256": "1c0fc615b6d97a79e58f33e8a7fb4e8de1834ad0f3f0e00e8943a4d416ddd242",
+          "size": 916992
+        },
+        {
+          "entry": "ggml-cpu-x64.dll",
+          "path": "runtime/llama-0.7.0/ggml-cpu-x64.dll",
+          "sha256": "7c9df996db7fe98510571524e3e62dd267a4034350185014814418dbad3c25ea",
+          "size": 909824
+        },
+        {
+          "entry": "ggml-cpu-zen4.dll",
+          "path": "runtime/llama-0.7.0/ggml-cpu-zen4.dll",
+          "sha256": "83ae254f6204670e9011e11db84786122567bde2fab07354e7c4827c18589ee1",
+          "size": 1600000
+        },
+        {
+          "entry": "ggml-rpc.dll",
+          "path": "runtime/llama-0.7.0/ggml-rpc.dll",
+          "sha256": "b52bd8eddb79ebd1dc0b832b34483bef23d44a34c6d5639301d92cb971f874a4",
+          "size": 231424
+        },
+        {
+          "entry": "ggml.dll",
+          "path": "runtime/llama-0.7.0/ggml.dll",
+          "sha256": "2649a5d914934188cccbe2c58e4642d2d4408bcda0f7068d58390686bd7ea62f",
+          "size": 78848
+        },
+        {
+          "entry": "libomp.dll",
+          "path": "runtime/llama-0.7.0/libomp.dll",
+          "sha256": "a12116ba72d1d6820407cf30be23da04ce79d6bb8a71a5ee71759c5a1faa6f1c",
+          "size": 768000
+        },
+        {
+          "entry": "LICENSE-LLVM-OpenMP",
+          "path": "runtime/llama-0.7.0/LICENSE-LLVM-OpenMP",
+          "sha256": "fdad1758a9e1f9d5a81e18879b3406772115edc92c24bfa36b70c654f325e8e4",
+          "size": 19741
+        },
+        {
+          "entry": "llama-batched-bench-impl.dll",
+          "path": "runtime/llama-0.7.0/llama-batched-bench-impl.dll",
+          "sha256": "86dd3cc19af625bd826f7919767883a7e78481e012fb141e5393677235518190",
+          "size": 61952
+        },
+        {
+          "entry": "llama-bench-impl.dll",
+          "path": "runtime/llama-0.7.0/llama-bench-impl.dll",
+          "sha256": "e4ff088cb9f50568366c281684b3ad4c69e9ddea3be6deb4a0a4fb63a6bf0650",
+          "size": 404480
+        },
+        {
+          "entry": "llama-cli-impl.dll",
+          "path": "runtime/llama-0.7.0/llama-cli-impl.dll",
+          "sha256": "8a50d8db8599970726f824f50d5d0a4570d2ff602a39940e09362d23f2c7fca5",
+          "size": 3319296
+        },
+        {
+          "entry": "llama-common.dll",
+          "path": "runtime/llama-0.7.0/llama-common.dll",
+          "sha256": "9adf40bc08e99005699d6397bcacb72c3aced68c9db01f13b5bd31c6abc7b2b5",
+          "size": 8037376
+        },
+        {
+          "entry": "llama-completion-impl.dll",
+          "path": "runtime/llama-0.7.0/llama-completion-impl.dll",
+          "sha256": "e10c6bba8275b289e3121aa3ab2820b8583d744109dfc5d546e7220328a4ee1d",
+          "size": 140800
+        },
+        {
+          "entry": "llama-fit-params-impl.dll",
+          "path": "runtime/llama-0.7.0/llama-fit-params-impl.dll",
+          "sha256": "a08d9a6fc98cd0a340bb80703e7a43a1bca4b362eb6f5bc3d235993b38b69d89",
+          "size": 43008
+        },
+        {
+          "entry": "llama-perplexity-impl.dll",
+          "path": "runtime/llama-0.7.0/llama-perplexity-impl.dll",
+          "sha256": "4ade93257c26e936770f5ad9e65de400efb73dbe3abcba9244c9756378b4de07",
+          "size": 197632
+        },
+        {
+          "entry": "llama-quantize-impl.dll",
+          "path": "runtime/llama-0.7.0/llama-quantize-impl.dll",
+          "sha256": "c792c25b55fada62323f50d9e68da797dc92e52b4f79601708fa203533586f86",
+          "size": 137216
+        },
+        {
+          "entry": "llama-server-impl.dll",
+          "path": "runtime/llama-0.7.0/llama-server-impl.dll",
+          "sha256": "24b1249ddd19e3ba3551804707dbe2f3c154c007542899ea8b16d69a94ab6597",
+          "size": 9259520
+        },
+        {
+          "entry": "llama-server.exe",
+          "path": "runtime/llama-0.7.0/llama-server.exe",
+          "sha256": "6a4635aeb35656153d4bfeeddf761d24ed84aada9c9108d580737cbed465141b",
+          "size": 9216,
+          "executable": true
+        },
+        {
+          "entry": "llama.dll",
+          "path": "runtime/llama-0.7.0/llama.dll",
+          "sha256": "aacb073c9c0d30090dd3e56f49772545452ccc4fd311efbfdb7d1bba7bbb0bda",
+          "size": 3541504
+        },
+        {
+          "entry": "mtmd.dll",
+          "path": "runtime/llama-0.7.0/mtmd.dll",
+          "sha256": "bd4a9dac32ba8b14cf95da3361495380ac556b34f48434ebe477ffef23f40bd1",
+          "size": 1847808
+        }
+      ]
+    },
+    {
+      "cabOffset": 630000,
+      "cabSize": 18091661,
+      "cabEntry": "a4",
+      "id": "vcredist-windows-amd64",
+      "name": "Visual C++ app-local runtime",
+      "group": "runtime",
+      "platform": "windows-amd64",
+      "url": "https://download.visualstudio.microsoft.com/download/pr/ebdab8e5-1d7b-4d9f-a11b-cbb1720c3b12/843068991DAAA1F73AD9F6239BCE4D0F6A07A51F18C37EA2A867E9BECA71295C/VC_redist.x64.exe",
+      "sha256": "843068991daaa1f73ad9f6239bce4d0f6a07a51f18c37ea2a867e9beca71295c",
+      "size": 18731856,
+      "format": "msvc-cab",
+      "files": [
+        {
+          "entry": "msvcp140.dll_amd64",
+          "path": "bin/msvcp140.dll",
+          "sha256": "7c26614e1d733892c2deac7e245ce115504b1d80592dd0a01b08e3e5a55f89ca",
+          "size": 643512
+        },
+        {
+          "entry": "msvcp140.dll_amd64",
+          "relativeTo": "llama",
+          "path": "msvcp140.dll",
+          "sha256": "7c26614e1d733892c2deac7e245ce115504b1d80592dd0a01b08e3e5a55f89ca",
+          "size": 643512
+        },
+        {
+          "entry": "msvcp140_1.dll_amd64",
+          "path": "bin/msvcp140_1.dll",
+          "sha256": "206c931bf90fdad8816de3b5e2ef80b2bcaa9406c89ecc05fe6fddffe251e982",
+          "size": 35768
+        },
+        {
+          "entry": "msvcp140_1.dll_amd64",
+          "relativeTo": "llama",
+          "path": "msvcp140_1.dll",
+          "sha256": "206c931bf90fdad8816de3b5e2ef80b2bcaa9406c89ecc05fe6fddffe251e982",
+          "size": 35768
+        },
+        {
+          "entry": "vcruntime140.dll_amd64",
+          "path": "bin/vcruntime140.dll",
+          "sha256": "d1f4225df2cd877dbf130d5668a021dce3f94118455ff5ec952061c30afc9ce7",
+          "size": 178616
+        },
+        {
+          "entry": "vcruntime140.dll_amd64",
+          "relativeTo": "llama",
+          "path": "vcruntime140.dll",
+          "sha256": "d1f4225df2cd877dbf130d5668a021dce3f94118455ff5ec952061c30afc9ce7",
+          "size": 178616
+        },
+        {
+          "entry": "vcruntime140_1.dll_amd64",
+          "path": "bin/vcruntime140_1.dll",
+          "sha256": "a7146c08f89fe5b04541ab507cdb59ff7b44534d4ba3c668a426c6450a03434e",
+          "size": 50112
+        },
+        {
+          "entry": "vcruntime140_1.dll_amd64",
+          "relativeTo": "llama",
+          "path": "vcruntime140_1.dll",
+          "sha256": "a7146c08f89fe5b04541ab507cdb59ff7b44534d4ba3c668a426c6450a03434e",
+          "size": 50112
+        }
+      ]
+    },
+    {
+      "id": "engine-windows-amd64",
+      "name": "Manga 이미지 API",
+      "group": "application",
+      "platform": "windows-amd64",
+      "url": "embedded:engine/windows-amd64.gz",
+      "sha256": "df3f93855cb59e29040358a9a0cb85f9c6e91c73bcebe9a138bf8ccf6f60645b",
+      "size": 1208975,
+      "format": "gzip",
+      "files": [
+        {
+          "path": "bin/manga-translator-server.exe",
+          "sha256": "5f91766ad1501bf99c7d720d71e87b74bc9d4d0d96d436798b187ccc41ed47ea",
+          "size": 3340288,
+          "executable": true
+        }
+      ]
+    },
+    {
+      "id": "ocr-hayai_decoder_decode_dynamic_wi8",
+      "name": "Hayai OCR · hayai_decoder_decode_dynamic_wi8.tflite",
+      "group": "ocr",
+      "platform": "all",
+      "url": "https://huggingface.co/JustANormalTinkerer/hayai-ocr-v2-tflite/resolve/f73d1c1b0c9cb53e42aaa8ec8b3625ca3ffc5d21/litert_exports/dynamic_wi8/hayai_decoder_decode_dynamic_wi8.tflite",
+      "sha256": "4dcff3557d2ffde2fa00e4f74220cf5c4fa2e73fff624b0bea92dcbc213e17ab",
+      "size": 55147600,
+      "format": "raw",
+      "files": [
+        {
+          "path": "models/JustANormalTinkerer__hayai-ocr-v2-tflite/litert_exports/dynamic_wi8/hayai_decoder_decode_dynamic_wi8.tflite",
+          "sha256": "4dcff3557d2ffde2fa00e4f74220cf5c4fa2e73fff624b0bea92dcbc213e17ab",
+          "size": 55147600
+        }
+      ]
+    },
+    {
+      "id": "ocr-hayai_decoder_prefill_dynamic_wi8",
+      "name": "Hayai OCR · hayai_decoder_prefill_dynamic_wi8.tflite",
+      "group": "ocr",
+      "platform": "all",
+      "url": "https://huggingface.co/JustANormalTinkerer/hayai-ocr-v2-tflite/resolve/f73d1c1b0c9cb53e42aaa8ec8b3625ca3ffc5d21/litert_exports/dynamic_wi8/hayai_decoder_prefill_dynamic_wi8.tflite",
+      "sha256": "e479569d69f54286d092665dec37504678c3e6f9ed62924169d7c4f8de1e4e68",
+      "size": 55911888,
+      "format": "raw",
+      "files": [
+        {
+          "path": "models/JustANormalTinkerer__hayai-ocr-v2-tflite/litert_exports/dynamic_wi8/hayai_decoder_prefill_dynamic_wi8.tflite",
+          "sha256": "e479569d69f54286d092665dec37504678c3e6f9ed62924169d7c4f8de1e4e68",
+          "size": 55911888
+        }
+      ]
+    },
+    {
+      "id": "ocr-hayai_encoder_dynamic_wi8",
+      "name": "Hayai OCR · hayai_encoder_dynamic_wi8.tflite",
+      "group": "ocr",
+      "platform": "all",
+      "url": "https://huggingface.co/JustANormalTinkerer/hayai-ocr-v2-tflite/resolve/f73d1c1b0c9cb53e42aaa8ec8b3625ca3ffc5d21/litert_exports/dynamic_wi8/hayai_encoder_dynamic_wi8.tflite",
+      "sha256": "d0fa63534cdd036ce33d9b3a4da829d109059900a9216be5c920447fb918dbff",
+      "size": 87137472,
+      "format": "raw",
+      "files": [
+        {
+          "path": "models/JustANormalTinkerer__hayai-ocr-v2-tflite/litert_exports/dynamic_wi8/hayai_encoder_dynamic_wi8.tflite",
+          "sha256": "d0fa63534cdd036ce33d9b3a4da829d109059900a9216be5c920447fb918dbff",
+          "size": 87137472
+        }
+      ]
+    },
+    {
+      "id": "ocr-position_base",
+      "name": "Hayai OCR · position_base.npy",
+      "group": "ocr",
+      "platform": "all",
+      "url": "https://huggingface.co/JustANormalTinkerer/hayai-ocr-v2-tflite/resolve/f73d1c1b0c9cb53e42aaa8ec8b3625ca3ffc5d21/litert_exports/dynamic_wi8/position_base.npy",
+      "sha256": "86b9f944334a3c6227c2898daecb90a521753aa1bdbac620b66027e54b0fcf4b",
+      "size": 786560,
+      "format": "raw",
+      "files": [
+        {
+          "path": "models/JustANormalTinkerer__hayai-ocr-v2-tflite/litert_exports/dynamic_wi8/position_base.npy",
+          "sha256": "86b9f944334a3c6227c2898daecb90a521753aa1bdbac620b66027e54b0fcf4b",
+          "size": 786560
+        }
+      ]
+    },
+    {
+      "id": "ocr-tokenizer",
+      "name": "Hayai OCR · tokenizer.json",
+      "group": "ocr",
+      "platform": "all",
+      "url": "https://huggingface.co/JustANormalTinkerer/hayai-ocr-v2-tflite/resolve/f73d1c1b0c9cb53e42aaa8ec8b3625ca3ffc5d21/litert_exports/dynamic_wi8/tokenizer.json",
+      "sha256": "f8a0a909c628a684fe463094614e236a8b1d3609e7770f77e7beafaf1056bf13",
+      "size": 1247253,
+      "format": "raw",
+      "files": [
+        {
+          "path": "models/JustANormalTinkerer__hayai-ocr-v2-tflite/litert_exports/dynamic_wi8/tokenizer.json",
+          "sha256": "f8a0a909c628a684fe463094614e236a8b1d3609e7770f77e7beafaf1056bf13",
+          "size": 1247253
+        }
+      ]
+    },
+    {
+      "id": "layout",
+      "name": "Koharu 768 · 말풍선과 글자 탐지",
+      "group": "layout",
+      "platform": "all",
+      "url": "https://huggingface.co/ShiniShiho/koharu-layout-rfdetr-seg-2xl-1152-onnx/resolve/bfbbd4e5ab34a50459865074fa044da496cebb57/rfdetr-seg-2xlarge.onnx",
+      "sha256": "7cc10d4316371946b8441da3512261a8e148b129abcdb0ea6235ed1d1d06d351",
+      "size": 148442003,
+      "format": "patch",
+      "files": [
+        {
+          "path": "models/koharu-layout-rfdetr-768-fullmask/koharu-768-fullmask.onnx",
+          "sha256": "120cc9d2a0a73c47382b2f3624b2b6be54258f0d5b143e4eb9b229cda1b63175",
+          "size": 140717822
+        }
+      ],
+      "patch": "koharu-768.patch",
+      "patchSha256": "93fa7b78464b031a41d7b178932b2ae50a6ba6d2ff29a54524c0a6dd5f560237"
+    },
+    {
+      "id": "gemma",
+      "name": "Gemma 4 E2B · 번역",
+      "group": "translation",
+      "platform": "all",
+      "url": "https://huggingface.co/ggml-org/gemma-4-E2B-it-GGUF/resolve/6938c58e698502037401a5f19f6905f2fb2f7dee/gemma-4-E2B-it-Q4_0.gguf",
+      "sha256": "8e30dff3ac4c8434c49a7036fa15564bdbb6044e42bf04550bf1a096ad7e6a52",
+      "size": 2841481184,
+      "format": "raw",
+      "files": [
+        {
+          "path": "models/gemma-4-E2B-it-GGUF/gemma-4-E2B-it-Q4_0.gguf",
+          "sha256": "8e30dff3ac4c8434c49a7036fa15564bdbb6044e42bf04550bf1a096ad7e6a52",
+          "size": 2841481184
+        }
+      ]
+    },
+    {
+      "id": "gemma-e4b",
+      "name": "Gemma 4 E4B Q4_0",
+      "group": "translation",
+      "platform": "all",
+      "url": "https://huggingface.co/ggml-org/gemma-4-E4B-it-GGUF/resolve/a69f018d7678a2b9f5e705f8903d6fb29b9b25dc/gemma-4-E4B-it-Q4_0.gguf",
+      "sha256": "a555b900214b477d8880e7832e0b8925e139b0159640036b09fe472b6f2097f2",
+      "size": 4590807392,
+      "format": "raw",
+      "files": [
+        {
+          "path": "models/gemma-4-E4B-it-GGUF/gemma-4-E4B-it-Q4_0.gguf",
+          "sha256": "a555b900214b477d8880e7832e0b8925e139b0159640036b09fe472b6f2097f2",
+          "size": 4590807392
+        }
+      ]
+    },
+    {
+      "id": "ocr-kv-fp32-hayai_decoder_kv_prefill_onnx",
+      "name": "Hayai ONNX FP32 + KV · hayai_decoder_kv_prefill.onnx",
+      "group": "ocr",
+      "platform": "all",
+      "url": "https://huggingface.co/vadik82/hayai-ocr-v2-onnx/resolve/154b1d24aa137f8e50887737782ddbb944569ce3/onnx/hayai_decoder_kv_prefill.onnx",
+      "sha256": "3d2c2237188910a20db7ed8c54a95735532911f151eff4f8fce4bde9e6d9b0f6",
+      "size": 250990576,
+      "format": "raw",
+      "files": [
+        {
+          "path": "models/vadik82__hayai-ocr-v2-onnx/onnx/hayai_decoder_kv_prefill.onnx",
+          "sha256": "3d2c2237188910a20db7ed8c54a95735532911f151eff4f8fce4bde9e6d9b0f6",
+          "size": 250990576
+        }
+      ]
+    },
+    {
+      "id": "ocr-kv-fp32-hayai_decoder_kv_step_onnx",
+      "name": "Hayai ONNX FP32 + KV · hayai_decoder_kv_step.onnx",
+      "group": "ocr",
+      "platform": "all",
+      "url": "https://huggingface.co/vadik82/hayai-ocr-v2-onnx/resolve/154b1d24aa137f8e50887737782ddbb944569ce3/onnx/hayai_decoder_kv_step.onnx",
+      "sha256": "41c919ac39902a1d3834ced43d12a08a1f8769fed0ffce380428c2e61677f000",
+      "size": 248367335,
+      "format": "raw",
+      "files": [
+        {
+          "path": "models/vadik82__hayai-ocr-v2-onnx/onnx/hayai_decoder_kv_step.onnx",
+          "sha256": "41c919ac39902a1d3834ced43d12a08a1f8769fed0ffce380428c2e61677f000",
+          "size": 248367335
+        }
+      ]
+    },
+    {
+      "id": "ocr-kv-fp32-hayai_encoder_onnx",
+      "name": "Hayai ONNX FP32 + KV · hayai_encoder.onnx",
+      "group": "ocr",
+      "platform": "all",
+      "url": "https://huggingface.co/vadik82/hayai-ocr-v2-onnx/resolve/154b1d24aa137f8e50887737782ddbb944569ce3/onnx/hayai_encoder.onnx",
+      "sha256": "daf592f2a553116bcd1d164bf7fc476811abacdff3d64a0e4d61158195c6e97b",
+      "size": 927287,
+      "format": "raw",
+      "files": [
+        {
+          "path": "models/vadik82__hayai-ocr-v2-onnx/onnx/hayai_encoder.onnx",
+          "sha256": "daf592f2a553116bcd1d164bf7fc476811abacdff3d64a0e4d61158195c6e97b",
+          "size": 927287
+        }
+      ]
+    },
+    {
+      "id": "ocr-kv-fp32-hayai_encoder_onnx_data",
+      "name": "Hayai ONNX FP32 + KV · hayai_encoder.onnx.data",
+      "group": "ocr",
+      "platform": "all",
+      "url": "https://huggingface.co/vadik82/hayai-ocr-v2-onnx/resolve/154b1d24aa137f8e50887737782ddbb944569ce3/onnx/hayai_encoder.onnx.data",
+      "sha256": "02ffbac5c0fffb47ea5353e05573724ee995a47067ef749c19fee89d51c6a87a",
+      "size": 342622208,
+      "format": "raw",
+      "files": [
+        {
+          "path": "models/vadik82__hayai-ocr-v2-onnx/onnx/hayai_encoder.onnx.data",
+          "sha256": "02ffbac5c0fffb47ea5353e05573724ee995a47067ef749c19fee89d51c6a87a",
+          "size": 342622208
+        }
+      ]
+    },
+    {
+      "id": "ocr-kv-fp32-position_base_npy",
+      "name": "Hayai ONNX FP32 + KV · position_base.npy",
+      "group": "ocr",
+      "platform": "all",
+      "url": "https://huggingface.co/vadik82/hayai-ocr-v2-onnx/resolve/154b1d24aa137f8e50887737782ddbb944569ce3/onnx/position_base.npy",
+      "sha256": "86b9f944334a3c6227c2898daecb90a521753aa1bdbac620b66027e54b0fcf4b",
+      "size": 786560,
+      "format": "raw",
+      "files": [
+        {
+          "path": "models/vadik82__hayai-ocr-v2-onnx/onnx/position_base.npy",
+          "sha256": "86b9f944334a3c6227c2898daecb90a521753aa1bdbac620b66027e54b0fcf4b",
+          "size": 786560
+        }
+      ]
+    },
+    {
+      "id": "ocr-kv-fp32-tokenizer_json",
+      "name": "Hayai ONNX FP32 + KV · tokenizer.json",
+      "group": "ocr",
+      "platform": "all",
+      "url": "https://huggingface.co/vadik82/hayai-ocr-v2-onnx/resolve/154b1d24aa137f8e50887737782ddbb944569ce3/onnx/tokenizer.json",
+      "sha256": "f8a0a909c628a684fe463094614e236a8b1d3609e7770f77e7beafaf1056bf13",
+      "size": 1247253,
+      "format": "raw",
+      "files": [
+        {
+          "path": "models/vadik82__hayai-ocr-v2-onnx/onnx/tokenizer.json",
+          "sha256": "f8a0a909c628a684fe463094614e236a8b1d3609e7770f77e7beafaf1056bf13",
+          "size": 1247253
+        }
+      ]
+    },
+    {
+      "id": "layout-1152",
+      "name": "Koharu 2XL 1152 · 원본 전체 마스크",
+      "group": "layout",
+      "platform": "all",
+      "url": "https://huggingface.co/ShiniShiho/koharu-layout-rfdetr-seg-2xl-1152-onnx/resolve/bfbbd4e5ab34a50459865074fa044da496cebb57/rfdetr-seg-2xlarge.onnx",
+      "sha256": "7cc10d4316371946b8441da3512261a8e148b129abcdb0ea6235ed1d1d06d351",
+      "size": 148442003,
+      "format": "raw",
+      "files": [
+        {
+          "path": "models/koharu-layout-rfdetr-1152-fullmask/rfdetr-seg-2xlarge.onnx",
+          "sha256": "7cc10d4316371946b8441da3512261a8e148b129abcdb0ea6235ed1d1d06d351",
+          "size": 148442003
+        }
+      ]
+    },
+    {
+      "id": "llama-vulkan-linux-arm64",
+      "name": "llama.cpp 0.7.0 · Vulkan",
+      "group": "runtime",
+      "platform": "linux-arm64",
+      "url": "https://github.com/ggml-org/llama.cpp/releases/download/b11669/llama-b11669-bin-ubuntu-vulkan-arm64.tar.gz",
+      "sha256": "d283522e479c0d532e3a04d715dd852ffb2d95925caa6d41ef2ba53a65e46a51",
+      "size": 24187561,
+      "format": "tgz",
+      "files": [
+        {
+          "entry": "llama-b11669/libggml.so.0.27.0",
+          "path": "runtime/llama-vulkan-0.7.0/libggml.so.0",
+          "sha256": "6be1305cdda55f0001e87fae600f1148b2f0b9c8b3f98f60c33b4fdfe3cfaf64",
+          "size": 77528
+        },
+        {
+          "entry": "llama-b11669/llama-server",
+          "path": "runtime/llama-vulkan-0.7.0/llama-server",
+          "sha256": "b319c96bfd668ea1825600415275beaffcf14e76edb303bce521a818b0b00aa5",
+          "size": 72448,
+          "executable": true
+        },
+        {
+          "entry": "llama-b11669/libggml-cpu-armv9.2_2.so",
+          "path": "runtime/llama-vulkan-0.7.0/libggml-cpu-armv9.2_2.so",
+          "sha256": "826288cba28f27c9a32b600c9fb93452ac0f2caad1ea56617ac8005eec75bd41",
+          "size": 1069816
+        },
+        {
+          "entry": "llama-b11669/libggml-rpc.so",
+          "path": "runtime/llama-vulkan-0.7.0/libggml-rpc.so",
+          "sha256": "1f38aba8b9f512daefd3cb746d9b6183ce70fa92df013dafa160970b14fe1011",
+          "size": 337272
+        },
+        {
+          "entry": "llama-b11669/libggml-cpu-armv8.0_1.so",
+          "path": "runtime/llama-vulkan-0.7.0/libggml-cpu-armv8.0_1.so",
+          "sha256": "801f370ba5d872cfa6aaa5a2cce696153cc51b94d31cfcef53f258c2c0fc87ad",
+          "size": 1002088
+        },
+        {
+          "entry": "llama-b11669/libmtmd.so.0.7.0",
+          "path": "runtime/llama-vulkan-0.7.0/libmtmd.so.0",
+          "sha256": "9c8dd28c13166f934e7d96714c4670b8519929079bc8bacf91b2bf05c5186ac9",
+          "size": 1893920
+        },
+        {
+          "entry": "llama-b11669/libggml-cpu-armv9.2_1.so",
+          "path": "runtime/llama-vulkan-0.7.0/libggml-cpu-armv9.2_1.so",
+          "sha256": "c5bb9e856d207bc55d3a4ebeaac19d4d6d8e150f18059800d4e80834c551e888",
+          "size": 1069816
+        },
+        {
+          "entry": "llama-b11669/libggml-cpu-armv8.2_1.so",
+          "path": "runtime/llama-vulkan-0.7.0/libggml-cpu-armv8.2_1.so",
+          "sha256": "547f1fe937e31c192a47e16488a318978646b9b05009bed3f72db47bf5a713a0",
+          "size": 1068992
+        },
+        {
+          "entry": "llama-b11669/LICENSE",
+          "path": "runtime/llama-vulkan-0.7.0/LICENSE",
+          "sha256": "94f29bbed6a22c35b992c5c6ebf0e7c92f13b836b90f36f461c9cf2f0f1d010d",
+          "size": 1078
+        },
+        {
+          "entry": "llama-b11669/libggml-cpu-armv8.2_2.so",
+          "path": "runtime/llama-vulkan-0.7.0/libggml-cpu-armv8.2_2.so",
+          "sha256": "4ba86d67010d29da42b61fd21bac405652d641b28ca0470f41d7361dfb6d9f90",
+          "size": 1068992
+        },
+        {
+          "entry": "llama-b11669/libggml-cpu-armv8.2_3.so",
+          "path": "runtime/llama-vulkan-0.7.0/libggml-cpu-armv8.2_3.so",
+          "sha256": "63ecf98e196a06e58e976256f5c839144054a48e5f5f2689b9b86949f15c2017",
+          "size": 1003936
+        },
+        {
+          "entry": "llama-b11669/libllama-common.so.0.7.0",
+          "path": "runtime/llama-vulkan-0.7.0/libllama-common.so.0",
+          "sha256": "50d0b0b9ccccc1d270c3dc06a5ed8cdd57af4c71900d5e44543a5e6f4c48723f",
+          "size": 5693232
+        },
+        {
+          "entry": "llama-b11669/libggml-cpu-armv8.6_1.so",
+          "path": "runtime/llama-vulkan-0.7.0/libggml-cpu-armv8.6_1.so",
+          "sha256": "8cd090f0ea7c6f8176facf48e183f8402aa4c40a04764aa828b5879a8a182628",
+          "size": 1069720
+        },
+        {
+          "entry": "llama-b11669/libggml-base.so.0.27.0",
+          "path": "runtime/llama-vulkan-0.7.0/libggml-base.so.0",
+          "sha256": "094d810465713b5b7bad2718c4bd884312e6cb3bdae7cfa13e8ff4f958d59bf1",
+          "size": 802072
+        },
+        {
+          "entry": "llama-b11669/libllama-server-impl.so",
+          "path": "runtime/llama-vulkan-0.7.0/libllama-server-impl.so",
+          "sha256": "cc3a8ff2ca7a2840424634d66367a30323f73fb1228a7c623871874f4c1d1964",
+          "size": 6891304
+        },
+        {
+          "entry": "llama-b11669/libllama.so.0.7.0",
+          "path": "runtime/llama-vulkan-0.7.0/libllama.so.0",
+          "sha256": "d5568269dbc18479cc7361e2ee516a99b57bfaab4c01e58bc20d22726f6ee6fa",
+          "size": 4801520
+        },
+        {
+          "entry": "llama-b11669/libggml-cpu-armv8.6_2.so",
+          "path": "runtime/llama-vulkan-0.7.0/libggml-cpu-armv8.6_2.so",
+          "sha256": "eea821102b3e571eb3ef41a835e2cf8e7f986fac7f694908e441d5c1803ce332",
+          "size": 1069720
+        },
+        {
+          "entry": "llama-b11669/libggml-vulkan.so",
+          "path": "runtime/llama-vulkan-0.7.0/libggml-vulkan.so",
+          "sha256": "f1430b97d758bcc606ed3356a7d4565db149aae23161456e76eac9837fd1b667",
+          "size": 32812768
+        }
+      ]
+    },
+    {
+      "id": "llama-vulkan-linux-amd64",
+      "name": "llama.cpp 0.7.0 · Vulkan",
+      "group": "runtime",
+      "platform": "linux-amd64",
+      "url": "https://github.com/ggml-org/llama.cpp/releases/download/b11669/llama-b11669-bin-ubuntu-vulkan-x64.tar.gz",
+      "sha256": "e8709e5ba6c1b093dea7f3de57f4aba842f9a188fba6b465782d65d6fcfa4d9f",
+      "size": 30497889,
+      "format": "tgz",
+      "files": [
+        {
+          "entry": "llama-b11669/libggml-cpu-cooperlake.so",
+          "path": "runtime/llama-vulkan-0.7.0/libggml-cpu-cooperlake.so",
+          "sha256": "b8dd831324fcc7e872ed66f840ead7f3cf7c571904db9b61574fb19ce00a935e",
+          "size": 1573640
+        },
+        {
+          "entry": "llama-b11669/LICENSE",
+          "path": "runtime/llama-vulkan-0.7.0/LICENSE",
+          "sha256": "94f29bbed6a22c35b992c5c6ebf0e7c92f13b836b90f36f461c9cf2f0f1d010d",
+          "size": 1078
+        },
+        {
+          "entry": "llama-b11669/libllama-server-impl.so",
+          "path": "runtime/llama-vulkan-0.7.0/libllama-server-impl.so",
+          "sha256": "9119be58c6ffa251c824cdf51677215735d6f4bdab131b17e7e549ff4e1ddcf1",
+          "size": 7533552
+        },
+        {
+          "entry": "llama-b11669/libggml-cpu-piledriver.so",
+          "path": "runtime/llama-vulkan-0.7.0/libggml-cpu-piledriver.so",
+          "sha256": "c8fec8f0f12d6a1a222c35d265618c582eacc3fd933a76dbd65c587114ed65f0",
+          "size": 1347848
+        },
+        {
+          "entry": "llama-b11669/libggml-cpu-zen4.so",
+          "path": "runtime/llama-vulkan-0.7.0/libggml-cpu-zen4.so",
+          "sha256": "ccb8fff995e04e532dc535eba4d9a84cccd5acd7612326db14710d302f4a8e2f",
+          "size": 1573640
+        },
+        {
+          "entry": "llama-b11669/libllama.so.0.7.0",
+          "path": "runtime/llama-vulkan-0.7.0/libllama.so.0",
+          "sha256": "522213ae6b6019ba8d2673e9254990c52f0a1a5fb047c75bfb93be1b34fad839",
+          "size": 5095048
+        },
+        {
+          "entry": "llama-b11669/llama-server",
+          "path": "runtime/llama-vulkan-0.7.0/llama-server",
+          "sha256": "3f2b53013c2eb596c8aca87e4740240a41f95bcebf72e61084d6d5ba0db761cc",
+          "size": 17864,
+          "executable": true
+        },
+        {
+          "entry": "llama-b11669/libggml-rpc.so",
+          "path": "runtime/llama-vulkan-0.7.0/libggml-rpc.so",
+          "sha256": "e28139e2d982fb057b88d243e5b2e9d72c52f8b98ae910b1cf751240ef1f9803",
+          "size": 319776
+        },
+        {
+          "entry": "llama-b11669/libggml-base.so.0.27.0",
+          "path": "runtime/llama-vulkan-0.7.0/libggml-base.so.0",
+          "sha256": "2c6ac9a8ae7c1455382c50587fe7d275e0607dfdaec4dcdb18689f31f6174c65",
+          "size": 897792
+        },
+        {
+          "entry": "llama-b11669/libggml-cpu-alderlake.so",
+          "path": "runtime/llama-vulkan-0.7.0/libggml-cpu-alderlake.so",
+          "sha256": "703dc62b89d2a6d700b8d276b3b4ae994caa3a315588b6038b4511549c4a308b",
+          "size": 1416296
+        },
+        {
+          "entry": "llama-b11669/libggml-cpu-sse42.so",
+          "path": "runtime/llama-vulkan-0.7.0/libggml-cpu-sse42.so",
+          "sha256": "81d37cdf3002c8f8f9d44e90fff3d058c4952782aaec1d97bcb375c4db10c659",
+          "size": 954536
+        },
+        {
+          "entry": "llama-b11669/libggml-cpu-haswell.so",
+          "path": "runtime/llama-vulkan-0.7.0/libggml-cpu-haswell.so",
+          "sha256": "aec8dcc1487baeac0914aa3f6ba747beb868b61cd398e10c40c39addd2f80b64",
+          "size": 1416296
+        },
+        {
+          "entry": "llama-b11669/libmtmd.so.0.7.0",
+          "path": "runtime/llama-vulkan-0.7.0/libmtmd.so.0",
+          "sha256": "5dc23ec9996bacb9d2791e06848cce30e33901d131a0c61f9cf2b821a587b17e",
+          "size": 1938632
+        },
+        {
+          "entry": "llama-b11669/libggml-cpu-cannonlake.so",
+          "path": "runtime/llama-vulkan-0.7.0/libggml-cpu-cannonlake.so",
+          "sha256": "b194dc5db78e21796342e573643006bcbd5ac3618b9ccbd08537bae0755c6972",
+          "size": 1565672
+        },
+        {
+          "entry": "llama-b11669/libggml-cpu-sapphirerapids.so",
+          "path": "runtime/llama-vulkan-0.7.0/libggml-cpu-sapphirerapids.so",
+          "sha256": "8a5d42ed076b212839c656d1e20731fb17b57b9f7ada0197680c735d70f15de2",
+          "size": 1839968
+        },
+        {
+          "entry": "llama-b11669/libllama-common.so.0.7.0",
+          "path": "runtime/llama-vulkan-0.7.0/libllama-common.so.0",
+          "sha256": "462f7e9ce1c4c537533f1d4530b37201452599d90128c3c602507b315934e795",
+          "size": 6499104
+        },
+        {
+          "entry": "llama-b11669/libggml-cpu-cascadelake.so",
+          "path": "runtime/llama-vulkan-0.7.0/libggml-cpu-cascadelake.so",
+          "sha256": "47b94135ee53c347bf90461ea7f9c3a055fa19b9462ff220c90f4cfdfdf79a5c",
+          "size": 1577664
+        },
+        {
+          "entry": "llama-b11669/libggml-cpu-sandybridge.so",
+          "path": "runtime/llama-vulkan-0.7.0/libggml-cpu-sandybridge.so",
+          "sha256": "03a91516104c443a739804eef17c2d02bc6fe428b5399813c7e97e2282d29007",
+          "size": 1350944
+        },
+        {
+          "entry": "llama-b11669/libggml-cpu-ivybridge.so",
+          "path": "runtime/llama-vulkan-0.7.0/libggml-cpu-ivybridge.so",
+          "sha256": "d2f79bcea05ed9fcf1b9e25bfaa9725655265cb7d7e0df79ffc9e996d1298820",
+          "size": 1351944
+        },
+        {
+          "entry": "llama-b11669/libggml.so.0.27.0",
+          "path": "runtime/llama-vulkan-0.7.0/libggml.so.0",
+          "sha256": "8643a58bb37af6fb153e2ea98b48efa227855725ee51c05f4ca76b9867956463",
+          "size": 51040
+        },
+        {
+          "entry": "llama-b11669/libggml-cpu-skylakex.so",
+          "path": "runtime/llama-vulkan-0.7.0/libggml-cpu-skylakex.so",
+          "sha256": "b34c8498cfb5368fd968699df833f956adb35432118074b45c962454ca229515",
+          "size": 1565672
+        },
+        {
+          "entry": "llama-b11669/libggml-cpu-icelake.so",
+          "path": "runtime/llama-vulkan-0.7.0/libggml-cpu-icelake.so",
+          "sha256": "eb79f0f5193557c52480cac8c85deb0f0e6793dd1cbd05793752071e5be10205",
+          "size": 1577664
+        },
+        {
+          "entry": "llama-b11669/libggml-vulkan.so",
+          "path": "runtime/llama-vulkan-0.7.0/libggml-vulkan.so",
+          "sha256": "fc574140b19625f6c549e7cba76dbe555d89b07cdfb50a4f65c500fe08d378b2",
+          "size": 40670576
+        },
+        {
+          "entry": "llama-b11669/libggml-cpu-x64.so",
+          "path": "runtime/llama-vulkan-0.7.0/libggml-cpu-x64.so",
+          "sha256": "2d1e8194f441ed4263bb28834cf44801a5e5e0a2592732fab5a2adc76b83290f",
+          "size": 950536
+        }
+      ]
+    },
+    {
+      "id": "llama-vulkan-windows-amd64",
+      "name": "llama.cpp 0.7.0 · Vulkan",
+      "group": "runtime",
+      "platform": "windows-amd64",
+      "url": "https://github.com/ggml-org/llama.cpp/releases/download/b11669/llama-b11669-bin-win-vulkan-x64.zip",
+      "sha256": "2c07574e7bde71321cb785282b20cc821e951132149eeceeea32ddebdbf0598e",
+      "size": 32182350,
+      "format": "zip",
+      "files": [
+        {
+          "entry": "ggml-vulkan.dll",
+          "path": "runtime/llama-vulkan-0.7.0/ggml-vulkan.dll",
+          "sha256": "17fe2fbe2534cd8e29e5190b99a95719b3e0614f7054bca4507d6ee50fca69f2",
+          "size": 41529856
+        },
+        {
+          "entry": "ggml-base.dll",
+          "path": "runtime/llama-vulkan-0.7.0/ggml-base.dll",
+          "sha256": "0a259689ea3c105a8122159eb97fb53733f2531fadd3e9739689961cdab27600",
+          "size": 803840
+        },
+        {
+          "entry": "LICENSE-LLVM-OpenMP",
+          "path": "runtime/llama-vulkan-0.7.0/LICENSE-LLVM-OpenMP",
+          "sha256": "fdad1758a9e1f9d5a81e18879b3406772115edc92c24bfa36b70c654f325e8e4",
+          "size": 19741
+        },
+        {
+          "entry": "mtmd.dll",
+          "path": "runtime/llama-vulkan-0.7.0/mtmd.dll",
+          "sha256": "bd4a9dac32ba8b14cf95da3361495380ac556b34f48434ebe477ffef23f40bd1",
+          "size": 1847808
+        },
+        {
+          "entry": "ggml-cpu-sapphirerapids.dll",
+          "path": "runtime/llama-vulkan-0.7.0/ggml-cpu-sapphirerapids.dll",
+          "sha256": "83af3cacf3bf32b98626791358f950da4b45a22af85bde63afe537fe51e60848",
+          "size": 1869824
+        },
+        {
+          "entry": "ggml-rpc.dll",
+          "path": "runtime/llama-vulkan-0.7.0/ggml-rpc.dll",
+          "sha256": "b52bd8eddb79ebd1dc0b832b34483bef23d44a34c6d5639301d92cb971f874a4",
+          "size": 231424
+        },
+        {
+          "entry": "ggml-cpu-piledriver.dll",
+          "path": "runtime/llama-vulkan-0.7.0/ggml-cpu-piledriver.dll",
+          "sha256": "bb5215c806397adf56e986f52aa0c75b04b3b5b33203a722f647254eae2b94b2",
+          "size": 1294336
+        },
+        {
+          "entry": "ggml-cpu-cannonlake.dll",
+          "path": "runtime/llama-vulkan-0.7.0/ggml-cpu-cannonlake.dll",
+          "sha256": "fef636daea23b26f935cf5983be9a29b79f0541cd148b9d64a32bc9ea0cec704",
+          "size": 1598976
+        },
+        {
+          "entry": "ggml-cpu-skylakex.dll",
+          "path": "runtime/llama-vulkan-0.7.0/ggml-cpu-skylakex.dll",
+          "sha256": "20722299dc5e4703056ff95b7ef329c223390ab87469c822721c1e67e4cc2a24",
+          "size": 1592320
+        },
+        {
+          "entry": "ggml-cpu-sse42.dll",
+          "path": "runtime/llama-vulkan-0.7.0/ggml-cpu-sse42.dll",
+          "sha256": "1c0fc615b6d97a79e58f33e8a7fb4e8de1834ad0f3f0e00e8943a4d416ddd242",
+          "size": 916992
+        },
+        {
+          "entry": "ggml-cpu-haswell.dll",
+          "path": "runtime/llama-vulkan-0.7.0/ggml-cpu-haswell.dll",
+          "sha256": "d33deb9bf3dd25427404f0f94a13c6b3da92b9b57b794199a9f354c3a327efb6",
+          "size": 1425408
+        },
+        {
+          "entry": "llama-common.dll",
+          "path": "runtime/llama-vulkan-0.7.0/llama-common.dll",
+          "sha256": "9adf40bc08e99005699d6397bcacb72c3aced68c9db01f13b5bd31c6abc7b2b5",
+          "size": 8037376
+        },
+        {
+          "entry": "libomp.dll",
+          "path": "runtime/llama-vulkan-0.7.0/libomp.dll",
+          "sha256": "a12116ba72d1d6820407cf30be23da04ce79d6bb8a71a5ee71759c5a1faa6f1c",
+          "size": 768000
+        },
+        {
+          "entry": "llama-server-impl.dll",
+          "path": "runtime/llama-vulkan-0.7.0/llama-server-impl.dll",
+          "sha256": "24b1249ddd19e3ba3551804707dbe2f3c154c007542899ea8b16d69a94ab6597",
+          "size": 9259520
+        },
+        {
+          "entry": "ggml-cpu-alderlake.dll",
+          "path": "runtime/llama-vulkan-0.7.0/ggml-cpu-alderlake.dll",
+          "sha256": "98b3bd12a84e848f57686f6d5f0969654ec79cda0c7636498933ea1063d14aa6",
+          "size": 1420288
+        },
+        {
+          "entry": "ggml-cpu-sandybridge.dll",
+          "path": "runtime/llama-vulkan-0.7.0/ggml-cpu-sandybridge.dll",
+          "sha256": "55d5659b45afcbe7a1d7611ab1914d2888476fc3024933e4b82122cdc58d6fd5",
+          "size": 1291264
+        },
+        {
+          "entry": "ggml.dll",
+          "path": "runtime/llama-vulkan-0.7.0/ggml.dll",
+          "sha256": "2649a5d914934188cccbe2c58e4642d2d4408bcda0f7068d58390686bd7ea62f",
+          "size": 78848
+        },
+        {
+          "entry": "ggml-cpu-zen4.dll",
+          "path": "runtime/llama-vulkan-0.7.0/ggml-cpu-zen4.dll",
+          "sha256": "83ae254f6204670e9011e11db84786122567bde2fab07354e7c4827c18589ee1",
+          "size": 1600000
+        },
+        {
+          "entry": "ggml-cpu-cascadelake.dll",
+          "path": "runtime/llama-vulkan-0.7.0/ggml-cpu-cascadelake.dll",
+          "sha256": "b32ee94fa0a366886cd03be48f80f1d8c1bbb338d71fc734a263753ec46aa8fd",
+          "size": 1583616
+        },
+        {
+          "entry": "llama.dll",
+          "path": "runtime/llama-vulkan-0.7.0/llama.dll",
+          "sha256": "aacb073c9c0d30090dd3e56f49772545452ccc4fd311efbfdb7d1bba7bbb0bda",
+          "size": 3541504
+        },
+        {
+          "entry": "llama-server.exe",
+          "path": "runtime/llama-vulkan-0.7.0/llama-server.exe",
+          "sha256": "6a4635aeb35656153d4bfeeddf761d24ed84aada9c9108d580737cbed465141b",
+          "size": 9216,
+          "executable": true
+        },
+        {
+          "entry": "ggml-cpu-x64.dll",
+          "path": "runtime/llama-vulkan-0.7.0/ggml-cpu-x64.dll",
+          "sha256": "7c9df996db7fe98510571524e3e62dd267a4034350185014814418dbad3c25ea",
+          "size": 909824
+        },
+        {
+          "entry": "ggml-cpu-cooperlake.dll",
+          "path": "runtime/llama-vulkan-0.7.0/ggml-cpu-cooperlake.dll",
+          "sha256": "e67357a558e71b834360b6f6d62abc6b9fe19930f6f7dd21ee0339e7b144306e",
+          "size": 1593344
+        },
+        {
+          "entry": "ggml-cpu-ivybridge.dll",
+          "path": "runtime/llama-vulkan-0.7.0/ggml-cpu-ivybridge.dll",
+          "sha256": "d674c12b3f40d657b0989801699560e68247dbe9509823651b055ac3816ba37c",
+          "size": 1301504
+        },
+        {
+          "entry": "ggml-cpu-icelake.dll",
+          "path": "runtime/llama-vulkan-0.7.0/ggml-cpu-icelake.dll",
+          "sha256": "41abb00a64bbf099c137cdb3b9547c7eb90bcd9c1d7b83238cbf10a74f97addd",
+          "size": 1590272
+        }
+      ]
+    },
+    {
+      "id": "llama-linux-amd64",
+      "name": "llama.cpp 0.7.0",
+      "group": "runtime",
+      "platform": "linux-amd64",
+      "url": "https://github.com/ggml-org/llama.cpp/releases/download/b11669/llama-b11669-bin-ubuntu-x64.tar.gz",
+      "sha256": "cf07c1c112d709bd67e522017471de57ed0ec8bea031d732c5422351c07f65ac",
+      "size": 17851611,
+      "format": "tgz",
+      "files": [
+        {
+          "entry": "llama-b11669/libggml-cpu-cooperlake.so",
+          "path": "runtime/llama-0.7.0/libggml-cpu-cooperlake.so",
+          "sha256": "b8dd831324fcc7e872ed66f840ead7f3cf7c571904db9b61574fb19ce00a935e",
+          "size": 1573640
+        },
+        {
+          "entry": "llama-b11669/LICENSE",
+          "path": "runtime/llama-0.7.0/LICENSE",
+          "sha256": "94f29bbed6a22c35b992c5c6ebf0e7c92f13b836b90f36f461c9cf2f0f1d010d",
+          "size": 1078
+        },
+        {
+          "entry": "llama-b11669/libllama-server-impl.so",
+          "path": "runtime/llama-0.7.0/libllama-server-impl.so",
+          "sha256": "9119be58c6ffa251c824cdf51677215735d6f4bdab131b17e7e549ff4e1ddcf1",
+          "size": 7533552
+        },
+        {
+          "entry": "llama-b11669/libggml-cpu-piledriver.so",
+          "path": "runtime/llama-0.7.0/libggml-cpu-piledriver.so",
+          "sha256": "c8fec8f0f12d6a1a222c35d265618c582eacc3fd933a76dbd65c587114ed65f0",
+          "size": 1347848
+        },
+        {
+          "entry": "llama-b11669/libggml-cpu-zen4.so",
+          "path": "runtime/llama-0.7.0/libggml-cpu-zen4.so",
+          "sha256": "ccb8fff995e04e532dc535eba4d9a84cccd5acd7612326db14710d302f4a8e2f",
+          "size": 1573640
+        },
+        {
+          "entry": "llama-b11669/libllama.so.0.7.0",
+          "path": "runtime/llama-0.7.0/libllama.so.0",
+          "sha256": "522213ae6b6019ba8d2673e9254990c52f0a1a5fb047c75bfb93be1b34fad839",
+          "size": 5095048
+        },
+        {
+          "entry": "llama-b11669/llama-server",
+          "path": "runtime/llama-0.7.0/llama-server",
+          "sha256": "3f2b53013c2eb596c8aca87e4740240a41f95bcebf72e61084d6d5ba0db761cc",
+          "size": 17864,
+          "executable": true
+        },
+        {
+          "entry": "llama-b11669/libggml-rpc.so",
+          "path": "runtime/llama-0.7.0/libggml-rpc.so",
+          "sha256": "e28139e2d982fb057b88d243e5b2e9d72c52f8b98ae910b1cf751240ef1f9803",
+          "size": 319776
+        },
+        {
+          "entry": "llama-b11669/libggml-base.so.0.27.0",
+          "path": "runtime/llama-0.7.0/libggml-base.so.0",
+          "sha256": "2c6ac9a8ae7c1455382c50587fe7d275e0607dfdaec4dcdb18689f31f6174c65",
+          "size": 897792
+        },
+        {
+          "entry": "llama-b11669/libggml-cpu-alderlake.so",
+          "path": "runtime/llama-0.7.0/libggml-cpu-alderlake.so",
+          "sha256": "703dc62b89d2a6d700b8d276b3b4ae994caa3a315588b6038b4511549c4a308b",
+          "size": 1416296
+        },
+        {
+          "entry": "llama-b11669/libggml-cpu-sse42.so",
+          "path": "runtime/llama-0.7.0/libggml-cpu-sse42.so",
+          "sha256": "81d37cdf3002c8f8f9d44e90fff3d058c4952782aaec1d97bcb375c4db10c659",
+          "size": 954536
+        },
+        {
+          "entry": "llama-b11669/libggml-cpu-haswell.so",
+          "path": "runtime/llama-0.7.0/libggml-cpu-haswell.so",
+          "sha256": "aec8dcc1487baeac0914aa3f6ba747beb868b61cd398e10c40c39addd2f80b64",
+          "size": 1416296
+        },
+        {
+          "entry": "llama-b11669/libmtmd.so.0.7.0",
+          "path": "runtime/llama-0.7.0/libmtmd.so.0",
+          "sha256": "5dc23ec9996bacb9d2791e06848cce30e33901d131a0c61f9cf2b821a587b17e",
+          "size": 1938632
+        },
+        {
+          "entry": "llama-b11669/libggml-cpu-cannonlake.so",
+          "path": "runtime/llama-0.7.0/libggml-cpu-cannonlake.so",
+          "sha256": "b194dc5db78e21796342e573643006bcbd5ac3618b9ccbd08537bae0755c6972",
+          "size": 1565672
+        },
+        {
+          "entry": "llama-b11669/libggml-cpu-sapphirerapids.so",
+          "path": "runtime/llama-0.7.0/libggml-cpu-sapphirerapids.so",
+          "sha256": "8a5d42ed076b212839c656d1e20731fb17b57b9f7ada0197680c735d70f15de2",
+          "size": 1839968
+        },
+        {
+          "entry": "llama-b11669/libllama-common.so.0.7.0",
+          "path": "runtime/llama-0.7.0/libllama-common.so.0",
+          "sha256": "462f7e9ce1c4c537533f1d4530b37201452599d90128c3c602507b315934e795",
+          "size": 6499104
+        },
+        {
+          "entry": "llama-b11669/libggml-cpu-cascadelake.so",
+          "path": "runtime/llama-0.7.0/libggml-cpu-cascadelake.so",
+          "sha256": "47b94135ee53c347bf90461ea7f9c3a055fa19b9462ff220c90f4cfdfdf79a5c",
+          "size": 1577664
+        },
+        {
+          "entry": "llama-b11669/libggml-cpu-sandybridge.so",
+          "path": "runtime/llama-0.7.0/libggml-cpu-sandybridge.so",
+          "sha256": "03a91516104c443a739804eef17c2d02bc6fe428b5399813c7e97e2282d29007",
+          "size": 1350944
+        },
+        {
+          "entry": "llama-b11669/libggml-cpu-ivybridge.so",
+          "path": "runtime/llama-0.7.0/libggml-cpu-ivybridge.so",
+          "sha256": "d2f79bcea05ed9fcf1b9e25bfaa9725655265cb7d7e0df79ffc9e996d1298820",
+          "size": 1351944
+        },
+        {
+          "entry": "llama-b11669/libggml.so.0.27.0",
+          "path": "runtime/llama-0.7.0/libggml.so.0",
+          "sha256": "8643a58bb37af6fb153e2ea98b48efa227855725ee51c05f4ca76b9867956463",
+          "size": 51040
+        },
+        {
+          "entry": "llama-b11669/libggml-cpu-skylakex.so",
+          "path": "runtime/llama-0.7.0/libggml-cpu-skylakex.so",
+          "sha256": "b34c8498cfb5368fd968699df833f956adb35432118074b45c962454ca229515",
+          "size": 1565672
+        },
+        {
+          "entry": "llama-b11669/libggml-cpu-icelake.so",
+          "path": "runtime/llama-0.7.0/libggml-cpu-icelake.so",
+          "sha256": "eb79f0f5193557c52480cac8c85deb0f0e6793dd1cbd05793752071e5be10205",
+          "size": 1577664
+        },
+        {
+          "entry": "llama-b11669/libggml-cpu-x64.so",
+          "path": "runtime/llama-0.7.0/libggml-cpu-x64.so",
+          "sha256": "2d1e8194f441ed4263bb28834cf44801a5e5e0a2592732fab5a2adc76b83290f",
+          "size": 950536
+        }
+      ]
+    },
+    {
+      "id": "ort-linux-amd64",
+      "name": "ONNX Runtime 1.31.0",
+      "group": "runtime",
+      "platform": "linux-amd64",
+      "url": "https://github.com/microsoft/onnxruntime/releases/download/v1.31.0/onnxruntime-linux-x64-1.31.0.tgz",
+      "sha256": "cc5c72baf5ae5c8238a6841f0897227be2d02826b9cf98eaf02fdefaeeb03a57",
+      "size": 11408003,
+      "format": "tgz",
+      "files": [
+        {
+          "entry": "onnxruntime-linux-x64-1.31.0/lib/libonnxruntime_providers_shared.so",
+          "path": "runtime/onnxruntime-linux-x64-1.31.0/lib/libonnxruntime_providers_shared.so",
+          "sha256": "086ec1d5388f64153d9c63470d126693db9a182c8ce236d3a1119068471b8a0d",
+          "size": 14632
+        },
+        {
+          "entry": "onnxruntime-linux-x64-1.31.0/lib/libonnxruntime.so.1.31.0",
+          "path": "runtime/onnxruntime-linux-x64-1.31.0/lib/libonnxruntime.so.1",
+          "sha256": "469849977cb60744ea160927e1a3a0643fd4c55c0aff743251c6d293402e334e",
+          "size": 29345384
+        },
+        {
+          "entry": "onnxruntime-linux-x64-1.31.0/ThirdPartyNotices.txt",
+          "path": "runtime/onnxruntime-linux-x64-1.31.0/ThirdPartyNotices.txt",
+          "sha256": "143764b952fdb1a7c69ce653bfba74a7744d6a8a573bfb73e235fba356c83de3",
+          "size": 338088
+        },
+        {
+          "entry": "onnxruntime-linux-x64-1.31.0/LICENSE",
+          "path": "runtime/onnxruntime-linux-x64-1.31.0/LICENSE",
+          "sha256": "2f07c72751aed99790b8a4869cf2311df85a860b22ded05fa22803587a48922c",
+          "size": 1073
+        }
+      ]
+    },
+    {
+      "id": "ort-cuda-linux-amd64",
+      "name": "ONNX Runtime 1.31.0 · CUDA",
+      "group": "runtime",
+      "platform": "linux-amd64",
+      "url": "https://github.com/microsoft/onnxruntime/releases/download/v1.31.0/onnxruntime-linux-x64-gpu_cuda12-1.31.0.tgz",
+      "sha256": "62d3af5269af2143b5d37494337573f1ffb8885f3ad7477ae0cb1cc79c8dedfd",
+      "size": 450228883,
+      "format": "tgz",
+      "files": [
+        {
+          "entry": "onnxruntime-linux-x64-gpu_cuda12-1.31.0/LICENSE",
+          "path": "runtime/onnxruntime-linux-x64-gpu_cuda12-1.31.0/LICENSE",
+          "sha256": "2f07c72751aed99790b8a4869cf2311df85a860b22ded05fa22803587a48922c",
+          "size": 1073
+        },
+        {
+          "entry": "onnxruntime-linux-x64-gpu_cuda12-1.31.0/lib/libonnxruntime_providers_shared.so",
+          "path": "runtime/onnxruntime-linux-x64-gpu_cuda12-1.31.0/lib/libonnxruntime_providers_shared.so",
+          "sha256": "c6a12593396095f5670160e284c35d1700b7708cf3037b7042e2a5200ccae772",
+          "size": 14632
+        },
+        {
+          "entry": "onnxruntime-linux-x64-gpu_cuda12-1.31.0/lib/libonnxruntime.so.1.31.0",
+          "path": "runtime/onnxruntime-linux-x64-gpu_cuda12-1.31.0/lib/libonnxruntime.so.1",
+          "sha256": "695362d785978cea2c4f8449e995f90239c6d125cae5f9a562efd953b50e75c1",
+          "size": 33076832
+        },
+        {
+          "entry": "onnxruntime-linux-x64-gpu_cuda12-1.31.0/lib/libonnxruntime_providers_cuda.so",
+          "path": "runtime/onnxruntime-linux-x64-gpu_cuda12-1.31.0/lib/libonnxruntime_providers_cuda.so",
+          "sha256": "3c9ed16371ceed88267d03eb64dea7717ccd6138a75cf262ddebde2ef73133b2",
+          "size": 614914552
+        },
+        {
+          "entry": "onnxruntime-linux-x64-gpu_cuda12-1.31.0/ThirdPartyNotices.txt",
+          "path": "runtime/onnxruntime-linux-x64-gpu_cuda12-1.31.0/ThirdPartyNotices.txt",
+          "sha256": "143764b952fdb1a7c69ce653bfba74a7744d6a8a573bfb73e235fba356c83de3",
+          "size": 338088
+        }
+      ]
+    },
+    {
+      "id": "nvidia-cublas-cu12-linux-amd64",
+      "name": "nvidia_cublas_cu12 12.9.2.10",
+      "group": "runtime",
+      "platform": "linux-amd64",
+      "url": "https://files.pythonhosted.org/packages/cb/c0/0a517bfe63ccd3b92eb254d264e28fca3c7cab75d07daea315250fb1bf73/nvidia_cublas_cu12-12.9.2.10-py3-none-manylinux_2_27_x86_64.whl",
+      "sha256": "e4f53a8ca8c5d6e8c492d0d0a3d565ecb59a751b19cfdaa4f6da0ab2104c1702",
+      "size": 581240110,
+      "format": "zip",
+      "files": [
+        {
+          "entry": "nvidia/cublas/lib/libcublas.so.12",
+          "path": "runtime/cuda12/lib/libcublas.so.12",
+          "sha256": "5757ab5839fb4f203ca47ecb336110d10f4a5606b1e097f195fbca89774569e2",
+          "size": 105140976
+        },
+        {
+          "entry": "nvidia/cublas/lib/libcublasLt.so.12",
+          "path": "runtime/cuda12/lib/libcublasLt.so.12",
+          "sha256": "2c9006a75c74b3bea2dc7ae2ec38ab038b0e45ea02cb4b717a915e8a5796acb1",
+          "size": 749210000
+        },
+        {
+          "entry": "nvidia/cublas/lib/libnvblas.so.12",
+          "path": "runtime/cuda12/lib/libnvblas.so.12",
+          "sha256": "188c9ff9a2814220ef99ae8d2ebc2b77614c1e5fb527f93bae66d011ad518fc8",
+          "size": 753824
+        },
+        {
+          "entry": "nvidia_cublas_cu12-12.9.2.10.dist-info/licenses/License.txt",
+          "path": "runtime/cuda12/licenses/nvidia-cublas-cu12-linux-amd64/License.txt",
+          "sha256": "ad6f5853fba0ca0d159d0f58d49ae49830c2f8c93f7a92648b9ce90adb4c6ccd",
+          "size": 59262
+        }
+      ]
+    },
+    {
+      "id": "nvidia-cuda-runtime-cu12-linux-amd64",
+      "name": "nvidia_cuda_runtime_cu12 12.9.79",
+      "group": "runtime",
+      "platform": "linux-amd64",
+      "url": "https://files.pythonhosted.org/packages/bc/46/a92db19b8309581092a3add7e6fceb4c301a3fd233969856a8cbf042cd3c/nvidia_cuda_runtime_cu12-12.9.79-py3-none-manylinux2014_x86_64.manylinux_2_17_x86_64.whl",
+      "sha256": "25bba2dfb01d48a9b59ca474a1ac43c6ebf7011f1b0b8cc44f54eb6ac48a96c3",
+      "size": 3493179,
+      "format": "zip",
+      "files": [
+        {
+          "entry": "nvidia/cuda_runtime/lib/libcudart.so.12",
+          "path": "runtime/cuda12/lib/libcudart.so.12",
+          "sha256": "256e6409e4f06f618e1fb53d4844a6b81cdded1013afa8ade40c22f99eb133b7",
+          "size": 741088
+        },
+        {
+          "entry": "nvidia_cuda_runtime_cu12-12.9.79.dist-info/licenses/License.txt",
+          "path": "runtime/cuda12/licenses/nvidia-cuda-runtime-cu12-linux-amd64/License.txt",
+          "sha256": "ad6f5853fba0ca0d159d0f58d49ae49830c2f8c93f7a92648b9ce90adb4c6ccd",
+          "size": 59262
+        }
+      ]
+    },
+    {
+      "id": "nvidia-curand-cu12-linux-amd64",
+      "name": "nvidia_curand_cu12 10.3.10.19",
+      "group": "runtime",
+      "platform": "linux-amd64",
+      "url": "https://files.pythonhosted.org/packages/31/44/193a0e171750ca9f8320626e8a1f2381e4077a65e69e2fb9708bd479e34a/nvidia_curand_cu12-10.3.10.19-py3-none-manylinux_2_27_x86_64.whl",
+      "sha256": "49b274db4780d421bd2ccd362e1415c13887c53c214f0d4b761752b8f9f6aa1e",
+      "size": 68295626,
+      "format": "zip",
+      "files": [
+        {
+          "entry": "nvidia/curand/lib/libcurand.so.10",
+          "path": "runtime/cuda12/lib/libcurand.so.10",
+          "sha256": "ab8c07338fa663c018b16df5b3f3878c84aaae98bda930e9e8bad340427b0faa",
+          "size": 166965432
+        },
+        {
+          "entry": "nvidia_curand_cu12-10.3.10.19.dist-info/License.txt",
+          "path": "runtime/cuda12/licenses/nvidia-curand-cu12-linux-amd64/License.txt",
+          "sha256": "ad6f5853fba0ca0d159d0f58d49ae49830c2f8c93f7a92648b9ce90adb4c6ccd",
+          "size": 59262
+        }
+      ]
+    },
+    {
+      "id": "nvidia-cudnn-cu12-linux-amd64",
+      "name": "nvidia_cudnn_cu12 9.27.0.42",
+      "group": "runtime",
+      "platform": "linux-amd64",
+      "url": "https://files.pythonhosted.org/packages/65/e4/c5a205d48ff00ed8b27882bb45d338d8138e976c76385f328a326bbfaeda/nvidia_cudnn_cu12-9.27.0.42-py3-none-manylinux_2_27_x86_64.whl",
+      "sha256": "0a4aa3a7d2264256506c6857fc41fc0c499982f78d70195b1cfcc9055c1957cd",
+      "size": 766178381,
+      "format": "zip",
+      "files": [
+        {
+          "entry": "nvidia/cudnn/lib/libcudnn.so.9",
+          "path": "runtime/cuda12/lib/libcudnn.so.9",
+          "sha256": "4c3ccb552ee0c43aacca7498e12914fbda31be4fcb52cbdc1aaa87e78fb96e19",
+          "size": 133336
+        },
+        {
+          "entry": "nvidia/cudnn/lib/libcudnn_adv.so.9",
+          "path": "runtime/cuda12/lib/libcudnn_adv.so.9",
+          "sha256": "6fb2f7455e690d77df3351483be3abd23c7b26c85cb2b70fe62abd27c0a14fa2",
+          "size": 274846904
+        },
+        {
+          "entry": "nvidia/cudnn/lib/libcudnn_cnn.so.9",
+          "path": "runtime/cuda12/lib/libcudnn_cnn.so.9",
+          "sha256": "0bc150ee4d6ed549287a5e2c04f3284155b208a22084543b6af2ec6521e02561",
+          "size": 4203880
+        },
+        {
+          "entry": "nvidia/cudnn/lib/libcudnn_engines_precompiled.so.9",
+          "path": "runtime/cuda12/lib/libcudnn_engines_precompiled.so.9",
+          "sha256": "106171d50adb53c263c9ce8e83d3b257fe231731372dbb72d31520fa58fae7d1",
+          "size": 566255968
+        },
+        {
+          "entry": "nvidia/cudnn/lib/libcudnn_engines_runtime_compiled.so.9",
+          "path": "runtime/cuda12/lib/libcudnn_engines_runtime_compiled.so.9",
+          "sha256": "3f480e78a61ab16d54263c0397f62f57915af67213752b8e7235e74f4b027a36",
+          "size": 48269728
+        },
+        {
+          "entry": "nvidia/cudnn/lib/libcudnn_engines_tensor_ir.so.9",
+          "path": "runtime/cuda12/lib/libcudnn_engines_tensor_ir.so.9",
+          "sha256": "805ec06f754944c107ce4e2c234a3a190a8e42d5b4bfae82a9128460fd5959bd",
+          "size": 2099128
+        },
+        {
+          "entry": "nvidia/cudnn/lib/libcudnn_ext.so.9",
+          "path": "runtime/cuda12/lib/libcudnn_ext.so.9",
+          "sha256": "fb7f46eaaadd2c81bda58504726058fa4bbbe76cbc87073c271513152f0ab9dd",
+          "size": 8401752
+        },
+        {
+          "entry": "nvidia/cudnn/lib/libcudnn_graph.so.9",
+          "path": "runtime/cuda12/lib/libcudnn_graph.so.9",
+          "sha256": "28aaa0dc993c91d7c537846d3409a45dd71b94097c4794aedf9aac8a98a0bac8",
+          "size": 115562616
+        },
+        {
+          "entry": "nvidia/cudnn/lib/libcudnn_heuristic.so.9",
+          "path": "runtime/cuda12/lib/libcudnn_heuristic.so.9",
+          "sha256": "0f8bebd3f041bdce10e11c7981f3cd397e90e1f953215b6afa1c37b1d65db15a",
+          "size": 96473880
+        },
+        {
+          "entry": "nvidia/cudnn/lib/libcudnn_ops.so.9",
+          "path": "runtime/cuda12/lib/libcudnn_ops.so.9",
+          "sha256": "e6c3242e8ea81fdc9b33d6a20144cab7ba246d2a4bb6b9ed31f0894be55921e4",
+          "size": 106964664
+        },
+        {
+          "entry": "nvidia_cudnn_cu12-9.27.0.42.dist-info/licenses/License.txt",
+          "path": "runtime/cuda12/licenses/nvidia-cudnn-cu12-linux-amd64/License.txt",
+          "sha256": "49cf79bdb35734b52fe6203013b3bd759f81e998cd32aa2c65c51db9a88c61d2",
+          "size": 18174
+        }
+      ]
+    },
+    {
+      "id": "nvidia-cuda-nvrtc-cu12-linux-amd64",
+      "name": "nvidia_cuda_nvrtc_cu12 12.9.86",
+      "group": "runtime",
+      "platform": "linux-amd64",
+      "url": "https://files.pythonhosted.org/packages/b8/85/e4af82cc9202023862090bfca4ea827d533329e925c758f0cde964cb54b7/nvidia_cuda_nvrtc_cu12-12.9.86-py3-none-manylinux2010_x86_64.manylinux_2_12_x86_64.whl",
+      "sha256": "210cf05005a447e29214e9ce50851e83fc5f4358df8b453155d5e1918094dcb4",
+      "size": 89568129,
+      "format": "zip",
+      "files": [
+        {
+          "entry": "nvidia/cuda_nvrtc/lib/libnvrtc-builtins.alt.so.12.9",
+          "path": "runtime/cuda12/lib/libnvrtc-builtins.alt.so.12.9",
+          "sha256": "5246bbfb25da49f7107b6a3ae9bb337fb45bce0178f97a431ce8a88113b2283c",
+          "size": 7169992
+        },
+        {
+          "entry": "nvidia/cuda_nvrtc/lib/libnvrtc-builtins.so.12.9",
+          "path": "runtime/cuda12/lib/libnvrtc-builtins.so.12.9",
+          "sha256": "6507cf33450cfb22970c2c1e7aa8e7c0a33e39d864720277b05f61a92791e2e8",
+          "size": 7202760
+        },
+        {
+          "entry": "nvidia/cuda_nvrtc/lib/libnvrtc.alt.so.12",
+          "path": "runtime/cuda12/lib/libnvrtc.alt.so.12",
+          "sha256": "0da838ec1266d7d12409927a8b5f00aecea29bf97b359f4462877bf6ecb5997e",
+          "size": 106723760
+        },
+        {
+          "entry": "nvidia/cuda_nvrtc/lib/libnvrtc.so.12",
+          "path": "runtime/cuda12/lib/libnvrtc.so.12",
+          "sha256": "7c67c6b51ea0e0279634cebd676ff7efda1674806444520c84430ad5c35fe625",
+          "size": 106244480
+        },
+        {
+          "entry": "nvidia_cuda_nvrtc_cu12-12.9.86.dist-info/licenses/License.txt",
+          "path": "runtime/cuda12/licenses/nvidia-cuda-nvrtc-cu12-linux-amd64/License.txt",
+          "sha256": "ad6f5853fba0ca0d159d0f58d49ae49830c2f8c93f7a92648b9ce90adb4c6ccd",
+          "size": 59262
+        }
+      ]
+    },
+    {
+      "id": "nvidia-nvjitlink-cu12-linux-amd64",
+      "name": "nvidia_nvjitlink_cu12 12.9.86",
+      "group": "runtime",
+      "platform": "linux-amd64",
+      "url": "https://files.pythonhosted.org/packages/46/0c/c75bbfb967457a0b7670b8ad267bfc4fffdf341c074e0a80db06c24ccfd4/nvidia_nvjitlink_cu12-12.9.86-py3-none-manylinux2010_x86_64.manylinux_2_12_x86_64.whl",
+      "sha256": "e3f1171dbdc83c5932a45f0f4c99180a70de9bd2718c1ab77d14104f6d7147f9",
+      "size": 39748338,
+      "format": "zip",
+      "files": [
+        {
+          "entry": "nvidia/nvjitlink/lib/libnvJitLink.so.12",
+          "path": "runtime/cuda12/lib/libnvJitLink.so.12",
+          "sha256": "02d3acb5fe598dd20f0fca3cc03734ad164037a22747a01900561a42d0b8448f",
+          "size": 95935344
+        },
+        {
+          "entry": "nvidia_nvjitlink_cu12-12.9.86.dist-info/licenses/License.txt",
+          "path": "runtime/cuda12/licenses/nvidia-nvjitlink-cu12-linux-amd64/License.txt",
+          "sha256": "ad6f5853fba0ca0d159d0f58d49ae49830c2f8c93f7a92648b9ce90adb4c6ccd",
+          "size": 59262
+        }
+      ]
+    },
+    {
+      "id": "ort-directml-windows-amd64",
+      "name": "ONNX Runtime 1.24.4 · DirectML",
+      "group": "runtime",
+      "platform": "windows-amd64",
+      "url": "https://api.nuget.org/v3-flatcontainer/microsoft.ml.onnxruntime.directml/1.24.4/microsoft.ml.onnxruntime.directml.1.24.4.nupkg",
+      "sha256": "57e9f11b73437bef7a309496135d4c1f96b1a8e9ddba60013fa27bfc1d788681",
+      "size": 12458649,
+      "format": "zip",
+      "files": [
+        {
+          "entry": "LICENSE",
+          "path": "runtime/onnxruntime-directml-1.24.4/LICENSE",
+          "sha256": "c250d6278f0b47a6439fb7592b08b58a55eb9f535aa49a1db63211c3f982b674",
+          "size": 1094
+        },
+        {
+          "entry": "runtimes/win-x64/native/onnxruntime.dll",
+          "path": "runtime/onnxruntime-directml-1.24.4/onnxruntime.dll",
+          "sha256": "e7eedec6a6f26dc39dc948276a75ef6d2bee3fff944d874ceed0bbd3b97bff40",
+          "size": 17328152
+        },
+        {
+          "entry": "runtimes/win-x64/native/onnxruntime_providers_shared.dll",
+          "path": "runtime/onnxruntime-directml-1.24.4/onnxruntime_providers_shared.dll",
+          "sha256": "265c8daf29637cb259cac8be9f08f2cd45f3883f0f0e4949cbfddd5b4cbec3b6",
+          "size": 22040
+        },
+        {
+          "entry": "ThirdPartyNotices.txt",
+          "path": "runtime/onnxruntime-directml-1.24.4/ThirdPartyNotices.txt",
+          "sha256": "fb0af774b4d7cffc5b9d046f2aaeade2f37df2f80abf8033c95dfffcc77a8866",
+          "size": 331175
+        }
+      ]
+    },
+    {
+      "id": "directml-windows-amd64",
+      "name": "DirectML 1.15.4",
+      "group": "runtime",
+      "platform": "windows-amd64",
+      "url": "https://api.nuget.org/v3-flatcontainer/microsoft.ai.directml/1.15.4/microsoft.ai.directml.1.15.4.nupkg",
+      "sha256": "4e7cb7ddce8cf837a7a75dc029209b520ca0101470fcdf275c1f49736a3615b9",
+      "size": 202292617,
+      "format": "zip",
+      "files": [
+        {
+          "entry": "LICENSE.txt",
+          "path": "runtime/onnxruntime-directml-1.24.4/LICENSE.txt",
+          "sha256": "a05138e3a085ff60a44881eedfa58dccb03ecc1d7b1f6ae888418e8c2fec4b8d",
+          "size": 10439
+        },
+        {
+          "entry": "bin/x64-win/DirectML.dll",
+          "path": "runtime/onnxruntime-directml-1.24.4/DirectML.dll",
+          "sha256": "9c9e6d822561c6c41b90e6994b3e8857cf1d66dbfb1e0c4c799c7c89b4e92da1",
+          "size": 18527776
+        }
+      ]
+    },
+    {
+      "id": "litert-linux-amd64",
+      "name": "LiteRT 2.3.1",
+      "group": "runtime",
+      "platform": "linux-amd64",
+      "url": "https://storage.googleapis.com/litert/binaries/2.3.1/linux_x86_64/libLiteRt.so",
+      "sha256": "df0c7e48b5407f37b499bcd2238bfdd61550efc23211a0c41bfc58ce6cbe82e4",
+      "size": 11095568,
+      "format": "raw",
+      "files": [
+        {
+          "path": "runtime/litert-2.3.1/libLiteRt.so",
+          "sha256": "df0c7e48b5407f37b499bcd2238bfdd61550efc23211a0c41bfc58ce6cbe82e4",
+          "size": 11095568
+        }
+      ]
+    },
+    {
+      "id": "engine-linux-amd64",
+      "name": "Manga 이미지 API",
+      "group": "application",
+      "platform": "linux-amd64",
+      "url": "embedded:engine/linux-amd64.gz",
+      "sha256": "0353ff7824fea33b31e4a45152189de1b9701abde59352e5fb1ffc97561c250e",
+      "size": 4981296,
+      "format": "gzip",
+      "files": [
+        {
+          "path": "bin/manga-translator-server",
+          "sha256": "3a129ffa729ab5023b625fc0e55733e3e593fd50ceb28605978ffe1f3efe4566",
+          "size": 20086560,
+          "executable": true
+        }
+      ]
+    },
+    {
+      "id": "ort-cuda-linux-arm64",
+      "name": "ONNX Runtime 1.31.0 · CUDA 13",
+      "group": "runtime",
+      "platform": "linux-arm64",
+      "url": "https://files.pythonhosted.org/packages/a5/09/35056a35bed6928e54200344af636b76249c3407688c4095c2b88cc950c8/onnxruntime_gpu-1.31.0-cp312-cp312-manylinux_2_34_aarch64.whl",
+      "sha256": "f2bf79ef829f3a17cc038f1a4c5abfeb686e1d3349def8d50323503854ffa515",
+      "size": 212350852,
+      "format": "zip",
+      "files": [
+        {
+          "entry": "onnxruntime/LICENSE",
+          "path": "runtime/onnxruntime-cuda13-1.31.0/LICENSE",
+          "sha256": "2f07c72751aed99790b8a4869cf2311df85a860b22ded05fa22803587a48922c",
+          "size": 1073
+        },
+        {
+          "entry": "onnxruntime/ThirdPartyNotices.txt",
+          "path": "runtime/onnxruntime-cuda13-1.31.0/ThirdPartyNotices.txt",
+          "sha256": "143764b952fdb1a7c69ce653bfba74a7744d6a8a573bfb73e235fba356c83de3",
+          "size": 338088
+        },
+        {
+          "entry": "onnxruntime/capi/libonnxruntime.so.1.31.0",
+          "path": "runtime/onnxruntime-cuda13-1.31.0/libonnxruntime.so.1",
+          "sha256": "f3bc844526a562ad28e6056d116411388d57973d236da10f79cf634274291c0d",
+          "size": 25002552
+        },
+        {
+          "entry": "onnxruntime/capi/libonnxruntime_providers_cuda.so",
+          "path": "runtime/onnxruntime-cuda13-1.31.0/libonnxruntime_providers_cuda.so",
+          "sha256": "fec15dca570a993d79003d329d141b0d87164bbcf8f6c6a00971bfbb49ab19c6",
+          "size": 237922800
+        },
+        {
+          "entry": "onnxruntime/capi/libonnxruntime_providers_shared.so",
+          "path": "runtime/onnxruntime-cuda13-1.31.0/libonnxruntime_providers_shared.so",
+          "sha256": "1fc9a38c51a15164ae7d126f4e89447e718e47bd0a934eaa1a86bb60a6ec4955",
+          "size": 198792
+        }
+      ]
+    },
+    {
+      "id": "nvidia-cublas-linux-arm64",
+      "name": "nvidia-cublas 13.8.1.7",
+      "group": "runtime",
+      "platform": "linux-arm64",
+      "url": "https://files.pythonhosted.org/packages/35/ea/54b9b5f0e0317cc1587353324e6821e16212693c3fde021d88919eaeee2f/nvidia_cublas-13.8.1.7-py3-none-manylinux_2_27_aarch64.whl",
+      "sha256": "803b9974cd7164a481d0b11c25826498d383d0ef0c372573bc6577a344ddf74e",
+      "size": 552728945,
+      "format": "zip",
+      "files": [
+        {
+          "entry": "nvidia/cu13/lib/libcublas.so.13",
+          "path": "runtime/cuda13/lib/libcublas.so.13",
+          "sha256": "80b97ca3028009b3ad5891a7560a59a56a0bfbeaceb0b5b29a5b13304d2657a3",
+          "size": 71959256
+        },
+        {
+          "entry": "nvidia/cu13/lib/libcublasLt.so.13",
+          "path": "runtime/cuda13/lib/libcublasLt.so.13",
+          "sha256": "a74b98fbd62e148617b509eed11cf804d9e32b8054fd32cc098e1126bb581bbe",
+          "size": 648206112
+        },
+        {
+          "entry": "nvidia/cu13/lib/libnvblas.so.13",
+          "path": "runtime/cuda13/lib/libnvblas.so.13",
+          "sha256": "e3d6f2ae1a66d38bcc8c9bfa329a4c4ef6f2b4c3b1b57a1f0c3788f2d8ec409a",
+          "size": 736784
+        },
+        {
+          "entry": "nvidia_cublas-13.8.1.7.dist-info/licenses/License.txt",
+          "path": "runtime/cuda13/licenses/nvidia-cublas-linux-arm64/License.txt",
+          "sha256": "ad6f5853fba0ca0d159d0f58d49ae49830c2f8c93f7a92648b9ce90adb4c6ccd",
+          "size": 59262
+        }
+      ]
+    },
+    {
+      "id": "nvidia-cuda-runtime-linux-arm64",
+      "name": "nvidia-cuda-runtime 13.4.92",
+      "group": "runtime",
+      "platform": "linux-arm64",
+      "url": "https://files.pythonhosted.org/packages/51/3b/2c6e9d88efa7b3585572760bca5e7da83fa9e06098a9386c7b29c81c46b2/nvidia_cuda_runtime-13.4.92-py3-none-manylinux2014_aarch64.manylinux_2_17_aarch64.whl",
+      "sha256": "bef071788589550ab02846fcbc732a2b88c2b16f2cd8a0f45d98e68e8c5fb0c8",
+      "size": 2509438,
+      "format": "zip",
+      "files": [
+        {
+          "entry": "nvidia/cu13/lib/libcudart.so.13",
+          "path": "runtime/cuda13/lib/libcudart.so.13",
+          "sha256": "5787a422ae23e45ab2f38f687f44b21b4d8aa0428fc3171cab80566211710967",
+          "size": 793872
+        },
+        {
+          "entry": "nvidia_cuda_runtime-13.4.92.dist-info/licenses/License.txt",
+          "path": "runtime/cuda13/licenses/nvidia-cuda-runtime-linux-arm64/License.txt",
+          "sha256": "ad6f5853fba0ca0d159d0f58d49ae49830c2f8c93f7a92648b9ce90adb4c6ccd",
+          "size": 59262
+        }
+      ]
+    },
+    {
+      "id": "nvidia-curand-linux-arm64",
+      "name": "nvidia-curand 10.4.4.72",
+      "group": "runtime",
+      "platform": "linux-arm64",
+      "url": "https://files.pythonhosted.org/packages/e8/9d/42faff77e90e5498eecb9b099894d5deea744b3d6b35e700dafd0381e07a/nvidia_curand-10.4.4.72-py3-none-manylinux_2_27_aarch64.whl",
+      "sha256": "53bef256d4362eb3d70c9c048a8d31bcf003f9dcade17720c73d3a494a7dcaa3",
+      "size": 63771251,
+      "format": "zip",
+      "files": [
+        {
+          "entry": "nvidia/cu13/lib/libcurand.so.10",
+          "path": "runtime/cuda13/lib/libcurand.so.10",
+          "sha256": "d33d7546b11ba6946856a5f346a0e0f5f44474666cc505d68bc7b76500cca29f",
+          "size": 136236248
+        },
+        {
+          "entry": "nvidia_curand-10.4.4.72.dist-info/licenses/License.txt",
+          "path": "runtime/cuda13/licenses/nvidia-curand-linux-arm64/License.txt",
+          "sha256": "ad6f5853fba0ca0d159d0f58d49ae49830c2f8c93f7a92648b9ce90adb4c6ccd",
+          "size": 59262
+        }
+      ]
+    },
+    {
+      "id": "nvidia-cudnn-cu13-linux-arm64",
+      "name": "nvidia-cudnn-cu13 9.27.0.42",
+      "group": "runtime",
+      "platform": "linux-arm64",
+      "url": "https://files.pythonhosted.org/packages/ff/c4/ecae6a5da85c256f6b378648bf5b7ef561bb4b56e0d2af868ef6c484c34c/nvidia_cudnn_cu13-9.27.0.42-py3-none-manylinux_2_27_aarch64.whl",
+      "sha256": "41b3aae756032ed13b1fcac39c79330cfc5434059d0c5251914e0f6ce582c7ea",
+      "size": 614353993,
+      "format": "zip",
+      "files": [
+        {
+          "entry": "nvidia/cudnn/lib/libcudnn.so.9",
+          "path": "runtime/cuda13/lib/libcudnn.so.9",
+          "sha256": "9825e0a6d9d06a2a9a6b9ee4ff152e0356b941f6577c0f8e36b19062a9507c18",
+          "size": 6330608
+        },
+        {
+          "entry": "nvidia/cudnn/lib/libcudnn_adv.so.9",
+          "path": "runtime/cuda13/lib/libcudnn_adv.so.9",
+          "sha256": "2976f1786d61ba87976c53d9a6e268ea65726dd643b5c07438d3e488d0087803",
+          "size": 128044752
+        },
+        {
+          "entry": "nvidia/cudnn/lib/libcudnn_cnn.so.9",
+          "path": "runtime/cuda13/lib/libcudnn_cnn.so.9",
+          "sha256": "536245211dd5089272401611cc0878badd7a6b3d28e9531d2d6ae31567e45f60",
+          "size": 2436320
+        },
+        {
+          "entry": "nvidia/cudnn/lib/libcudnn_engines_precompiled.so.9",
+          "path": "runtime/cuda13/lib/libcudnn_engines_precompiled.so.9",
+          "sha256": "cb04f269505ae8f04a8440ed22c0ac5b8a7403cb10f10e66d42720564a93d574",
+          "size": 327172568
+        },
+        {
+          "entry": "nvidia/cudnn/lib/libcudnn_engines_runtime_compiled.so.9",
+          "path": "runtime/cuda13/lib/libcudnn_engines_runtime_compiled.so.9",
+          "sha256": "f391c6cba2845bba28448d28037c70c1c714b0936eddee11f8cbe634d3972a43",
+          "size": 44065064
+        },
+        {
+          "entry": "nvidia/cudnn/lib/libcudnn_engines_tensor_ir.so.9",
+          "path": "runtime/cuda13/lib/libcudnn_engines_tensor_ir.so.9",
+          "sha256": "6064b057ddcc7e09a70eb2c41e99c544b69d2a68eb29b537f40f15f84f0f1e8f",
+          "size": 211822776
+        },
+        {
+          "entry": "nvidia/cudnn/lib/libcudnn_ext.so.9",
+          "path": "runtime/cuda13/lib/libcudnn_ext.so.9",
+          "sha256": "8256dedebb73d5a24b5cea75be4b7e753c8716444df50181ed8527753bf728bd",
+          "size": 8069384
+        },
+        {
+          "entry": "nvidia/cudnn/lib/libcudnn_graph.so.9",
+          "path": "runtime/cuda13/lib/libcudnn_graph.so.9",
+          "sha256": "6f272da7e092c4f399455115f9b735e68cb60f15d9f652c607f7cf6965bc4a14",
+          "size": 128144496
+        },
+        {
+          "entry": "nvidia/cudnn/lib/libcudnn_heuristic.so.9",
+          "path": "runtime/cuda13/lib/libcudnn_heuristic.so.9",
+          "sha256": "348cf8738d9aad5bac671389f3865461c956ef64521bf0405ddcbc57c675e91d",
+          "size": 100666792
+        },
+        {
+          "entry": "nvidia/cudnn/lib/libcudnn_ops.so.9",
+          "path": "runtime/cuda13/lib/libcudnn_ops.so.9",
+          "sha256": "c13b61bd30ae9c79e1ec9edde509f90e1ad006d9b56275b79e8e6edf443e8b54",
+          "size": 50342800
+        },
+        {
+          "entry": "nvidia_cudnn_cu13-9.27.0.42.dist-info/licenses/License.txt",
+          "path": "runtime/cuda13/licenses/nvidia-cudnn-cu13-linux-arm64/License.txt",
+          "sha256": "49cf79bdb35734b52fe6203013b3bd759f81e998cd32aa2c65c51db9a88c61d2",
+          "size": 18174
+        }
+      ]
+    },
+    {
+      "id": "nvidia-cuda-nvrtc-linux-arm64",
+      "name": "nvidia-cuda-nvrtc 13.4.92",
+      "group": "runtime",
+      "platform": "linux-arm64",
+      "url": "https://files.pythonhosted.org/packages/4f/73/cf76dc0083d68bd1e29309bc51fc95ada28d4b64d341e945eb3f8ec8edec/nvidia_cuda_nvrtc-13.4.92-py3-none-manylinux2014_aarch64.manylinux_2_17_aarch64.whl",
+      "sha256": "24b9f5eccc6a5a19779038cf468aecb7cecfa8716269beaef5640bd989d21c28",
+      "size": 50927348,
+      "format": "zip",
+      "files": [
+        {
+          "entry": "nvidia/cu13/lib/libnvrtc-builtins.so.13.4",
+          "path": "runtime/cuda13/lib/libnvrtc-builtins.so.13.4",
+          "sha256": "b696149a7ba1513ee7e7f2935d8c0975e6310ab4b949c812ebd3ca039da0e578",
+          "size": 7108392
+        },
+        {
+          "entry": "nvidia/cu13/lib/libnvrtc.so.13",
+          "path": "runtime/cuda13/lib/libnvrtc.so.13",
+          "sha256": "b2321bac3786ed53d0a28c0281e6070abf7a6ebec61cedebdc766d81f7092cc8",
+          "size": 115809136
+        },
+        {
+          "entry": "nvidia_cuda_nvrtc-13.4.92.dist-info/licenses/License.txt",
+          "path": "runtime/cuda13/licenses/nvidia-cuda-nvrtc-linux-arm64/License.txt",
+          "sha256": "ad6f5853fba0ca0d159d0f58d49ae49830c2f8c93f7a92648b9ce90adb4c6ccd",
+          "size": 59262
+        }
+      ]
+    },
+    {
+      "id": "nvidia-nvjitlink-linux-arm64",
+      "name": "nvidia-nvjitlink 13.4.92",
+      "group": "runtime",
+      "platform": "linux-arm64",
+      "url": "https://files.pythonhosted.org/packages/1f/a8/1cbd4014898af8b419e69b0d7dbc63da2121ee92d92b47d59f4fe9075349/nvidia_nvjitlink-13.4.92-py3-none-manylinux2014_aarch64.manylinux_2_17_aarch64.whl",
+      "sha256": "25f74fad0d654271c921ac4dca614bd6258bc21791242fc7b2289dad7ae9c099",
+      "size": 40420120,
+      "format": "zip",
+      "files": [
+        {
+          "entry": "nvidia/cu13/lib/libnvJitLink.so.13",
+          "path": "runtime/cuda13/lib/libnvJitLink.so.13",
+          "sha256": "14a24d0e7e23625c0503b2c502f66da9788c1a6ed0c5461433b315760d375a92",
+          "size": 93911560
+        },
+        {
+          "entry": "nvidia_nvjitlink-13.4.92.dist-info/licenses/License.txt",
+          "path": "runtime/cuda13/licenses/nvidia-nvjitlink-linux-arm64/License.txt",
+          "sha256": "ad6f5853fba0ca0d159d0f58d49ae49830c2f8c93f7a92648b9ce90adb4c6ccd",
+          "size": 59262
+        }
+      ]
+    },
+    {
+      "id": "ocr-baberu-license",
+      "name": "Baberu OCR · LICENSE",
+      "group": "ocr",
+      "platform": "all",
+      "url": "https://huggingface.co/genshiai-daichi/baberu-ocr/resolve/b9868433dbda3ed9ba1357d008599ff4ada873d5/LICENSE",
+      "sha256": "186332043e82fcfdbeb0b8e0e8d77b63d97ffa3dd9d91ccf7cef1377d8ab345b",
+      "size": 11348,
+      "format": "raw",
+      "files": [
+        {
+          "path": "models/genshiai-daichi__baberu-ocr/LICENSE",
+          "sha256": "186332043e82fcfdbeb0b8e0e8d77b63d97ffa3dd9d91ccf7cef1377d8ab345b",
+          "size": 11348
+        }
+      ]
+    },
+    {
+      "id": "ocr-baberu-readme-md",
+      "name": "Baberu OCR · README.md",
+      "group": "ocr",
+      "platform": "all",
+      "url": "https://huggingface.co/genshiai-daichi/baberu-ocr/resolve/b9868433dbda3ed9ba1357d008599ff4ada873d5/README.md",
+      "sha256": "d31cd71973dc91247ab791cb376890101a13e32cc1e41b8ebf991c919a75c416",
+      "size": 17798,
+      "format": "raw",
+      "files": [
+        {
+          "path": "models/genshiai-daichi__baberu-ocr/README.md",
+          "sha256": "d31cd71973dc91247ab791cb376890101a13e32cc1e41b8ebf991c919a75c416",
+          "size": 17798
+        }
+      ]
+    },
+    {
+      "id": "ocr-baberu-tokenizer-vocab-json",
+      "name": "Baberu OCR · tokenizer/vocab.json",
+      "group": "ocr",
+      "platform": "all",
+      "url": "https://huggingface.co/genshiai-daichi/baberu-ocr/resolve/b9868433dbda3ed9ba1357d008599ff4ada873d5/tokenizer/vocab.json",
+      "sha256": "681de4eb83154a397af49e2ddae4705041b12a22e16fe00860b829e889e5f47c",
+      "size": 130761,
+      "format": "raw",
+      "files": [
+        {
+          "path": "models/genshiai-daichi__baberu-ocr/tokenizer/vocab.json",
+          "sha256": "681de4eb83154a397af49e2ddae4705041b12a22e16fe00860b829e889e5f47c",
+          "size": 130761
+        }
+      ]
+    },
+    {
+      "id": "ocr-baberu-onnx-decoder-prefill-int8-onnx",
+      "name": "Baberu OCR · onnx/decoder_prefill_int8.onnx",
+      "group": "ocr",
+      "platform": "all",
+      "url": "https://huggingface.co/genshiai-daichi/baberu-ocr/resolve/b9868433dbda3ed9ba1357d008599ff4ada873d5/onnx/decoder_prefill_int8.onnx",
+      "sha256": "187a59cb61d3870f1f97c9eb027eb34ff19d023fba801cda113a13870be0b724",
+      "size": 35133596,
+      "format": "raw",
+      "files": [
+        {
+          "path": "models/genshiai-daichi__baberu-ocr/onnx/decoder_prefill_int8.onnx",
+          "sha256": "187a59cb61d3870f1f97c9eb027eb34ff19d023fba801cda113a13870be0b724",
+          "size": 35133596
+        }
+      ]
+    },
+    {
+      "id": "ocr-baberu-onnx-decoder-step-int8-onnx",
+      "name": "Baberu OCR · onnx/decoder_step_int8.onnx",
+      "group": "ocr",
+      "platform": "all",
+      "url": "https://huggingface.co/genshiai-daichi/baberu-ocr/resolve/b9868433dbda3ed9ba1357d008599ff4ada873d5/onnx/decoder_step_int8.onnx",
+      "sha256": "46640b0b3db77f0f0eef660bbe5dc9126a5e0fb49eb2786b2edba7b0371d9769",
+      "size": 34715466,
+      "format": "raw",
+      "files": [
+        {
+          "path": "models/genshiai-daichi__baberu-ocr/onnx/decoder_step_int8.onnx",
+          "sha256": "46640b0b3db77f0f0eef660bbe5dc9126a5e0fb49eb2786b2edba7b0371d9769",
+          "size": 34715466
+        }
+      ]
+    },
+    {
+      "id": "ocr-baberu-onnx-vision-int4-onnx",
+      "name": "Baberu OCR · onnx/vision_int4.onnx",
+      "group": "ocr",
+      "platform": "all",
+      "url": "https://huggingface.co/genshiai-daichi/baberu-ocr/resolve/b9868433dbda3ed9ba1357d008599ff4ada873d5/onnx/vision_int4.onnx",
+      "sha256": "1967ecef502e4c1e1e7c512ea0a2e06396b39ded87a8a9cc77bd7db2e981a361",
+      "size": 52293486,
+      "format": "raw",
+      "files": [
+        {
+          "path": "models/genshiai-daichi__baberu-ocr/onnx/vision_int4.onnx",
+          "sha256": "1967ecef502e4c1e1e7c512ea0a2e06396b39ded87a8a9cc77bd7db2e981a361",
+          "size": 52293486
+        }
+      ]
+    },
+    {
+      "id": "ocr-baberu-onnx-vision-fp16-onnx",
+      "name": "Baberu OCR · onnx/vision_fp16.onnx",
+      "group": "ocr",
+      "platform": "all",
+      "url": "https://huggingface.co/genshiai-daichi/baberu-ocr/resolve/b9868433dbda3ed9ba1357d008599ff4ada873d5/onnx/vision_fp16.onnx",
+      "sha256": "12dd22685ea75c0da3166be9dc3c2622a21d99a9919320d9192702f388e55e5c",
+      "size": 172917304,
+      "format": "raw",
+      "files": [
+        {
+          "path": "models/genshiai-daichi__baberu-ocr/onnx/vision_fp16.onnx",
+          "sha256": "12dd22685ea75c0da3166be9dc3c2622a21d99a9919320d9192702f388e55e5c",
+          "size": 172917304
+        }
+      ]
+    }
+  ],
+  "licenses": [
+    {
+      "name": "Koharu / Manga109",
+      "url": "https://huggingface.co/mayocream/koharu-layout-rfdetr-seg-2xl-1152",
+      "license": "other/custom"
+    },
+    {
+      "name": "Hayai OCR",
+      "url": "https://huggingface.co/JustANormalTinkerer/hayai-ocr-v2-tflite",
+      "license": "Apache-2.0"
+    },
+    {
+      "name": "Gemma",
+      "url": "https://ai.google.dev/gemma/terms",
+      "license": "Gemma Terms"
+    },
+    {
+      "name": "ONNX Runtime",
+      "url": "https://github.com/microsoft/onnxruntime",
+      "license": "MIT"
+    },
+    {
+      "name": "LiteRT",
+      "url": "https://github.com/google-ai-edge/LiteRT",
+      "license": "Apache-2.0"
+    },
+    {
+      "name": "llama.cpp",
+      "url": "https://github.com/ggml-org/llama.cpp",
+      "license": "MIT"
+    },
+    {
+      "name": "purego",
+      "url": "https://github.com/ebitengine/purego",
+      "license": "Apache-2.0"
+    },
+    {
+      "name": "NVIDIA CUDA libraries",
+      "url": "https://docs.nvidia.com/cuda/eula/index.html",
+      "license": "NVIDIA CUDA EULA"
+    },
+    {
+      "name": "NVIDIA cuDNN",
+      "url": "https://docs.nvidia.com/deeplearning/cudnn/backend/latest/reference/eula.html",
+      "license": "NVIDIA cuDNN license"
+    },
+    {
+      "name": "DirectML",
+      "url": "https://www.nuget.org/packages/Microsoft.AI.DirectML/1.15.4",
+      "license": "Microsoft license"
+    },
+    {
+      "name": "Baberu OCR · weights and code",
+      "url": "https://huggingface.co/genshiai-daichi/baberu-ocr/tree/b9868433dbda3ed9ba1357d008599ff4ada873d5",
+      "license": "Apache-2.0"
+    }
+  ]
+}

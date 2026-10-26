@@ -1,0 +1,13 @@
+0.3.10: Baberu OCR options
+
+Baberu INT4 encoder + INT8 decoder and FP16 encoder + INT8 decoder are selectable.
+CPU runs all stages on CPU; CUDA runs only the encoder on CUDA and both decoder sessions on CPU, following the native comparison. DirectML is not offered for Baberu.
+Official pinned SHA256 downloads include LICENSE and README training-data notices. The bundled license notices retain Apache-2.0 and the upstream Manga109-s disclosure.
+Model order: Baberu INT4, Hayai INT8, Baberu FP16, Hayai FP32. Existing user selection is preserved.
+Shared decoder/tokenizer files survive deletion of the other installed or selected variant; deleting the final unused variant removes them.
+Production native CPU engine: 40/40 exact texts and bit-exact preprocessing, vision and first-logit tensors versus upstream.
+Production native CUDA engine: 40/40 token sequences match the evaluated GPU-encoder/CPU-decoder configuration.
+Actual page/API and UI checks are recorded in adjacent JSON files. Windows/Linux x64 are cross-build checks; actual Windows inference remains unverified.
+
+Actual page checks passed: both variants on OP5P CPU (8 regions each) and DGX CUDA+CPU with Vulkan translation (8 regions each).
+The Baberu GPU pipeline retains CUDA resources alongside its CPU decoder, reaching 1657 MiB RSS for FP16. Its watchdog cap is 3072 MiB with 4096 MiB startup free-memory requirement; the CPU 1536 MiB cap and larger-layout safeguards remain unchanged.

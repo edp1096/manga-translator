@@ -1,0 +1,15 @@
+{
+  "version": "0.3.9",
+  "primaryHost": "192.168.100.25",
+  "settingsModelsKeysJobsUnchanged": true,
+  "preservedFiles": 3049,
+  "managedFilesUpdated": 21,
+  "leftStopped": true,
+  "checks": [
+    "panel_scope unit and real Chromium",
+    "editor add/delete/apply",
+    "selected ZIP all statuses/order/error entries",
+    "ZIP Python interoperability",
+    "Go tests/vet; Linux ARM64/x64 and Windows x64 builds"
+  ]
+}

@@ -1,0 +1,9 @@
+Baberu OCR
+Upstream: https://huggingface.co/genshiai-daichi/baberu-ocr
+Revision: b9868433dbda3ed9ba1357d008599ff4ada873d5
+
+The publisher declares Apache-2.0 for the weights and code.
+The model was trained using Manga109-s (74 of its 87 titles), including Manga109-v2026 dialogue/narration and COO sound-effect annotations. Training images are not redistributed with this application.
+See the downloaded model README.md for upstream training-data disclosures, acknowledgements and citations. Upstream components credited by the publisher include DINOv2, manga-ocr and PaddleOCR-VL.
+
+Verified upstream SHA256 and URLs are recorded in docs/baberu-evaluation/model-manifest.json.

@@ -1,0 +1,22 @@
+{
+  "fp16": {
+    "count": 20,
+    "rgbBitExact": true,
+    "normalizedTensorBitExact": true,
+    "textsExact": true,
+    "maximumAbsoluteDifference": {
+      "vision.f32": 0.0,
+      "first_logits.f32": 0.0
+    }
+  },
+  "int4": {
+    "count": 20,
+    "rgbBitExact": true,
+    "normalizedTensorBitExact": true,
+    "textsExact": true,
+    "maximumAbsoluteDifference": {
+      "vision.f32": 0.0,
+      "first_logits.f32": 0.0
+    }
+  }
+}

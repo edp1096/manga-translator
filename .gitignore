@@ -1,0 +1,14 @@
+__pycache__/
+*.pyc
+data/
+models/
+runtime/
+benchmarks/**/node_modules/
+benchmarks/**/tools/
+benchmarks/**/models/
+*.partial
+control/web/node_modules/
+control/.build/
+
+dist/
+archive/

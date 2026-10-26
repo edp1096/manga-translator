@@ -1,0 +1,23 @@
+Original weights: mayocream/koharu-layout-rfdetr-seg-2xl-1152
+Revision aed55fdb8ca953c6bec33cf6ed6dd52a9b72bfa2.
+Original weights SHA256 9bf6d2cbd7793c956d8c857bb1672a396eb7f100eb0682f86830d05e31168efb.
+Model license designation: other/custom. See original model card and Manga109 terms.
+https://huggingface.co/mayocream/koharu-layout-rfdetr-seg-2xl-1152
+
+Original full1152 ONNX: ShiniShiho/koharu-layout-rfdetr-seg-2xl-1152-onnx
+Revision bfbbd4e5ab34a50459865074fa044da496cebb57.
+SHA256 7cc10d4316371946b8441da3512261a8e148b129abcdb0ea6235ed1d1d06d351.
+
+Comparison artifact only: DevilishDaoSaint/koharu-layout-rfdetr
+Historical full-mask 768 revision ed8e6078b9e119f6b1db89c7aea39f08046d65f8.
+https://huggingface.co/DevilishDaoSaint/koharu-layout-rfdetr/tree/ed8e6078b9e119f6b1db89c7aea39f08046d65f8
+
+This derivative reconstructs spatial dimensions and position embedding from original
+1152 ONNX, retaining all operations, mask head and other learned weights.
+No retraining. It preserves upstream model licensing and does not redistribute training data.
+
+RF-DETR code: Roboflow, Apache-2.0 (segmentation architecture).
+ONNX Runtime: Microsoft, MIT; third-party notices included.
+stb_image: Sean Barrett and contributors, MIT/public-domain dual license.
+nlohmann/json: Niels Lohmann and contributors, MIT.
+No AGPL runtime/model component included.

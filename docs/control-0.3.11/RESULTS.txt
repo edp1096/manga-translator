@@ -1,0 +1,15 @@
+0.3.11 — reader adapters and runtime settings layout
+
+All source edits, browser checks and builds were done on OP5P.
+
+ComicWalker/Kadocomi: 18 actual content pages; horizontal and vertical viewer modes; stable page keys; full page loading and restoration of a partial vertical scroll position.
+Tonari no Young Jump: 38 actual content pages, excluding ads/back matter; tainted canvas uses visible-tab capture and full-resolution tiles. Requires the manga tab to remain active and screen capture allowed.
+Mangaz: 7 actual content pages; decoded blob images, native page navigation and a stable book identity across /i:N URL changes.
+
+All three: first/middle/last pages read at original pixel dimensions; every page loaded; thumbnails generated; overlays aligned inside viewer containers; original/translation toggle; completed results and selection keys survive page/mode changes; reader position restored.
+The real site DOM and images were used in isolated Chromium. Translation API responses were mocked to isolate extension behavior. Tainted-canvas screenshot pixels were provided by Playwright; production keeps the existing toolbar action/activeTab capture permission. No image decryption, access-control bypass, or non-viewable page requests are implemented.
+
+Runtime settings: each title appears above its selector; desktop grid and narrow-screen stacking keep values readable. Verified at 1440 and 390 pixels, no horizontal overflow or console errors.
+
+Existing extension retry, restore, lazy images, selection behavior, ZIP export, pairing and actual tab-specific side-panel tests passed.
+No production native inference changes in this release. Existing model/settings/job data is preserved during deployment.

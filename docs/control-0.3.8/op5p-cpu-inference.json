@@ -1,0 +1,64 @@
+{
+  "onnxProviderEvents": {},
+  "version": "0.3.8",
+  "settings": {
+    "llmExecution": "cpu",
+    "layoutExecution": "cpu",
+    "ocrExecution": "cpu",
+    "layout": "koharu-768",
+    "ocr": "hayai-int8",
+    "model": "gemma",
+    "autoStart": false,
+    "threads": 4,
+    "threadsAuto": true
+  },
+  "hardware": {
+    "cpu": {
+      "name": "ARM CPU (0xd05 / 0xd0b)",
+      "board": "Xunlong Orange Pi 5 Plus",
+      "logical": 8,
+      "physical": 8,
+      "performance": 4,
+      "recommendedThreads": 4,
+      "threadBasis": "OS가 보고한 성능 코어 수 기준",
+      "source": "Linux sysfs / procfs / affinity"
+    },
+    "gpus": [
+      {
+        "vulkanIndex": 0,
+        "id": "vulkan:b5130000050067a80000000000000000",
+        "name": "Mali-G610 MC4",
+        "vendor": "13b5",
+        "memoryKind": "shared",
+        "memoryTotal": null,
+        "memoryUsed": null,
+        "memoryFree": null,
+        "source": "Linux DRM sysfs / Vulkan driver"
+      }
+    ],
+    "gpuStatus": "ready",
+    "ramTotal": 16308969472,
+    "ramAvailable": 7349678080
+  },
+  "elapsedSeconds": 32.375,
+  "regions": 8,
+  "timings": {
+    "detection_ms": 6679.389133,
+    "geometry_ms": 3.607885,
+    "ocr_ms": 10511.342707,
+    "total_ms": 31978.012929,
+    "translation_ms": 14659.176964
+  },
+  "runtime": {
+    "layout": "ONNX Runtime",
+    "layoutExecution": "cpu",
+    "native": true,
+    "ocr": "LiteRT",
+    "ocrExecution": "cpu",
+    "python": false,
+    "translation": "local llama.cpp",
+    "translationExecution": "cpu"
+  },
+  "maxRssMiB": 882.48828125,
+  "llmGPUOffload": []
+}

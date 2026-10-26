@@ -1,0 +1,24 @@
+[Unit]
+Description=Manga Translator local control app
+After=network.target
+StartLimitIntervalSec=60
+StartLimitBurst=3
+
+[Service]
+Type=simple
+WorkingDirectory=/
+ExecStart=/home/edp1096/workspace/manga_translator/dist/manga-translator/manga-control --no-open
+Environment=MANGA_CHROME_PROFILE=/home/edp1096/.config/manga-translator-test
+Environment=GOMEMLIMIT=768MiB
+CPUAffinity=4-7
+MemoryHigh=7G
+MemoryMax=8G
+MemorySwapMax=512M
+Restart=on-failure
+RestartSec=5
+KillMode=process
+TimeoutStopSec=45
+UMask=0077
+
+[Install]
+WantedBy=default.target

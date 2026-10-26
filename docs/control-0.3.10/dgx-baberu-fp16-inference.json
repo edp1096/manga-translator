@@ -1,0 +1,73 @@
+{
+  "onnxProviderEvents": {
+    "CPUExecutionProvider": 45148,
+    "CUDAExecutionProvider": 3859
+  },
+  "version": "0.3.10",
+  "settings": {
+    "llmExecution": "vulkan",
+    "layoutExecution": "cuda",
+    "ocrExecution": "cuda",
+    "layout": "koharu-768",
+    "ocr": "baberu-fp16",
+    "model": "gemma",
+    "autoStart": false,
+    "threads": 10,
+    "threadsAuto": true
+  },
+  "hardware": {
+    "cpu": {
+      "name": "ARM CPU (0xd87 / 0xd85)",
+      "board": "GX10",
+      "logical": 20,
+      "physical": 20,
+      "performance": 10,
+      "recommendedThreads": 10,
+      "threadBasis": "OS가 보고한 성능 코어 수 기준",
+      "source": "Linux sysfs / procfs / affinity"
+    },
+    "gpus": [
+      {
+        "vulkanIndex": 0,
+        "cudaIndex": 0,
+        "id": "000f:01:00.0",
+        "name": "NVIDIA GB10",
+        "vendor": "10de",
+        "memoryKind": "shared",
+        "memoryTotal": null,
+        "memoryUsed": null,
+        "memoryFree": null,
+        "source": "NVML / CUDA driver"
+      }
+    ],
+    "gpuStatus": "ready",
+    "ramTotal": 130593968128,
+    "ramAvailable": 22938554368
+  },
+  "elapsedSeconds": 5.065,
+  "regions": 8,
+  "timings": {
+    "detection_ms": 1219.581049,
+    "geometry_ms": 1.303441,
+    "ocr_ms": 1264.391186,
+    "total_ms": 4314.262253,
+    "translation_ms": 1755.511851
+  },
+  "runtime": {
+    "layout": "ONNX Runtime",
+    "layoutExecution": "cuda",
+    "native": true,
+    "ocr": "ONNX Runtime",
+    "ocrBackend": "baberu-fp16",
+    "ocrDecoderExecution": "cpu",
+    "ocrEncoderExecution": "cuda",
+    "ocrExecution": "cuda",
+    "python": false,
+    "translation": "local llama.cpp",
+    "translationExecution": "vulkan"
+  },
+  "maxRssMiB": 1656.921875,
+  "llmGPUOffload": [
+    "offloaded 36/36 layers to GPU"
+  ]
+}

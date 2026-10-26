@@ -1,0 +1,77 @@
+Build the portable app (no Python required)
+
+Requirements: Go 1.26.5+, Node.js 24 and npm.
+From the project root:
+
+  make dist
+
+Or: ./build.sh (Linux), ./build.ps1 (Windows PowerShell).
+Arguments are passed to the Go packager, e.g. ./build.sh --output /absolute/path.
+
+This builds Svelte, runs Go tests/vet, builds the Linux ARM64 and Windows x64
+launchers, and writes standalone folders, ZIPs, source tar.gz and SHA256SUMS under dist/. It uses the
+verified native binaries already embedded in the source bundle. Configuration,
+installed models, private jobs and research archives are never copied into a ZIP.
+
+Rebuild native C++ only when changing native/ code
+Requirements: CMake, a C++17 compiler, ONNX Runtime 1.31.0 headers/libraries,
+LiteRT C headers and libwebp 1.6.0 source. End users need none of these tools.
+
+  cmake -S ../native -B BUILD -DCMAKE_BUILD_TYPE=Release \
+    -DORT_ROOT=PATH_TO_ONNX_RUNTIME \
+    -DLITERT_SDK=PATH_TO_LITERT_C_HEADERS \
+    -DWEBP_SOURCE_DIR=PATH_TO_LIBWEBP_SOURCE
+  cmake --build BUILD --target manga-translator-server -j 4
+
+For Windows AMD64, additionally pass the supplied/appropriate Windows cross-
+compiler toolchain. The tested Linux-hosted compiler is llvm-mingw 20261020 UCRT.
+LiteRT is loaded only when selected, so no LiteRT import library is linked.
+
+Pass the rebuilt binaries to the same Go packager:
+
+  go run ./cmd/package \
+    --linux-native PATH_TO_LINUX_SERVER \
+    --windows-native PATH_TO_WINDOWS_SERVER_EXE
+
+The source bundle includes the native source and verified engine binaries.
+Native SDKs/toolchains are external build dependencies. Dependency locations and
+versions are pinned in internal/assets/bundle/catalog.json and web/package-lock.json.
+Windows cross-compilation is not on-device Windows inference verification.
+
+Tests
+  go test -race ./internal/control
+  go vet ./...
+
+Root contract
+The main executable directory is the default portable root. No working-directory,
+parent-config or user-profile data lookup is used. --root is an explicit absolute
+override. Workers, caches, models and temporary files stay beneath that root.
+
+Model-conversion provenance is in docs/model-provenance/koharu768/ (beside the
+control module in the source bundle). It is not invoked by the application build
+or runtime. The obsolete Python/Docker application has been removed.
+
+License
+See ../THIRD_PARTY_NOTICES.md and internal/assets/bundle/licenses/.
+The obsolete prototype-wide GPL declaration has been removed; dependency and
+model notices are retained. No replacement application license was selected.
+
+Runtime pins and upgrades
+See RUNTIME_UPDATES.txt. Runtime versions, archive entries, installed paths and
+checksums are defined in internal/assets/bundle/catalog.json. The controller
+resolves the executable and per-service library search paths from its runtimes
+section. Native LiteRT loading uses the generated litert_library configuration;
+the native executable has no release-specific RPATH.
+
+Hardware detection is Go-only and does not launch external utilities. Release
+builds use CGO_ENABLED=0; details and diagnostics are in HARDWARE.txt.
+
+Primary development host: OP5P, 192.168.100.25, /home/edp1096/workspace/manga_translator.
+DGX Spark is only an auxiliary CUDA/Vulkan verification host (see ../AGENTS.md).
+0.3.8 was built on OP5P with Go 1.27.1 (CGO_ENABLED=0), Node 24.22.1,
+CMake 4.4.4, the system ARM64 C++ compiler, llvm-mingw 20261020 for Windows,
+and Zig 0.17.0 targeting x86_64-linux-gnu.2.28 for Linux x64.
+Rebuilt Linux x64 engine: pass --linux-x64-native /absolute/path/to/server.
+Browser tests use MANGA_PLAYWRIGHT=/path/to/playwright and isolated profiles.
+The control-profile UI test uses simulated GPU hardware; native GPU execution is
+validated separately on GB10, with MANGA_ORT_PROFILE=1 to record actual providers.

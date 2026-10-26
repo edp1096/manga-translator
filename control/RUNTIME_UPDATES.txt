@@ -1,0 +1,69 @@
+Runtime release pins (2026-10-26)
+
+llama.cpp: 0.7.0. The official v0.7.0 release's nightly-tag.txt selects b11669.
+  https://github.com/ggml-org/llama.cpp/releases/tag/v0.7.0
+  https://github.com/ggml-org/llama.cpp/releases/download/v0.7.0/nightly-tag.txt
+ONNX Runtime: 1.31.0, official latest stable core release checked on this date.
+  https://github.com/microsoft/onnxruntime/releases/tag/v1.31.0
+LiteRT: 2.3.1, latest official prebuilt Linux ARM64 / Windows x64 runtime listed
+  in the C++ SDK documentation. The separately packaged C SDK headers are 2.3.0;
+  their required C ABI symbols were checked against the 2.3.1 runtime.
+  https://developers.google.com/edge/litert/next/cpp_sdk
+
+Application startup never queries latest or downloads updates automatically.
+A published application's runtime pins cannot change when upstream publishes.
+
+Changing a runtime release
+1. Download the chosen official release assets for every supported platform.
+   For llama.cpp semantic releases, resolve that release's nightly-tag.txt;
+   do not substitute whichever nightly happens to be newest.
+2. Update the runtime's version/releaseUrl/buildTag, executable/library/libraryDirs
+   in internal/assets/bundle/catalog.json. Use a NEW versioned install directory.
+3. Update the referenced artifact URL, size, SHA-256 and every output file's
+   archive entry, size, SHA-256 and installed path. Archive entry and install path
+   are independent: do not assume an archive's top-level folder stays constant.
+   Preserve SONAME aliases and check the new executable's DLL/SO dependencies.
+4. VC files with relativeTo: llama follow the runtime executable's directory.
+   Their paths are basenames, so changing the llama.cpp folder requires no other
+   VC destination edits. Native-engine VC files remain adjacent to its executable.
+5. Check the release's CLI/API and native ABI compatibility. If the C APIs or
+   linked SONAME change, rebuild the affected native engines with compatible SDKs.
+   SDK build inputs are recorded separately in tools/build-inputs.json.
+6. Run make dist (Windows: ./build.ps1), go test -race ./internal/control, and
+   actual inference with the pinned releases before distributing. For rebuilt
+   engines pass --linux-native, --linux-x64-native and --windows-native to build.sh/build.ps1.
+
+The catalog loader rejects entry points not covered by a verified artifact,
+unknown dependency IDs, missing library directories and unpinned version labels.
+The controller resolves paths from this catalog; no runtime version is encoded
+in Go/C++ execution paths, Windows prerequisite checks or the native RPATH.
+Linux workers get only their selected runtime library directories. The LLM does
+not inherit the vision libraries, and FP32 OCR does not require LiteRT.
+
+Upgrade behavior
+Previously downloaded models are verified and reused. A new runtime version's
+files do not satisfy readiness until all expected hashes are verified. Explicit
+installation is required; startup never downloads missing new runtimes. API
+processes must be stopped before installation, so in-use libraries are not
+replaced. Old versioned runtime directories are retained and are not searched
+by the new application. Partially downloaded/installed new runtimes cannot start.
+Keep the previous application ZIP if rollback is required; do not silently load
+an old runtime against a new application's pin. Upstream breaking CLI/API/ABI
+changes still require compatibility testing; path independence cannot guarantee
+compatibility with arbitrary future releases.
+
+0.3.8 GPU variants
+- llama-vulkan: official b11669 builds for Linux ARM64, Linux x64, Windows x64.
+- ort-cuda: 1.31.0 Linux x64 CUDA 12 archive; Linux ARM64 CUDA 13 native libraries
+  extracted from the official onnxruntime-gpu wheel. No Python module is installed
+  or executed. NVIDIA native dependency wheels are treated as verified ZIP archives.
+- ort-directml: Microsoft.ML.OnnxRuntime.DirectML 1.24.4 with DirectML 1.15.4.
+- additionalArtifacts declares each runtime's transitive native dependencies.
+  Loader directories are resolved from those verified outputs as a set.
+- Native ONNX C++ wrappers request the common API 24 ABI explicitly so both
+  ORT 1.31.0 and the official DirectML 1.24.4 release are supported.
+- Do not register archive symlink entries as outputs. Map real, hashed SO members
+  to their required SONAME filenames. Windows ZIP backslashes are normalized
+  before traversal validation and matching; installed paths remain canonical.
+- Optional archive installation tests use MANGA_RUNTIME_ARCHIVES and never fetch
+  unpinned releases. Required runtime deletion and shared-file protection are tested.

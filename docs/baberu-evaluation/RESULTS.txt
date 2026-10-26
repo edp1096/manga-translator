@@ -1,0 +1,72 @@
+Baberu / Hayai native comparison — 2026-10-26
+
+Primary source/build/evidence: OP5P 192.168.100.25. DGX Spark is only the CUDA verification host.
+Frozen fixture: 20 crops (12 Japanese, 8 English), identical PNG hashes to the prior Hayai evaluation.
+Fixture SHA256: 7f8068c014bcf2951c20dd5d28d819e1698cccfb5503a75f6d8ababb9431c7c7
+Baberu upstream: genshiai-daichi/baberu-ocr @ b9868433dbda3ed9ba1357d008599ff4ada873d5
+All inference is native C++; Python is used only for upstream oracle, scoring and diagnostics.
+Runtime: ONNX Runtime 1.31.0; DGX CUDA 13 runtime; LiteRT 2.3.1 CPU/XNNPACK.
+OP5P: 4 performance cores, affinity 4-7; DGX: 4 ORT intra-op threads, 1 inter-op thread.
+Each configuration: one unmeasured warm-up crop, then 3 passes x 20 crops; reverse sample order in the middle pass.
+Models ran sequentially on each host. Loading, profiling and memory-monitor runs are excluded from timing statistics.
+Baberu uses the published 256-token cap/repetition penalty/run limits. Hayai uses its production 64-token cap. No sample truncated.
+Native Baberu parity: both tiers x all 20 crops have bit-exact RGB/pixel tensors, vision tensors and first logits, plus exact text against upstream ONNX CPU.
+Pillow separable pass ordering is matched (including vertical-first shrink heuristic): https://github.com/python-pillow/Pillow/blob/main/src/libImaging/Resample.c
+
+Timing / process memory (lower is better; mean and p95 in milliseconds):
+configuration | mean ms | p95 ms | load ms | peak process RSS MiB
+cpu-baberu-fp16 | 1708.41 | 2076.73 | 1679.59 | 425.4
+cpu-baberu-int4 | 991.85 | 1390.21 | 737.70 | 289.3
+cpu-hayai-fp32 | 1439.67 | 2244.67 | 3370.65 | 1135.3
+cpu-hayai-int8 | 1694.71 | 5084.95 | 635.09 | 449.3
+dgx-cpu-baberu-fp16 | 217.90 | 333.10 | 346.59 | 402.4
+dgx-cpu-baberu-int4 | 215.29 | 322.83 | 342.31 | 272.5
+dgx-cpu-hayai-fp32 | 313.59 | 537.03 | 1152.10 | 1163.0
+gpu-baberu-fp16 | 75.95 | 264.05 | 740.33 | 1332.6
+gpu-baberu-int4 | 81.40 | 268.53 | 705.58 | 1062.1
+gpu-hayai-fp32 | 63.24 | 197.57 | 1412.01 | 981.7
+mixed-baberu-fp16-decoder-gpu | 246.08 | 432.42 | 687.67 | 1039.7
+mixed-baberu-fp16 | 55.51 | 169.26 | 635.70 | 1197.5
+mixed-baberu-int4-decoder-gpu | 248.16 | 436.55 | 682.60 | 908.5
+mixed-baberu-int4 | 60.34 | 168.07 | 599.19 | 1072.8
+mixed-hayai-fp32-decoder-gpu | 197.94 | 334.54 | 1359.43 | 1313.2
+mixed-hayai-fp32-vision-gpu | 180.61 | 404.67 | 1462.33 | 1397.6
+
+Quality (20 unique samples, not 60 independent samples):
+model | JA CER % | EN CER % | exact / 20 | weight MiB
+hayai-int8 | 0.95 | 2.27 | 18/20 | 189.0
+hayai-fp32 | 0.95 | 2.27 | 18/20 | 803.9
+baberu-int4 | 1.90 | 0.38 | 17/20 | 116.5
+baberu-fp16 | 2.38 | 0.38 | 16/20 | 231.5
+
+CER uses NFKC + case folding + whitespace removal; punctuation is retained. Separate content CER and all predictions are in summary.json.
+All repetitions produce consistent token sequences within each configuration. CUDA can change whitespace from CPU, but normalized quality scores match here.
+This small frozen fixture does not establish broad language accuracy or a general model winner.
+
+Actual execution placement:
+Baberu FP16 and INT4 vision: all profiled nodes CUDA. INT4 MatMulNBits is actually executed by CUDA.
+Baberu INT8 prefill and step: DynamicQuantizeLinear and MatMulInteger execute on CPU even when CUDA is selected. Other GPU nodes create a split graph.
+Hayai FP32: substantial matrix operations execute on CUDA in vision, prefill and step. CPU nodes handle small shape/index/scalar tensors.
+Raw per-stage traces (gzip) and operator counts are retained. These profile runs use one JA and one EN crop plus warm-up and are not latency measurements.
+
+Decisions:
+Keep current Hayai FP32 GPU execution: 63.24 ms mean; GPU vision / CPU decoder is 180.61 ms; CPU vision / GPU decoder is 197.94 ms.
+Baberu is now an available license alternative; its CUDA mode uses GPU vision + CPU decoder on this DGX: FP16 55.51 ms, INT4 60.34 ms. All-CUDA-provider requests are slower (75.95 / 81.40 ms).
+On OP5P CPU, Baberu INT4 is faster and smaller than current Hayai LiteRT INT8, but Japanese CER is worse in this fixture. Keep the existing selected/default Hayai model; Baberu INT4 and FP16 are added as explicit alternatives in 0.3.10.
+LiteRT INT8 remains CPU-only because the supported native GPU route did not pass earlier runtime validation.
+
+GPU allocation accounting:
+memory-baberu-fp16: 954.7 MiB sampled NVML allocation (10 ms sampling)
+memory-baberu-int4: 824.5 MiB sampled NVML allocation (10 ms sampling)
+memory-hayai-fp32: 2156.5 MiB sampled NVML allocation (10 ms sampling)
+memory-mixed-baberu-fp16: 574.7 MiB sampled NVML allocation (10 ms sampling)
+memory-mixed-baberu-int4: 444.5 MiB sampled NVML allocation (10 ms sampling)
+GB10 uses unified system memory. NVML allocations and RSS are different accounting views and must not be added as separate physical RAM/VRAM.
+Other resident DGX services were preserved; they occupied GPU memory. Background GPU utilization before memory runs was 0–1%.
+
+Reproduction:
+Build on OP5P with tests/ocr_compare/build_native.sh. See native_compare.cpp command usage, baberu_reference.py, baberu_tensors.py, summarize.py, profile_summary.py and gpu_memory.py.
+The per-character Unicode content class set is generated from the pinned vocabulary by upstream Vocab; it is an evaluation artifact, not a production Python dependency.
+Native binary, downloaded pinned models and tensor dumps remain in ~/.cache/manga-translator-build/baberu-eval on OP5P.
+
+Production integration: both Baberu variants are selectable; CPU and CUDA engines preserve the validated output. The shipped source archive contains fixture metadata, not the manga crop images.

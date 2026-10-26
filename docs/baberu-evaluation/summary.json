@@ -1,0 +1,2962 @@
+{
+  "cpu-baberu-fp16": {
+    "mode": "baberu-fp16",
+    "backend": "cpu",
+    "load_ms": 1679.590643,
+    "passes": 3,
+    "threads": 4,
+    "max_rss_kib": 435640,
+    "quality": {
+      "all": {
+        "count": 20,
+        "cer_percent": 1.2658227848101267,
+        "content_cer_percent": 1.1135857461024499,
+        "exact_count": 16,
+        "edits": 6,
+        "reference_chars": 474
+      },
+      "ja": {
+        "count": 12,
+        "cer_percent": 2.380952380952381,
+        "content_cer_percent": 2.487562189054726,
+        "exact_count": 9,
+        "edits": 5,
+        "reference_chars": 210
+      },
+      "en": {
+        "count": 8,
+        "cer_percent": 0.3787878787878788,
+        "content_cer_percent": 0.0,
+        "exact_count": 7,
+        "edits": 1,
+        "reference_chars": 264
+      }
+    },
+    "timing": {
+      "prepare_ms": {
+        "mean": 3.7962792333333333,
+        "median": 3.070639,
+        "p95": 7.281975
+      },
+      "vision_ms": {
+        "mean": 1399.3666021833333,
+        "median": 1369.8363215,
+        "p95": 1626.724208
+      },
+      "prefill_ms": {
+        "mean": 132.7651401,
+        "median": 99.27747,
+        "p95": 220.287408
+      },
+      "decode_ms": {
+        "mean": 172.48422155,
+        "median": 120.0244055,
+        "p95": 529.061592
+      },
+      "total_ms": {
+        "mean": 1708.4135944666666,
+        "median": 1666.71076,
+        "p95": 2076.729397
+      }
+    },
+    "truncated": 0,
+    "repetitions_consistent": true,
+    "predictions": [
+      {
+        "id": "ja_a_02",
+        "truth": "周囲の状況は？",
+        "prediction": "周囲の状況は？",
+        "stopped": true
+      },
+      {
+        "id": "ja_a_03",
+        "truth": "問題ありません",
+        "prediction": "問題ありません",
+        "stopped": true
+      },
+      {
+        "id": "ja_a_04",
+        "truth": "茸ジャマーも機能しています",
+        "prediction": "─ジャマーも機能しています",
+        "stopped": true
+      },
+      {
+        "id": "ja_a_06",
+        "truth": "遅かれ早かれ出てくるとは思っていたが",
+        "prediction": "遅かれ早かれ出てくるとは思っていたが",
+        "stopped": true
+      },
+      {
+        "id": "ja_a_07",
+        "truth": "このタイミングとはな",
+        "prediction": "このタイミングとはな",
+        "stopped": true
+      },
+      {
+        "id": "ja_a_09",
+        "truth": "知ってるんですか？",
+        "prediction": "知ってるんですか？",
+        "stopped": true
+      },
+      {
+        "id": "ja_a_12",
+        "truth": "宇宙人の高次元ジャケットに唯一適合できた人間だ",
+        "prediction": "宇宙人の高次元ジャケットに唯一適合できた人間だ",
+        "stopped": true
+      },
+      {
+        "id": "ja_a_13",
+        "truth": "そしてかつて俺達の仲間だった人だ",
+        "prediction": "そしてかつて俺達の仲間だった人だ",
+        "stopped": true
+      },
+      {
+        "id": "ja_b_01",
+        "truth": "どういうわけか今はR・R社に在籍している",
+        "prediction": "どういうわけか今はＲ・Ｒ社に在藉している",
+        "stopped": true
+      },
+      {
+        "id": "ja_b_05",
+        "truth": "当時の事を知っているのは社長や隊長…あとは一部の幹部連中だろう",
+        "prediction": "当時の事を知っているのは社長や隊長．．．あとは一部の幹部連中だろう",
+        "stopped": true
+      },
+      {
+        "id": "ja_b_08",
+        "truth": "過去に何体もの宇宙人を──…高次元ジャケットを屠ってきた実績がある",
+        "prediction": "過去に何体もの宇宙人をー．．．高次元ジャケットを尾ってきた実績がある",
+        "stopped": true
+      },
+      {
+        "id": "ja_b_09",
+        "truth": "彼女は百戦錬磨の戦士であるということだ",
+        "prediction": "彼女は百戦錬磨の戦士であるということだ",
+        "stopped": true
+      },
+      {
+        "id": "en_a_01",
+        "truth": "BOY.",
+        "prediction": "BOY.",
+        "stopped": true
+      },
+      {
+        "id": "en_a_02",
+        "truth": "WHERE ARE YOU HEADING?",
+        "prediction": "WHERE ARE YOU HEADING?",
+        "stopped": true
+      },
+      {
+        "id": "en_a_03",
+        "truth": "THREE MONTHS LATER",
+        "prediction": "THREE MONTHS LATER",
+        "stopped": true
+      },
+      {
+        "id": "en_a_04",
+        "truth": "AOTERU.",
+        "prediction": "AOTERU.",
+        "stopped": true
+      },
+      {
+        "id": "en_a_05",
+        "truth": "DO YOU KNOW ABOUT TORYUMON?",
+        "prediction": "DO YOU KNOW ABOUT TORYUMON?",
+        "stopped": true
+      },
+      {
+        "id": "en_a_06",
+        "truth": "A VIRTUOUS MAN WHO EXCELS IN BOTH THE FINE AND MARTIAL ARTS. ALTHOUGHT HE'S STRICT, HE'S WELL RESPECTED.",
+        "prediction": "A VIRTUOUS MAN WHO EXCELS IN BOTH THE FINE AND MAR-TIAL ARTS. ALTHOUGHT HE'S STRICT, HE'S WELL RESPECTED.",
+        "stopped": true
+      },
+      {
+        "id": "en_a_07",
+        "truth": "RYU-MON MIT-SUHIDE.",
+        "prediction": "RYU-MON MIT-SUHIDE.",
+        "stopped": true
+      },
+      {
+        "id": "en_a_08",
+        "truth": "IT'S RUMOURED THAT IN THE CAPITAL, OSAKA, THOUSANDS OF PEOPLE WHO WISH TO GOVERN COME TO HIS HOUSE EVERY DAY.",
+        "prediction": "IT'S RUMOURED THAT IN THE CAPITAL, OSAKA, THOUSANDS OF PEOPLE WHO WISH TO GOVERN COME TO HIS HOUSE EVERY DAY.",
+        "stopped": true
+      }
+    ]
+  },
+  "cpu-baberu-int4": {
+    "mode": "baberu-int4",
+    "backend": "cpu",
+    "load_ms": 737.698481,
+    "passes": 3,
+    "threads": 4,
+    "max_rss_kib": 296276,
+    "quality": {
+      "all": {
+        "count": 20,
+        "cer_percent": 1.0548523206751055,
+        "content_cer_percent": 0.89086859688196,
+        "exact_count": 17,
+        "edits": 5,
+        "reference_chars": 474
+      },
+      "ja": {
+        "count": 12,
+        "cer_percent": 1.9047619047619047,
+        "content_cer_percent": 1.9900497512437811,
+        "exact_count": 10,
+        "edits": 4,
+        "reference_chars": 210
+      },
+      "en": {
+        "count": 8,
+        "cer_percent": 0.3787878787878788,
+        "content_cer_percent": 0.0,
+        "exact_count": 7,
+        "edits": 1,
+        "reference_chars": 264
+      }
+    },
+    "timing": {
+      "prepare_ms": {
+        "mean": 3.4414505666666666,
+        "median": 3.0354929999999998,
+        "p95": 7.05681
+      },
+      "vision_ms": {
+        "mean": 668.8649592166666,
+        "median": 654.756384,
+        "p95": 955.767493
+      },
+      "prefill_ms": {
+        "mean": 136.4845999,
+        "median": 150.2324845,
+        "p95": 189.927226
+      },
+      "decode_ms": {
+        "mean": 183.06252031666668,
+        "median": 114.30254099999999,
+        "p95": 597.131597
+      },
+      "total_ms": {
+        "mean": 991.8548327166667,
+        "median": 1050.2047985,
+        "p95": 1390.213573
+      }
+    },
+    "truncated": 0,
+    "repetitions_consistent": true,
+    "predictions": [
+      {
+        "id": "ja_a_02",
+        "truth": "周囲の状況は？",
+        "prediction": "周囲の状況は？",
+        "stopped": true
+      },
+      {
+        "id": "ja_a_03",
+        "truth": "問題ありません",
+        "prediction": "問題ありません",
+        "stopped": true
+      },
+      {
+        "id": "ja_a_04",
+        "truth": "茸ジャマーも機能しています",
+        "prediction": "─ジャマーも機能しています",
+        "stopped": true
+      },
+      {
+        "id": "ja_a_06",
+        "truth": "遅かれ早かれ出てくるとは思っていたが",
+        "prediction": "遅かれ早かれ出てくるとは思っていたが",
+        "stopped": true
+      },
+      {
+        "id": "ja_a_07",
+        "truth": "このタイミングとはな",
+        "prediction": "このタイミングとはな",
+        "stopped": true
+      },
+      {
+        "id": "ja_a_09",
+        "truth": "知ってるんですか？",
+        "prediction": "知ってるんですか？",
+        "stopped": true
+      },
+      {
+        "id": "ja_a_12",
+        "truth": "宇宙人の高次元ジャケットに唯一適合できた人間だ",
+        "prediction": "宇宙人の高次元ジャケットに唯一適合できた人間だ",
+        "stopped": true
+      },
+      {
+        "id": "ja_a_13",
+        "truth": "そしてかつて俺達の仲間だった人だ",
+        "prediction": "そしてかつて俺達の仲間だった人だ",
+        "stopped": true
+      },
+      {
+        "id": "ja_b_01",
+        "truth": "どういうわけか今はR・R社に在籍している",
+        "prediction": "どういうわけか今はＲ・Ｒ社に在籍している",
+        "stopped": true
+      },
+      {
+        "id": "ja_b_05",
+        "truth": "当時の事を知っているのは社長や隊長…あとは一部の幹部連中だろう",
+        "prediction": "当時の事を知っているのは社長や隊長．．．あとは一部の幹部連中だろう",
+        "stopped": true
+      },
+      {
+        "id": "ja_b_08",
+        "truth": "過去に何体もの宇宙人を──…高次元ジャケットを屠ってきた実績がある",
+        "prediction": "過去に何体もの宇宙人をー．．．高次元ジャケットを尾ってきた実績がある",
+        "stopped": true
+      },
+      {
+        "id": "ja_b_09",
+        "truth": "彼女は百戦錬磨の戦士であるということだ",
+        "prediction": "彼女は百戦錬磨の戦士であるということだ",
+        "stopped": true
+      },
+      {
+        "id": "en_a_01",
+        "truth": "BOY.",
+        "prediction": "BOY.",
+        "stopped": true
+      },
+      {
+        "id": "en_a_02",
+        "truth": "WHERE ARE YOU HEADING?",
+        "prediction": "WHERE ARE YOU HEADING?",
+        "stopped": true
+      },
+      {
+        "id": "en_a_03",
+        "truth": "THREE MONTHS LATER",
+        "prediction": "THREE MONTHS LATER",
+        "stopped": true
+      },
+      {
+        "id": "en_a_04",
+        "truth": "AOTERU.",
+        "prediction": "AOTERU.",
+        "stopped": true
+      },
+      {
+        "id": "en_a_05",
+        "truth": "DO YOU KNOW ABOUT TORYUMON?",
+        "prediction": "DO YOU KNOW ABOUT TORYUMON?",
+        "stopped": true
+      },
+      {
+        "id": "en_a_06",
+        "truth": "A VIRTUOUS MAN WHO EXCELS IN BOTH THE FINE AND MARTIAL ARTS. ALTHOUGHT HE'S STRICT, HE'S WELL RESPECTED.",
+        "prediction": "A VIRTUOUS MAN WHO EXCELS IN BOTH THE FINE AND MAR-TIAL ARTS. ALTHOUGHT HE'S STRICT, HE'S WELL RESPECTED.",
+        "stopped": true
+      },
+      {
+        "id": "en_a_07",
+        "truth": "RYU-MON MIT-SUHIDE.",
+        "prediction": "RYU-MON MIT-SUHIDE.",
+        "stopped": true
+      },
+      {
+        "id": "en_a_08",
+        "truth": "IT'S RUMOURED THAT IN THE CAPITAL, OSAKA, THOUSANDS OF PEOPLE WHO WISH TO GOVERN COME TO HIS HOUSE EVERY DAY.",
+        "prediction": "IT'S RUMOURED THAT IN THE CAPITAL, OSAKA, THOUSANDS OF PEOPLE WHO WISH TO GOVERN COME TO HIS HOUSE EVERY DAY.",
+        "stopped": true
+      }
+    ]
+  },
+  "cpu-hayai-fp32": {
+    "mode": "hayai-fp32",
+    "backend": "cpu",
+    "load_ms": 3370.654764,
+    "passes": 3,
+    "threads": 4,
+    "max_rss_kib": 1162568,
+    "quality": {
+      "all": {
+        "count": 20,
+        "cer_percent": 1.6877637130801688,
+        "content_cer_percent": 1.78173719376392,
+        "exact_count": 18,
+        "edits": 8,
+        "reference_chars": 474
+      },
+      "ja": {
+        "count": 12,
+        "cer_percent": 0.9523809523809523,
+        "content_cer_percent": 0.9950248756218906,
+        "exact_count": 11,
+        "edits": 2,
+        "reference_chars": 210
+      },
+      "en": {
+        "count": 8,
+        "cer_percent": 2.272727272727273,
+        "content_cer_percent": 2.4193548387096775,
+        "exact_count": 7,
+        "edits": 6,
+        "reference_chars": 264
+      }
+    },
+    "timing": {
+      "prepare_ms": {
+        "mean": 5.717625666666667,
+        "median": 4.698415499999999,
+        "p95": 11.290022
+      },
+      "vision_ms": {
+        "mean": 558.8030572833334,
+        "median": 498.4380385,
+        "p95": 943.949559
+      },
+      "prefill_ms": {
+        "mean": 417.7842682333333,
+        "median": 494.838759,
+        "p95": 533.445303
+      },
+      "decode_ms": {
+        "mean": 457.35854828333333,
+        "median": 320.5572645,
+        "p95": 1260.222133
+      },
+      "total_ms": {
+        "mean": 1439.6650353333334,
+        "median": 1298.9311969999999,
+        "p95": 2244.666615
+      }
+    },
+    "truncated": 0,
+    "repetitions_consistent": true,
+    "predictions": [
+      {
+        "id": "ja_a_02",
+        "truth": "周囲の状況は？",
+        "prediction": "周囲の状況は?",
+        "stopped": true
+      },
+      {
+        "id": "ja_a_03",
+        "truth": "問題ありません",
+        "prediction": "問題ありません",
+        "stopped": true
+      },
+      {
+        "id": "ja_a_04",
+        "truth": "茸ジャマーも機能しています",
+        "prediction": "茸ジャマーも機能しています",
+        "stopped": true
+      },
+      {
+        "id": "ja_a_06",
+        "truth": "遅かれ早かれ出てくるとは思っていたが",
+        "prediction": "遅かれ早かれ出てくるとは思っていたが",
+        "stopped": true
+      },
+      {
+        "id": "ja_a_07",
+        "truth": "このタイミングとはな",
+        "prediction": "このタイミングとはな",
+        "stopped": true
+      },
+      {
+        "id": "ja_a_09",
+        "truth": "知ってるんですか？",
+        "prediction": "知ってるんですか?",
+        "stopped": true
+      },
+      {
+        "id": "ja_a_12",
+        "truth": "宇宙人の高次元ジャケットに唯一適合できた人間だ",
+        "prediction": "宇宙人の高次元ジャケットに唯一適合できた人間だ",
+        "stopped": true
+      },
+      {
+        "id": "ja_a_13",
+        "truth": "そしてかつて俺達の仲間だった人だ",
+        "prediction": "そしてかつて俺達の仲間だった人だ",
+        "stopped": true
+      },
+      {
+        "id": "ja_b_01",
+        "truth": "どういうわけか今はR・R社に在籍している",
+        "prediction": "どういうわけか今はR・R社に在籍している",
+        "stopped": true
+      },
+      {
+        "id": "ja_b_05",
+        "truth": "当時の事を知っているのは社長や隊長…あとは一部の幹部連中だろう",
+        "prediction": "当時の事を知っているのは社長や隊長...あとは一部の幹部連中だろう",
+        "stopped": true
+      },
+      {
+        "id": "ja_b_08",
+        "truth": "過去に何体もの宇宙人を──…高次元ジャケットを屠ってきた実績がある",
+        "prediction": "過去に何体もの宇宙人をーー...高次元ジャケットを屠ってきた実績がある",
+        "stopped": true
+      },
+      {
+        "id": "ja_b_09",
+        "truth": "彼女は百戦錬磨の戦士であるということだ",
+        "prediction": "彼女は百戦錬磨の戦士であるということだ",
+        "stopped": true
+      },
+      {
+        "id": "en_a_01",
+        "truth": "BOY.",
+        "prediction": "BOY.",
+        "stopped": true
+      },
+      {
+        "id": "en_a_02",
+        "truth": "WHERE ARE YOU HEADING?",
+        "prediction": "WHERE ARE YOU HEADING?",
+        "stopped": true
+      },
+      {
+        "id": "en_a_03",
+        "truth": "THREE MONTHS LATER",
+        "prediction": "THREE MONTHS LATER",
+        "stopped": true
+      },
+      {
+        "id": "en_a_04",
+        "truth": "AOTERU.",
+        "prediction": "AOTERU.",
+        "stopped": true
+      },
+      {
+        "id": "en_a_05",
+        "truth": "DO YOU KNOW ABOUT TORYUMON?",
+        "prediction": "DO YOU KNOW ABOUT TORYUMON?",
+        "stopped": true
+      },
+      {
+        "id": "en_a_06",
+        "truth": "A VIRTUOUS MAN WHO EXCELS IN BOTH THE FINE AND MARTIAL ARTS. ALTHOUGHT HE'S STRICT, HE'S WELL RESPECTED.",
+        "prediction": "A VIRTUOUS MAN WHO EXCELS IN BOTH THE FINE AND MARTS. ALTHOUGHT HE'S STRICT, HE'S WELL RESPECTED.",
+        "stopped": true
+      },
+      {
+        "id": "en_a_07",
+        "truth": "RYU-MON MIT-SUHIDE.",
+        "prediction": "RYU-MON MIT-SUHIDE.",
+        "stopped": true
+      },
+      {
+        "id": "en_a_08",
+        "truth": "IT'S RUMOURED THAT IN THE CAPITAL, OSAKA, THOUSANDS OF PEOPLE WHO WISH TO GOVERN COME TO HIS HOUSE EVERY DAY.",
+        "prediction": "IT'S RUMOURED THAT IN THE CAPITAL, OSAKA, THOUSANDS OF PEOPLE WHO WISH TO GOVERN COME TO HIS HOUSE EVERY DAY.",
+        "stopped": true
+      }
+    ]
+  },
+  "cpu-hayai-int8": {
+    "mode": "hayai-int8",
+    "backend": "cpu",
+    "load_ms": 635.088459,
+    "passes": 3,
+    "threads": 4,
+    "max_rss_kib": 460068,
+    "quality": {
+      "all": {
+        "count": 20,
+        "cer_percent": 1.6877637130801688,
+        "content_cer_percent": 1.78173719376392,
+        "exact_count": 18,
+        "edits": 8,
+        "reference_chars": 474
+      },
+      "ja": {
+        "count": 12,
+        "cer_percent": 0.9523809523809523,
+        "content_cer_percent": 0.9950248756218906,
+        "exact_count": 11,
+        "edits": 2,
+        "reference_chars": 210
+      },
+      "en": {
+        "count": 8,
+        "cer_percent": 2.272727272727273,
+        "content_cer_percent": 2.4193548387096775,
+        "exact_count": 7,
+        "edits": 6,
+        "reference_chars": 264
+      }
+    },
+    "timing": {
+      "prepare_ms": {
+        "mean": 4.47637655,
+        "median": 4.304669499999999,
+        "p95": 5.71924
+      },
+      "vision_ms": {
+        "mean": 156.65012296666666,
+        "median": 151.737033,
+        "p95": 168.55263
+      },
+      "prefill_ms": {
+        "mean": 206.27951485,
+        "median": 204.349136,
+        "p95": 223.847167
+      },
+      "decode_ms": {
+        "mean": 1327.3074120666668,
+        "median": 937.289266,
+        "p95": 4724.924831
+      },
+      "total_ms": {
+        "mean": 1694.71393685,
+        "median": 1338.221256,
+        "p95": 5084.948757
+      }
+    },
+    "truncated": 0,
+    "repetitions_consistent": true,
+    "predictions": [
+      {
+        "id": "ja_a_02",
+        "truth": "周囲の状況は？",
+        "prediction": "周囲の状況は?",
+        "stopped": true
+      },
+      {
+        "id": "ja_a_03",
+        "truth": "問題ありません",
+        "prediction": "問題ありません",
+        "stopped": true
+      },
+      {
+        "id": "ja_a_04",
+        "truth": "茸ジャマーも機能しています",
+        "prediction": "茸ジャマーも機能しています",
+        "stopped": true
+      },
+      {
+        "id": "ja_a_06",
+        "truth": "遅かれ早かれ出てくるとは思っていたが",
+        "prediction": "遅かれ早かれ出てくるとは思っていたが",
+        "stopped": true
+      },
+      {
+        "id": "ja_a_07",
+        "truth": "このタイミングとはな",
+        "prediction": "このタイミングとはな",
+        "stopped": true
+      },
+      {
+        "id": "ja_a_09",
+        "truth": "知ってるんですか？",
+        "prediction": "知ってるんですか?",
+        "stopped": true
+      },
+      {
+        "id": "ja_a_12",
+        "truth": "宇宙人の高次元ジャケットに唯一適合できた人間だ",
+        "prediction": "宇宙人の高次元ジャケットに唯一適合できた人間だ",
+        "stopped": true
+      },
+      {
+        "id": "ja_a_13",
+        "truth": "そしてかつて俺達の仲間だった人だ",
+        "prediction": "そしてかつて俺達の仲間だった人だ",
+        "stopped": true
+      },
+      {
+        "id": "ja_b_01",
+        "truth": "どういうわけか今はR・R社に在籍している",
+        "prediction": "どういうわけか今はR・R社に在籍している",
+        "stopped": true
+      },
+      {
+        "id": "ja_b_05",
+        "truth": "当時の事を知っているのは社長や隊長…あとは一部の幹部連中だろう",
+        "prediction": "当時の事を知っているのは社長や隊長...あとは一部の幹部連中だろう",
+        "stopped": true
+      },
+      {
+        "id": "ja_b_08",
+        "truth": "過去に何体もの宇宙人を──…高次元ジャケットを屠ってきた実績がある",
+        "prediction": "過去に何体もの宇宙人をーー...高次元ジャケットを屠ってきた実績がある",
+        "stopped": true
+      },
+      {
+        "id": "ja_b_09",
+        "truth": "彼女は百戦錬磨の戦士であるということだ",
+        "prediction": "彼女は百戦錬磨の戦士であるということだ",
+        "stopped": true
+      },
+      {
+        "id": "en_a_01",
+        "truth": "BOY.",
+        "prediction": "BOY.",
+        "stopped": true
+      },
+      {
+        "id": "en_a_02",
+        "truth": "WHERE ARE YOU HEADING?",
+        "prediction": "WHERE ARE YOU HEADING?",
+        "stopped": true
+      },
+      {
+        "id": "en_a_03",
+        "truth": "THREE MONTHS LATER",
+        "prediction": "THREE MONTHS LATER",
+        "stopped": true
+      },
+      {
+        "id": "en_a_04",
+        "truth": "AOTERU.",
+        "prediction": "AOTERU.",
+        "stopped": true
+      },
+      {
+        "id": "en_a_05",
+        "truth": "DO YOU KNOW ABOUT TORYUMON?",
+        "prediction": "DO YOU KNOW ABOUT TORYUMON?",
+        "stopped": true
+      },
+      {
+        "id": "en_a_06",
+        "truth": "A VIRTUOUS MAN WHO EXCELS IN BOTH THE FINE AND MARTIAL ARTS. ALTHOUGHT HE'S STRICT, HE'S WELL RESPECTED.",
+        "prediction": "A VIRTUOUS MAN WHO EXCELS IN BOTH THE FINE AND MARTS. ALTHOUGHT HE'S STRICT, HE'S WELL RESPECTED.",
+        "stopped": true
+      },
+      {
+        "id": "en_a_07",
+        "truth": "RYU-MON MIT-SUHIDE.",
+        "prediction": "RYU-MON MIT-SUHIDE.",
+        "stopped": true
+      },
+      {
+        "id": "en_a_08",
+        "truth": "IT'S RUMOURED THAT IN THE CAPITAL, OSAKA, THOUSANDS OF PEOPLE WHO WISH TO GOVERN COME TO HIS HOUSE EVERY DAY.",
+        "prediction": "IT'S RUMOURED THAT IN THE CAPITAL, OSAKA, THOUSANDS OF PEOPLE WHO WISH TO GOVERN COME TO HIS HOUSE EVERY DAY.",
+        "stopped": true
+      }
+    ]
+  },
+  "dgx-cpu-baberu-fp16": {
+    "mode": "baberu-fp16",
+    "backend": "cpu",
+    "load_ms": 346.591123,
+    "passes": 3,
+    "threads": 4,
+    "max_rss_kib": 412008,
+    "quality": {
+      "all": {
+        "count": 20,
+        "cer_percent": 1.2658227848101267,
+        "content_cer_percent": 1.1135857461024499,
+        "exact_count": 16,
+        "edits": 6,
+        "reference_chars": 474
+      },
+      "ja": {
+        "count": 12,
+        "cer_percent": 2.380952380952381,
+        "content_cer_percent": 2.487562189054726,
+        "exact_count": 9,
+        "edits": 5,
+        "reference_chars": 210
+      },
+      "en": {
+        "count": 8,
+        "cer_percent": 0.3787878787878788,
+        "content_cer_percent": 0.0,
+        "exact_count": 7,
+        "edits": 1,
+        "reference_chars": 264
+      }
+    },
+    "timing": {
+      "prepare_ms": {
+        "mean": 1.2829869333333332,
+        "median": 1.160631,
+        "p95": 1.987534
+      },
+      "vision_ms": {
+        "mean": 161.50967971666665,
+        "median": 160.997094,
+        "p95": 167.15748
+      },
+      "prefill_ms": {
+        "mean": 18.416424983333332,
+        "median": 16.164959500000002,
+        "p95": 32.74824
+      },
+      "decode_ms": {
+        "mean": 36.69372815,
+        "median": 26.143878,
+        "p95": 151.92124
+      },
+      "total_ms": {
+        "mean": 217.90346351666668,
+        "median": 204.1065875,
+        "p95": 333.104755
+      }
+    },
+    "truncated": 0,
+    "repetitions_consistent": true,
+    "predictions": [
+      {
+        "id": "ja_a_02",
+        "truth": "周囲の状況は？",
+        "prediction": "周囲の状況は？",
+        "stopped": true
+      },
+      {
+        "id": "ja_a_03",
+        "truth": "問題ありません",
+        "prediction": "問題ありません",
+        "stopped": true
+      },
+      {
+        "id": "ja_a_04",
+        "truth": "茸ジャマーも機能しています",
+        "prediction": "─ジャマーも機能しています",
+        "stopped": true
+      },
+      {
+        "id": "ja_a_06",
+        "truth": "遅かれ早かれ出てくるとは思っていたが",
+        "prediction": "遅かれ早かれ出てくるとは思っていたが",
+        "stopped": true
+      },
+      {
+        "id": "ja_a_07",
+        "truth": "このタイミングとはな",
+        "prediction": "このタイミングとはな",
+        "stopped": true
+      },
+      {
+        "id": "ja_a_09",
+        "truth": "知ってるんですか？",
+        "prediction": "知ってるんですか？",
+        "stopped": true
+      },
+      {
+        "id": "ja_a_12",
+        "truth": "宇宙人の高次元ジャケットに唯一適合できた人間だ",
+        "prediction": "宇宙人の高次元ジャケットに唯一適合できた人間だ",
+        "stopped": true
+      },
+      {
+        "id": "ja_a_13",
+        "truth": "そしてかつて俺達の仲間だった人だ",
+        "prediction": "そしてかつて俺達の仲間だった人だ",
+        "stopped": true
+      },
+      {
+        "id": "ja_b_01",
+        "truth": "どういうわけか今はR・R社に在籍している",
+        "prediction": "どういうわけか今はＲ・Ｒ社に在藉している",
+        "stopped": true
+      },
+      {
+        "id": "ja_b_05",
+        "truth": "当時の事を知っているのは社長や隊長…あとは一部の幹部連中だろう",
+        "prediction": "当時の事を知っているのは社長や隊長．．．あとは一部の幹部連中だろう",
+        "stopped": true
+      },
+      {
+        "id": "ja_b_08",
+        "truth": "過去に何体もの宇宙人を──…高次元ジャケットを屠ってきた実績がある",
+        "prediction": "過去に何体もの宇宙人をー．．．高次元ジャケットを尾ってきた実績がある",
+        "stopped": true
+      },
+      {
+        "id": "ja_b_09",
+        "truth": "彼女は百戦錬磨の戦士であるということだ",
+        "prediction": "彼女は百戦錬磨の戦士であるということだ",
+        "stopped": true
+      },
+      {
+        "id": "en_a_01",
+        "truth": "BOY.",
+        "prediction": "BOY.",
+        "stopped": true
+      },
+      {
+        "id": "en_a_02",
+        "truth": "WHERE ARE YOU HEADING?",
+        "prediction": "WHERE ARE YOU HEADING?",
+        "stopped": true
+      },
+      {
+        "id": "en_a_03",
+        "truth": "THREE MONTHS LATER",
+        "prediction": "THREE MONTHS LATER",
+        "stopped": true
+      },
+      {
+        "id": "en_a_04",
+        "truth": "AOTERU.",
+        "prediction": "AOTERU.",
+        "stopped": true
+      },
+      {
+        "id": "en_a_05",
+        "truth": "DO YOU KNOW ABOUT TORYUMON?",
+        "prediction": "DO YOU KNOW ABOUT TORYUMON?",
+        "stopped": true
+      },
+      {
+        "id": "en_a_06",
+        "truth": "A VIRTUOUS MAN WHO EXCELS IN BOTH THE FINE AND MARTIAL ARTS. ALTHOUGHT HE'S STRICT, HE'S WELL RESPECTED.",
+        "prediction": "A VIRTUOUS MAN WHO EXCELS IN BOTH THE FINE AND MAR-TIAL ARTS. ALTHOUGHT HE'S STRICT, HE'S WELL RESPECTED.",
+        "stopped": true
+      },
+      {
+        "id": "en_a_07",
+        "truth": "RYU-MON MIT-SUHIDE.",
+        "prediction": "RYU-MON MIT-SUHIDE.",
+        "stopped": true
+      },
+      {
+        "id": "en_a_08",
+        "truth": "IT'S RUMOURED THAT IN THE CAPITAL, OSAKA, THOUSANDS OF PEOPLE WHO WISH TO GOVERN COME TO HIS HOUSE EVERY DAY.",
+        "prediction": "IT'S RUMOURED THAT IN THE CAPITAL, OSAKA, THOUSANDS OF PEOPLE WHO WISH TO GOVERN COME TO HIS HOUSE EVERY DAY.",
+        "stopped": true
+      }
+    ]
+  },
+  "dgx-cpu-baberu-int4": {
+    "mode": "baberu-int4",
+    "backend": "cpu",
+    "load_ms": 342.308027,
+    "passes": 3,
+    "threads": 4,
+    "max_rss_kib": 279004,
+    "quality": {
+      "all": {
+        "count": 20,
+        "cer_percent": 1.0548523206751055,
+        "content_cer_percent": 0.89086859688196,
+        "exact_count": 17,
+        "edits": 5,
+        "reference_chars": 474
+      },
+      "ja": {
+        "count": 12,
+        "cer_percent": 1.9047619047619047,
+        "content_cer_percent": 1.9900497512437811,
+        "exact_count": 10,
+        "edits": 4,
+        "reference_chars": 210
+      },
+      "en": {
+        "count": 8,
+        "cer_percent": 0.3787878787878788,
+        "content_cer_percent": 0.0,
+        "exact_count": 7,
+        "edits": 1,
+        "reference_chars": 264
+      }
+    },
+    "timing": {
+      "prepare_ms": {
+        "mean": 1.2638000333333332,
+        "median": 1.1419025,
+        "p95": 1.978478
+      },
+      "vision_ms": {
+        "mean": 161.88244231666667,
+        "median": 161.7982485,
+        "p95": 162.36843
+      },
+      "prefill_ms": {
+        "mean": 17.300412433333335,
+        "median": 16.6804075,
+        "p95": 32.439152
+      },
+      "decode_ms": {
+        "mean": 34.8412503,
+        "median": 24.6667835,
+        "p95": 141.801284
+      },
+      "total_ms": {
+        "mean": 215.28819921666667,
+        "median": 204.64822099999998,
+        "p95": 322.832865
+      }
+    },
+    "truncated": 0,
+    "repetitions_consistent": true,
+    "predictions": [
+      {
+        "id": "ja_a_02",
+        "truth": "周囲の状況は？",
+        "prediction": "周囲の状況は？",
+        "stopped": true
+      },
+      {
+        "id": "ja_a_03",
+        "truth": "問題ありません",
+        "prediction": "問題ありません",
+        "stopped": true
+      },
+      {
+        "id": "ja_a_04",
+        "truth": "茸ジャマーも機能しています",
+        "prediction": "─ジャマーも機能しています",
+        "stopped": true
+      },
+      {
+        "id": "ja_a_06",
+        "truth": "遅かれ早かれ出てくるとは思っていたが",
+        "prediction": "遅かれ早かれ出てくるとは思っていたが",
+        "stopped": true
+      },
+      {
+        "id": "ja_a_07",
+        "truth": "このタイミングとはな",
+        "prediction": "このタイミングとはな",
+        "stopped": true
+      },
+      {
+        "id": "ja_a_09",
+        "truth": "知ってるんですか？",
+        "prediction": "知ってるんですか？",
+        "stopped": true
+      },
+      {
+        "id": "ja_a_12",
+        "truth": "宇宙人の高次元ジャケットに唯一適合できた人間だ",
+        "prediction": "宇宙人の高次元ジャケットに唯一適合できた人間だ",
+        "stopped": true
+      },
+      {
+        "id": "ja_a_13",
+        "truth": "そしてかつて俺達の仲間だった人だ",
+        "prediction": "そしてかつて俺達の仲間だった人だ",
+        "stopped": true
+      },
+      {
+        "id": "ja_b_01",
+        "truth": "どういうわけか今はR・R社に在籍している",
+        "prediction": "どういうわけか今はＲ・Ｒ社に在籍している",
+        "stopped": true
+      },
+      {
+        "id": "ja_b_05",
+        "truth": "当時の事を知っているのは社長や隊長…あとは一部の幹部連中だろう",
+        "prediction": "当時の事を知っているのは社長や隊長．．．あとは一部の幹部連中だろう",
+        "stopped": true
+      },
+      {
+        "id": "ja_b_08",
+        "truth": "過去に何体もの宇宙人を──…高次元ジャケットを屠ってきた実績がある",
+        "prediction": "過去に何体もの宇宙人をー．．．高次元ジャケットを尾ってきた実績がある",
+        "stopped": true
+      },
+      {
+        "id": "ja_b_09",
+        "truth": "彼女は百戦錬磨の戦士であるということだ",
+        "prediction": "彼女は百戦錬磨の戦士であるということだ",
+        "stopped": true
+      },
+      {
+        "id": "en_a_01",
+        "truth": "BOY.",
+        "prediction": "BOY.",
+        "stopped": true
+      },
+      {
+        "id": "en_a_02",
+        "truth": "WHERE ARE YOU HEADING?",
+        "prediction": "WHERE ARE YOU HEADING?",
+        "stopped": true
+      },
+      {
+        "id": "en_a_03",
+        "truth": "THREE MONTHS LATER",
+        "prediction": "THREE MONTHS LATER",
+        "stopped": true
+      },
+      {
+        "id": "en_a_04",
+        "truth": "AOTERU.",
+        "prediction": "AOTERU.",
+        "stopped": true
+      },
+      {
+        "id": "en_a_05",
+        "truth": "DO YOU KNOW ABOUT TORYUMON?",
+        "prediction": "DO YOU KNOW ABOUT TORYUMON?",
+        "stopped": true
+      },
+      {
+        "id": "en_a_06",
+        "truth": "A VIRTUOUS MAN WHO EXCELS IN BOTH THE FINE AND MARTIAL ARTS. ALTHOUGHT HE'S STRICT, HE'S WELL RESPECTED.",
+        "prediction": "A VIRTUOUS MAN WHO EXCELS IN BOTH THE FINE AND MAR-TIAL ARTS. ALTHOUGHT HE'S STRICT, HE'S WELL RESPECTED.",
+        "stopped": true
+      },
+      {
+        "id": "en_a_07",
+        "truth": "RYU-MON MIT-SUHIDE.",
+        "prediction": "RYU-MON MIT-SUHIDE.",
+        "stopped": true
+      },
+      {
+        "id": "en_a_08",
+        "truth": "IT'S RUMOURED THAT IN THE CAPITAL, OSAKA, THOUSANDS OF PEOPLE WHO WISH TO GOVERN COME TO HIS HOUSE EVERY DAY.",
+        "prediction": "IT'S RUMOURED THAT IN THE CAPITAL, OSAKA, THOUSANDS OF PEOPLE WHO WISH TO GOVERN COME TO HIS HOUSE EVERY DAY.",
+        "stopped": true
+      }
+    ]
+  },
+  "dgx-cpu-hayai-fp32": {
+    "mode": "hayai-fp32",
+    "backend": "cpu",
+    "load_ms": 1152.100706,
+    "passes": 3,
+    "threads": 4,
+    "max_rss_kib": 1190892,
+    "quality": {
+      "all": {
+        "count": 20,
+        "cer_percent": 1.6877637130801688,
+        "content_cer_percent": 1.78173719376392,
+        "exact_count": 18,
+        "edits": 8,
+        "reference_chars": 474
+      },
+      "ja": {
+        "count": 12,
+        "cer_percent": 0.9523809523809523,
+        "content_cer_percent": 0.9950248756218906,
+        "exact_count": 11,
+        "edits": 2,
+        "reference_chars": 210
+      },
+      "en": {
+        "count": 8,
+        "cer_percent": 2.272727272727273,
+        "content_cer_percent": 2.4193548387096775,
+        "exact_count": 7,
+        "edits": 6,
+        "reference_chars": 264
+      }
+    },
+    "timing": {
+      "prepare_ms": {
+        "mean": 1.7138569833333333,
+        "median": 1.612847,
+        "p95": 2.271325
+      },
+      "vision_ms": {
+        "mean": 138.77104418333334,
+        "median": 138.647921,
+        "p95": 139.067769
+      },
+      "prefill_ms": {
+        "mean": 88.58950813333334,
+        "median": 88.9880405,
+        "p95": 89.246793
+      },
+      "decode_ms": {
+        "mean": 84.51643345,
+        "median": 58.3448075,
+        "p95": 307.095123
+      },
+      "total_ms": {
+        "mean": 313.5917640833333,
+        "median": 288.076493,
+        "p95": 537.033058
+      }
+    },
+    "truncated": 0,
+    "repetitions_consistent": true,
+    "predictions": [
+      {
+        "id": "ja_a_02",
+        "truth": "周囲の状況は？",
+        "prediction": "周囲の状況は?",
+        "stopped": true
+      },
+      {
+        "id": "ja_a_03",
+        "truth": "問題ありません",
+        "prediction": "問題ありません",
+        "stopped": true
+      },
+      {
+        "id": "ja_a_04",
+        "truth": "茸ジャマーも機能しています",
+        "prediction": "茸ジャマーも機能しています",
+        "stopped": true
+      },
+      {
+        "id": "ja_a_06",
+        "truth": "遅かれ早かれ出てくるとは思っていたが",
+        "prediction": "遅かれ早かれ出てくるとは思っていたが",
+        "stopped": true
+      },
+      {
+        "id": "ja_a_07",
+        "truth": "このタイミングとはな",
+        "prediction": "このタイミングとはな",
+        "stopped": true
+      },
+      {
+        "id": "ja_a_09",
+        "truth": "知ってるんですか？",
+        "prediction": "知ってるんですか?",
+        "stopped": true
+      },
+      {
+        "id": "ja_a_12",
+        "truth": "宇宙人の高次元ジャケットに唯一適合できた人間だ",
+        "prediction": "宇宙人の高次元ジャケットに唯一適合できた人間だ",
+        "stopped": true
+      },
+      {
+        "id": "ja_a_13",
+        "truth": "そしてかつて俺達の仲間だった人だ",
+        "prediction": "そしてかつて俺達の仲間だった人だ",
+        "stopped": true
+      },
+      {
+        "id": "ja_b_01",
+        "truth": "どういうわけか今はR・R社に在籍している",
+        "prediction": "どういうわけか今はR・R社に在籍している",
+        "stopped": true
+      },
+      {
+        "id": "ja_b_05",
+        "truth": "当時の事を知っているのは社長や隊長…あとは一部の幹部連中だろう",
+        "prediction": "当時の事を知っているのは社長や隊長...あとは一部の幹部連中だろう",
+        "stopped": true
+      },
+      {
+        "id": "ja_b_08",
+        "truth": "過去に何体もの宇宙人を──…高次元ジャケットを屠ってきた実績がある",
+        "prediction": "過去に何体もの宇宙人をーー...高次元ジャケットを屠ってきた実績がある",
+        "stopped": true
+      },
+      {
+        "id": "ja_b_09",
+        "truth": "彼女は百戦錬磨の戦士であるということだ",
+        "prediction": "彼女は百戦錬磨の戦士であるということだ",
+        "stopped": true
+      },
+      {
+        "id": "en_a_01",
+        "truth": "BOY.",
+        "prediction": "BOY.",
+        "stopped": true
+      },
+      {
+        "id": "en_a_02",
+        "truth": "WHERE ARE YOU HEADING?",
+        "prediction": "WHERE ARE YOU HEADING?",
+        "stopped": true
+      },
+      {
+        "id": "en_a_03",
+        "truth": "THREE MONTHS LATER",
+        "prediction": "THREE MONTHS LATER",
+        "stopped": true
+      },
+      {
+        "id": "en_a_04",
+        "truth": "AOTERU.",
+        "prediction": "AOTERU.",
+        "stopped": true
+      },
+      {
+        "id": "en_a_05",
+        "truth": "DO YOU KNOW ABOUT TORYUMON?",
+        "prediction": "DO YOU KNOW ABOUT TORYUMON?",
+        "stopped": true
+      },
+      {
+        "id": "en_a_06",
+        "truth": "A VIRTUOUS MAN WHO EXCELS IN BOTH THE FINE AND MARTIAL ARTS. ALTHOUGHT HE'S STRICT, HE'S WELL RESPECTED.",
+        "prediction": "A VIRTUOUS MAN WHO EXCELS IN BOTH THE FINE AND MARTS. ALTHOUGHT HE'S STRICT, HE'S WELL RESPECTED.",
+        "stopped": true
+      },
+      {
+        "id": "en_a_07",
+        "truth": "RYU-MON MIT-SUHIDE.",
+        "prediction": "RYU-MON MIT-SUHIDE.",
+        "stopped": true
+      },
+      {
+        "id": "en_a_08",
+        "truth": "IT'S RUMOURED THAT IN THE CAPITAL, OSAKA, THOUSANDS OF PEOPLE WHO WISH TO GOVERN COME TO HIS HOUSE EVERY DAY.",
+        "prediction": "IT'S RUMOURED THAT IN THE CAPITAL, OSAKA, THOUSANDS OF PEOPLE WHO WISH TO GOVERN COME TO HIS HOUSE EVERY DAY.",
+        "stopped": true
+      }
+    ]
+  },
+  "gpu-baberu-fp16": {
+    "mode": "baberu-fp16",
+    "backend": "cuda",
+    "load_ms": 740.328975,
+    "passes": 3,
+    "threads": 4,
+    "max_rss_kib": 1364588,
+    "quality": {
+      "all": {
+        "count": 20,
+        "cer_percent": 1.2658227848101267,
+        "content_cer_percent": 1.1135857461024499,
+        "exact_count": 16,
+        "edits": 6,
+        "reference_chars": 474
+      },
+      "ja": {
+        "count": 12,
+        "cer_percent": 2.380952380952381,
+        "content_cer_percent": 2.487562189054726,
+        "exact_count": 9,
+        "edits": 5,
+        "reference_chars": 210
+      },
+      "en": {
+        "count": 8,
+        "cer_percent": 0.3787878787878788,
+        "content_cer_percent": 0.0,
+        "exact_count": 7,
+        "edits": 1,
+        "reference_chars": 264
+      }
+    },
+    "timing": {
+      "prepare_ms": {
+        "mean": 1.2808000833333333,
+        "median": 1.152439,
+        "p95": 1.99259
+      },
+      "vision_ms": {
+        "mean": 2.8924563666666665,
+        "median": 2.875637,
+        "p95": 2.935276
+      },
+      "prefill_ms": {
+        "mean": 11.751297716666667,
+        "median": 11.493083500000001,
+        "p95": 11.81978
+      },
+      "decode_ms": {
+        "mean": 60.02888273333333,
+        "median": 42.3405235,
+        "p95": 247.414636
+      },
+      "total_ms": {
+        "mean": 75.95401183333334,
+        "median": 58.828962000000004,
+        "p95": 264.051322
+      }
+    },
+    "truncated": 0,
+    "repetitions_consistent": true,
+    "predictions": [
+      {
+        "id": "ja_a_02",
+        "truth": "周囲の状況は？",
+        "prediction": "周囲の状況は？",
+        "stopped": true
+      },
+      {
+        "id": "ja_a_03",
+        "truth": "問題ありません",
+        "prediction": "問題ありません",
+        "stopped": true
+      },
+      {
+        "id": "ja_a_04",
+        "truth": "茸ジャマーも機能しています",
+        "prediction": "─ジャマーも機能しています",
+        "stopped": true
+      },
+      {
+        "id": "ja_a_06",
+        "truth": "遅かれ早かれ出てくるとは思っていたが",
+        "prediction": "遅かれ早かれ出てくるとは思っていたが",
+        "stopped": true
+      },
+      {
+        "id": "ja_a_07",
+        "truth": "このタイミングとはな",
+        "prediction": "このタイミングとはな",
+        "stopped": true
+      },
+      {
+        "id": "ja_a_09",
+        "truth": "知ってるんですか？",
+        "prediction": "知ってるんですか？",
+        "stopped": true
+      },
+      {
+        "id": "ja_a_12",
+        "truth": "宇宙人の高次元ジャケットに唯一適合できた人間だ",
+        "prediction": "宇宙人の高次元ジャケットに唯一適合できた人間だ",
+        "stopped": true
+      },
+      {
+        "id": "ja_a_13",
+        "truth": "そしてかつて俺達の仲間だった人だ",
+        "prediction": "そしてかつて俺達の仲間だった人だ",
+        "stopped": true
+      },
+      {
+        "id": "ja_b_01",
+        "truth": "どういうわけか今はR・R社に在籍している",
+        "prediction": "どういうわけか今はＲ・Ｒ社に在藉している",
+        "stopped": true
+      },
+      {
+        "id": "ja_b_05",
+        "truth": "当時の事を知っているのは社長や隊長…あとは一部の幹部連中だろう",
+        "prediction": "当時の事を知っているのは社長や隊長．．．あとは一部の幹部連中だろう",
+        "stopped": true
+      },
+      {
+        "id": "ja_b_08",
+        "truth": "過去に何体もの宇宙人を──…高次元ジャケットを屠ってきた実績がある",
+        "prediction": "過去に何体もの宇宙人をー．．．高次元ジャケットを尾ってきた実績がある",
+        "stopped": true
+      },
+      {
+        "id": "ja_b_09",
+        "truth": "彼女は百戦錬磨の戦士であるということだ",
+        "prediction": "彼女は百戦錬磨の戦士であるということだ",
+        "stopped": true
+      },
+      {
+        "id": "en_a_01",
+        "truth": "BOY.",
+        "prediction": "BOY.",
+        "stopped": true
+      },
+      {
+        "id": "en_a_02",
+        "truth": "WHERE ARE YOU HEADING?",
+        "prediction": "WHERE ARE YOU HEADING?",
+        "stopped": true
+      },
+      {
+        "id": "en_a_03",
+        "truth": "THREE MONTHS LATER",
+        "prediction": "THREE MONTHS LATER",
+        "stopped": true
+      },
+      {
+        "id": "en_a_04",
+        "truth": "AOTERU.",
+        "prediction": "AOTERU.",
+        "stopped": true
+      },
+      {
+        "id": "en_a_05",
+        "truth": "DO YOU KNOW ABOUT TORYUMON?",
+        "prediction": "DO YOU KNOW ABOUT TORYUMON?",
+        "stopped": true
+      },
+      {
+        "id": "en_a_06",
+        "truth": "A VIRTUOUS MAN WHO EXCELS IN BOTH THE FINE AND MARTIAL ARTS. ALTHOUGHT HE'S STRICT, HE'S WELL RESPECTED.",
+        "prediction": "A VIRTUOUS MAN WHO EXCELS IN BOTH THE FINE AND MAR-TIAL ARTS. ALTHOUGHT HE'S STRICT, HE'S WELL RESPECTED.",
+        "stopped": true
+      },
+      {
+        "id": "en_a_07",
+        "truth": "RYU-MON MIT-SUHIDE.",
+        "prediction": "RYU-\nMON\nMIT-\nSUHIDE.",
+        "stopped": true
+      },
+      {
+        "id": "en_a_08",
+        "truth": "IT'S RUMOURED THAT IN THE CAPITAL, OSAKA, THOUSANDS OF PEOPLE WHO WISH TO GOVERN COME TO HIS HOUSE EVERY DAY.",
+        "prediction": "IT'S RUMOURED THAT IN THE CAPITAL, OSAKA, THOUSANDS OF PEOPLE WHO WISH TO GOVERN COME TO HIS HOUSE EVERY DAY.",
+        "stopped": true
+      }
+    ]
+  },
+  "gpu-baberu-int4": {
+    "mode": "baberu-int4",
+    "backend": "cuda",
+    "load_ms": 705.583538,
+    "passes": 3,
+    "threads": 4,
+    "max_rss_kib": 1087540,
+    "quality": {
+      "all": {
+        "count": 20,
+        "cer_percent": 1.0548523206751055,
+        "content_cer_percent": 0.89086859688196,
+        "exact_count": 17,
+        "edits": 5,
+        "reference_chars": 474
+      },
+      "ja": {
+        "count": 12,
+        "cer_percent": 1.9047619047619047,
+        "content_cer_percent": 1.9900497512437811,
+        "exact_count": 10,
+        "edits": 4,
+        "reference_chars": 210
+      },
+      "en": {
+        "count": 8,
+        "cer_percent": 0.3787878787878788,
+        "content_cer_percent": 0.0,
+        "exact_count": 7,
+        "edits": 1,
+        "reference_chars": 264
+      }
+    },
+    "timing": {
+      "prepare_ms": {
+        "mean": 1.27995895,
+        "median": 1.1539350000000002,
+        "p95": 1.997134
+      },
+      "vision_ms": {
+        "mean": 8.701898616666666,
+        "median": 8.687215,
+        "p95": 8.721351
+      },
+      "prefill_ms": {
+        "mean": 11.615164516666667,
+        "median": 11.595652000000001,
+        "p95": 11.806324
+      },
+      "decode_ms": {
+        "mean": 59.8043993,
+        "median": 42.499957,
+        "p95": 246.339222
+      },
+      "total_ms": {
+        "mean": 81.40197845,
+        "median": 64.5823665,
+        "p95": 268.532751
+      }
+    },
+    "truncated": 0,
+    "repetitions_consistent": true,
+    "predictions": [
+      {
+        "id": "ja_a_02",
+        "truth": "周囲の状況は？",
+        "prediction": "周囲の状況は？",
+        "stopped": true
+      },
+      {
+        "id": "ja_a_03",
+        "truth": "問題ありません",
+        "prediction": "問題ありません",
+        "stopped": true
+      },
+      {
+        "id": "ja_a_04",
+        "truth": "茸ジャマーも機能しています",
+        "prediction": "─ジャマーも機能しています",
+        "stopped": true
+      },
+      {
+        "id": "ja_a_06",
+        "truth": "遅かれ早かれ出てくるとは思っていたが",
+        "prediction": "遅かれ早かれ出てくるとは思っていたが",
+        "stopped": true
+      },
+      {
+        "id": "ja_a_07",
+        "truth": "このタイミングとはな",
+        "prediction": "このタイミングとはな",
+        "stopped": true
+      },
+      {
+        "id": "ja_a_09",
+        "truth": "知ってるんですか？",
+        "prediction": "知ってるんですか？",
+        "stopped": true
+      },
+      {
+        "id": "ja_a_12",
+        "truth": "宇宙人の高次元ジャケットに唯一適合できた人間だ",
+        "prediction": "宇宙人の高次元ジャケットに唯一適合できた人間だ",
+        "stopped": true
+      },
+      {
+        "id": "ja_a_13",
+        "truth": "そしてかつて俺達の仲間だった人だ",
+        "prediction": "そしてかつて俺達の仲間だった人だ",
+        "stopped": true
+      },
+      {
+        "id": "ja_b_01",
+        "truth": "どういうわけか今はR・R社に在籍している",
+        "prediction": "どういうわけか今はＲ・Ｒ社に在籍している",
+        "stopped": true
+      },
+      {
+        "id": "ja_b_05",
+        "truth": "当時の事を知っているのは社長や隊長…あとは一部の幹部連中だろう",
+        "prediction": "当時の事を知っているのは社長や隊長．．．あとは一部の幹部連中だろう",
+        "stopped": true
+      },
+      {
+        "id": "ja_b_08",
+        "truth": "過去に何体もの宇宙人を──…高次元ジャケットを屠ってきた実績がある",
+        "prediction": "過去に何体もの宇宙人をー．．．高次元ジャケットを居ってきた実績がある",
+        "stopped": true
+      },
+      {
+        "id": "ja_b_09",
+        "truth": "彼女は百戦錬磨の戦士であるということだ",
+        "prediction": "彼女は百戦錬磨の戦士であるということだ",
+        "stopped": true
+      },
+      {
+        "id": "en_a_01",
+        "truth": "BOY.",
+        "prediction": "BOY.",
+        "stopped": true
+      },
+      {
+        "id": "en_a_02",
+        "truth": "WHERE ARE YOU HEADING?",
+        "prediction": "WHERE ARE YOU HEADING?",
+        "stopped": true
+      },
+      {
+        "id": "en_a_03",
+        "truth": "THREE MONTHS LATER",
+        "prediction": "THREE MONTHS LATER",
+        "stopped": true
+      },
+      {
+        "id": "en_a_04",
+        "truth": "AOTERU.",
+        "prediction": "AOTERU.",
+        "stopped": true
+      },
+      {
+        "id": "en_a_05",
+        "truth": "DO YOU KNOW ABOUT TORYUMON?",
+        "prediction": "DO YOU KNOW ABOUT TORYUMON?",
+        "stopped": true
+      },
+      {
+        "id": "en_a_06",
+        "truth": "A VIRTUOUS MAN WHO EXCELS IN BOTH THE FINE AND MARTIAL ARTS. ALTHOUGHT HE'S STRICT, HE'S WELL RESPECTED.",
+        "prediction": "A VIRTUOUS MAN WHO EXCELS IN BOTH THE FINE AND MAR-TIAL ARTS. ALTHOUGHT HE'S STRICT, HE'S WELL RESPECTED.",
+        "stopped": true
+      },
+      {
+        "id": "en_a_07",
+        "truth": "RYU-MON MIT-SUHIDE.",
+        "prediction": "RYU-\nMON\nMIT-\nSUHIDE.",
+        "stopped": true
+      },
+      {
+        "id": "en_a_08",
+        "truth": "IT'S RUMOURED THAT IN THE CAPITAL, OSAKA, THOUSANDS OF PEOPLE WHO WISH TO GOVERN COME TO HIS HOUSE EVERY DAY.",
+        "prediction": "IT'S RUMOURED THAT IN THE CAPITAL, OSAKA, THOUSANDS OF PEOPLE WHO WISH TO GOVERN COME TO HIS HOUSE EVERY DAY.",
+        "stopped": true
+      }
+    ]
+  },
+  "gpu-hayai-fp32": {
+    "mode": "hayai-fp32",
+    "backend": "cuda",
+    "load_ms": 1412.00561,
+    "passes": 3,
+    "threads": 4,
+    "max_rss_kib": 1005292,
+    "quality": {
+      "all": {
+        "count": 20,
+        "cer_percent": 1.6877637130801688,
+        "content_cer_percent": 1.78173719376392,
+        "exact_count": 18,
+        "edits": 8,
+        "reference_chars": 474
+      },
+      "ja": {
+        "count": 12,
+        "cer_percent": 0.9523809523809523,
+        "content_cer_percent": 0.9950248756218906,
+        "exact_count": 11,
+        "edits": 2,
+        "reference_chars": 210
+      },
+      "en": {
+        "count": 8,
+        "cer_percent": 2.272727272727273,
+        "content_cer_percent": 2.4193548387096775,
+        "exact_count": 7,
+        "edits": 6,
+        "reference_chars": 264
+      }
+    },
+    "timing": {
+      "prepare_ms": {
+        "mean": 1.6507137666666667,
+        "median": 1.570614,
+        "p95": 2.234558
+      },
+      "vision_ms": {
+        "mean": 5.513514166666667,
+        "median": 5.428011,
+        "p95": 6.045034
+      },
+      "prefill_ms": {
+        "mean": 4.9302355166666665,
+        "median": 4.816122999999999,
+        "p95": 5.701227
+      },
+      "decode_ms": {
+        "mean": 51.14372706666666,
+        "median": 36.3998835,
+        "p95": 184.221398
+      },
+      "total_ms": {
+        "mean": 63.23852598333333,
+        "median": 48.764559,
+        "p95": 197.568729
+      }
+    },
+    "truncated": 0,
+    "repetitions_consistent": true,
+    "predictions": [
+      {
+        "id": "ja_a_02",
+        "truth": "周囲の状況は？",
+        "prediction": "周囲の状況は?",
+        "stopped": true
+      },
+      {
+        "id": "ja_a_03",
+        "truth": "問題ありません",
+        "prediction": "問題ありません",
+        "stopped": true
+      },
+      {
+        "id": "ja_a_04",
+        "truth": "茸ジャマーも機能しています",
+        "prediction": "茸ジャマーも機能しています",
+        "stopped": true
+      },
+      {
+        "id": "ja_a_06",
+        "truth": "遅かれ早かれ出てくるとは思っていたが",
+        "prediction": "遅かれ早かれ出てくるとは思っていたが",
+        "stopped": true
+      },
+      {
+        "id": "ja_a_07",
+        "truth": "このタイミングとはな",
+        "prediction": "このタイミングとはな",
+        "stopped": true
+      },
+      {
+        "id": "ja_a_09",
+        "truth": "知ってるんですか？",
+        "prediction": "知ってるんですか?",
+        "stopped": true
+      },
+      {
+        "id": "ja_a_12",
+        "truth": "宇宙人の高次元ジャケットに唯一適合できた人間だ",
+        "prediction": "宇宙人の高次元ジャケットに唯一適合できた人間だ",
+        "stopped": true
+      },
+      {
+        "id": "ja_a_13",
+        "truth": "そしてかつて俺達の仲間だった人だ",
+        "prediction": "そしてかつて俺達の仲間だった人だ",
+        "stopped": true
+      },
+      {
+        "id": "ja_b_01",
+        "truth": "どういうわけか今はR・R社に在籍している",
+        "prediction": "どういうわけか今はR・R社に在籍している",
+        "stopped": true
+      },
+      {
+        "id": "ja_b_05",
+        "truth": "当時の事を知っているのは社長や隊長…あとは一部の幹部連中だろう",
+        "prediction": "当時の事を知っているのは社長や隊長...あとは一部の幹部連中だろう",
+        "stopped": true
+      },
+      {
+        "id": "ja_b_08",
+        "truth": "過去に何体もの宇宙人を──…高次元ジャケットを屠ってきた実績がある",
+        "prediction": "過去に何体もの宇宙人をーー...高次元ジャケットを屠ってきた実績がある",
+        "stopped": true
+      },
+      {
+        "id": "ja_b_09",
+        "truth": "彼女は百戦錬磨の戦士であるということだ",
+        "prediction": "彼女は百戦錬磨の戦士であるということだ",
+        "stopped": true
+      },
+      {
+        "id": "en_a_01",
+        "truth": "BOY.",
+        "prediction": "BOY.",
+        "stopped": true
+      },
+      {
+        "id": "en_a_02",
+        "truth": "WHERE ARE YOU HEADING?",
+        "prediction": "WHERE ARE YOU HEADING?",
+        "stopped": true
+      },
+      {
+        "id": "en_a_03",
+        "truth": "THREE MONTHS LATER",
+        "prediction": "THREE MONTHS LATER",
+        "stopped": true
+      },
+      {
+        "id": "en_a_04",
+        "truth": "AOTERU.",
+        "prediction": "AOTERU.",
+        "stopped": true
+      },
+      {
+        "id": "en_a_05",
+        "truth": "DO YOU KNOW ABOUT TORYUMON?",
+        "prediction": "DO YOU KNOW ABOUT TORYUMON?",
+        "stopped": true
+      },
+      {
+        "id": "en_a_06",
+        "truth": "A VIRTUOUS MAN WHO EXCELS IN BOTH THE FINE AND MARTIAL ARTS. ALTHOUGHT HE'S STRICT, HE'S WELL RESPECTED.",
+        "prediction": "A VIRTUOUS MAN WHO EXCELS IN BOTH THE FINE AND MARTS. ALTHOUGHT HE'S STRICT, HE'S WELL RESPECTED.",
+        "stopped": true
+      },
+      {
+        "id": "en_a_07",
+        "truth": "RYU-MON MIT-SUHIDE.",
+        "prediction": "RYU-MON MIT-SUHIDE.",
+        "stopped": true
+      },
+      {
+        "id": "en_a_08",
+        "truth": "IT'S RUMOURED THAT IN THE CAPITAL, OSAKA, THOUSANDS OF PEOPLE WHO WISH TO GOVERN COME TO HIS HOUSE EVERY DAY.",
+        "prediction": "IT'S RUMOURED THAT IN THE CAPITAL, OSAKA, THOUSANDS OF PEOPLE WHO WISH TO GOVERN COME TO HIS HOUSE EVERY DAY.",
+        "stopped": true
+      }
+    ]
+  },
+  "mixed-baberu-fp16-decoder-gpu": {
+    "mode": "baberu-fp16",
+    "backend": "cuda-decoder",
+    "load_ms": 687.674166,
+    "passes": 3,
+    "threads": 4,
+    "max_rss_kib": 1064624,
+    "quality": {
+      "all": {
+        "count": 20,
+        "cer_percent": 1.2658227848101267,
+        "content_cer_percent": 1.1135857461024499,
+        "exact_count": 16,
+        "edits": 6,
+        "reference_chars": 474
+      },
+      "ja": {
+        "count": 12,
+        "cer_percent": 2.380952380952381,
+        "content_cer_percent": 2.487562189054726,
+        "exact_count": 9,
+        "edits": 5,
+        "reference_chars": 210
+      },
+      "en": {
+        "count": 8,
+        "cer_percent": 0.3787878787878788,
+        "content_cer_percent": 0.0,
+        "exact_count": 7,
+        "edits": 1,
+        "reference_chars": 264
+      }
+    },
+    "timing": {
+      "prepare_ms": {
+        "mean": 1.2892869833333334,
+        "median": 1.1622080000000001,
+        "p95": 2.005153
+      },
+      "vision_ms": {
+        "mean": 160.85590475,
+        "median": 160.544491,
+        "p95": 169.855357
+      },
+      "prefill_ms": {
+        "mean": 23.33906035,
+        "median": 24.301059000000002,
+        "p95": 24.425435
+      },
+      "decode_ms": {
+        "mean": 60.5979856,
+        "median": 42.374283000000005,
+        "p95": 245.896319
+      },
+      "total_ms": {
+        "mean": 246.08310755,
+        "median": 229.263401,
+        "p95": 432.423722
+      }
+    },
+    "truncated": 0,
+    "repetitions_consistent": true,
+    "predictions": [
+      {
+        "id": "ja_a_02",
+        "truth": "周囲の状況は？",
+        "prediction": "周囲の状況は？",
+        "stopped": true
+      },
+      {
+        "id": "ja_a_03",
+        "truth": "問題ありません",
+        "prediction": "問題ありません",
+        "stopped": true
+      },
+      {
+        "id": "ja_a_04",
+        "truth": "茸ジャマーも機能しています",
+        "prediction": "─ジャマーも機能しています",
+        "stopped": true
+      },
+      {
+        "id": "ja_a_06",
+        "truth": "遅かれ早かれ出てくるとは思っていたが",
+        "prediction": "遅かれ早かれ出てくるとは思っていたが",
+        "stopped": true
+      },
+      {
+        "id": "ja_a_07",
+        "truth": "このタイミングとはな",
+        "prediction": "このタイミングとはな",
+        "stopped": true
+      },
+      {
+        "id": "ja_a_09",
+        "truth": "知ってるんですか？",
+        "prediction": "知ってるんですか？",
+        "stopped": true
+      },
+      {
+        "id": "ja_a_12",
+        "truth": "宇宙人の高次元ジャケットに唯一適合できた人間だ",
+        "prediction": "宇宙人の高次元ジャケットに唯一適合できた人間だ",
+        "stopped": true
+      },
+      {
+        "id": "ja_a_13",
+        "truth": "そしてかつて俺達の仲間だった人だ",
+        "prediction": "そしてかつて俺達の仲間だった人だ",
+        "stopped": true
+      },
+      {
+        "id": "ja_b_01",
+        "truth": "どういうわけか今はR・R社に在籍している",
+        "prediction": "どういうわけか今はＲ・Ｒ社に在藉している",
+        "stopped": true
+      },
+      {
+        "id": "ja_b_05",
+        "truth": "当時の事を知っているのは社長や隊長…あとは一部の幹部連中だろう",
+        "prediction": "当時の事を知っているのは社長や隊長．．．あとは一部の幹部連中だろう",
+        "stopped": true
+      },
+      {
+        "id": "ja_b_08",
+        "truth": "過去に何体もの宇宙人を──…高次元ジャケットを屠ってきた実績がある",
+        "prediction": "過去に何体もの宇宙人をー．．．高次元ジャケットを尾ってきた実績がある",
+        "stopped": true
+      },
+      {
+        "id": "ja_b_09",
+        "truth": "彼女は百戦錬磨の戦士であるということだ",
+        "prediction": "彼女は百戦錬磨の戦士であるということだ",
+        "stopped": true
+      },
+      {
+        "id": "en_a_01",
+        "truth": "BOY.",
+        "prediction": "BOY.",
+        "stopped": true
+      },
+      {
+        "id": "en_a_02",
+        "truth": "WHERE ARE YOU HEADING?",
+        "prediction": "WHERE ARE YOU HEADING?",
+        "stopped": true
+      },
+      {
+        "id": "en_a_03",
+        "truth": "THREE MONTHS LATER",
+        "prediction": "THREE MONTHS LATER",
+        "stopped": true
+      },
+      {
+        "id": "en_a_04",
+        "truth": "AOTERU.",
+        "prediction": "AOTERU.",
+        "stopped": true
+      },
+      {
+        "id": "en_a_05",
+        "truth": "DO YOU KNOW ABOUT TORYUMON?",
+        "prediction": "DO YOU KNOW ABOUT TORYUMON?",
+        "stopped": true
+      },
+      {
+        "id": "en_a_06",
+        "truth": "A VIRTUOUS MAN WHO EXCELS IN BOTH THE FINE AND MARTIAL ARTS. ALTHOUGHT HE'S STRICT, HE'S WELL RESPECTED.",
+        "prediction": "A VIRTUOUS MAN WHO EXCELS IN BOTH THE FINE AND MAR-TIAL ARTS. ALTHOUGHT HE'S STRICT, HE'S WELL RESPECTED.",
+        "stopped": true
+      },
+      {
+        "id": "en_a_07",
+        "truth": "RYU-MON MIT-SUHIDE.",
+        "prediction": "RYU-MON MIT-SUHIDE.",
+        "stopped": true
+      },
+      {
+        "id": "en_a_08",
+        "truth": "IT'S RUMOURED THAT IN THE CAPITAL, OSAKA, THOUSANDS OF PEOPLE WHO WISH TO GOVERN COME TO HIS HOUSE EVERY DAY.",
+        "prediction": "IT'S RUMOURED THAT IN THE CAPITAL, OSAKA, THOUSANDS OF PEOPLE WHO WISH TO GOVERN COME TO HIS HOUSE EVERY DAY.",
+        "stopped": true
+      }
+    ]
+  },
+  "mixed-baberu-fp16": {
+    "mode": "baberu-fp16",
+    "backend": "cuda-vision",
+    "load_ms": 635.695599,
+    "passes": 3,
+    "threads": 4,
+    "max_rss_kib": 1226240,
+    "quality": {
+      "all": {
+        "count": 20,
+        "cer_percent": 1.2658227848101267,
+        "content_cer_percent": 1.1135857461024499,
+        "exact_count": 16,
+        "edits": 6,
+        "reference_chars": 474
+      },
+      "ja": {
+        "count": 12,
+        "cer_percent": 2.380952380952381,
+        "content_cer_percent": 2.487562189054726,
+        "exact_count": 9,
+        "edits": 5,
+        "reference_chars": 210
+      },
+      "en": {
+        "count": 8,
+        "cer_percent": 0.3787878787878788,
+        "content_cer_percent": 0.0,
+        "exact_count": 7,
+        "edits": 1,
+        "reference_chars": 264
+      }
+    },
+    "timing": {
+      "prepare_ms": {
+        "mean": 1.27804755,
+        "median": 1.150223,
+        "p95": 1.987486
+      },
+      "vision_ms": {
+        "mean": 2.9264966,
+        "median": 2.8525815,
+        "p95": 2.875789
+      },
+      "prefill_ms": {
+        "mean": 14.593356466666666,
+        "median": 14.564946500000001,
+        "p95": 14.705778
+      },
+      "decode_ms": {
+        "mean": 36.7086491,
+        "median": 26.105152,
+        "p95": 150.028004
+      },
+      "total_ms": {
+        "mean": 55.50702758333333,
+        "median": 45.471781,
+        "p95": 169.263138
+      }
+    },
+    "truncated": 0,
+    "repetitions_consistent": true,
+    "predictions": [
+      {
+        "id": "ja_a_02",
+        "truth": "周囲の状況は？",
+        "prediction": "周囲の状況は？",
+        "stopped": true
+      },
+      {
+        "id": "ja_a_03",
+        "truth": "問題ありません",
+        "prediction": "問題ありません",
+        "stopped": true
+      },
+      {
+        "id": "ja_a_04",
+        "truth": "茸ジャマーも機能しています",
+        "prediction": "─ジャマーも機能しています",
+        "stopped": true
+      },
+      {
+        "id": "ja_a_06",
+        "truth": "遅かれ早かれ出てくるとは思っていたが",
+        "prediction": "遅かれ早かれ出てくるとは思っていたが",
+        "stopped": true
+      },
+      {
+        "id": "ja_a_07",
+        "truth": "このタイミングとはな",
+        "prediction": "このタイミングとはな",
+        "stopped": true
+      },
+      {
+        "id": "ja_a_09",
+        "truth": "知ってるんですか？",
+        "prediction": "知ってるんですか？",
+        "stopped": true
+      },
+      {
+        "id": "ja_a_12",
+        "truth": "宇宙人の高次元ジャケットに唯一適合できた人間だ",
+        "prediction": "宇宙人の高次元ジャケットに唯一適合できた人間だ",
+        "stopped": true
+      },
+      {
+        "id": "ja_a_13",
+        "truth": "そしてかつて俺達の仲間だった人だ",
+        "prediction": "そしてかつて俺達の仲間だった人だ",
+        "stopped": true
+      },
+      {
+        "id": "ja_b_01",
+        "truth": "どういうわけか今はR・R社に在籍している",
+        "prediction": "どういうわけか今はＲ・Ｒ社に在藉している",
+        "stopped": true
+      },
+      {
+        "id": "ja_b_05",
+        "truth": "当時の事を知っているのは社長や隊長…あとは一部の幹部連中だろう",
+        "prediction": "当時の事を知っているのは社長や隊長．．．あとは一部の幹部連中だろう",
+        "stopped": true
+      },
+      {
+        "id": "ja_b_08",
+        "truth": "過去に何体もの宇宙人を──…高次元ジャケットを屠ってきた実績がある",
+        "prediction": "過去に何体もの宇宙人をー．．．高次元ジャケットを尾ってきた実績がある",
+        "stopped": true
+      },
+      {
+        "id": "ja_b_09",
+        "truth": "彼女は百戦錬磨の戦士であるということだ",
+        "prediction": "彼女は百戦錬磨の戦士であるということだ",
+        "stopped": true
+      },
+      {
+        "id": "en_a_01",
+        "truth": "BOY.",
+        "prediction": "BOY.",
+        "stopped": true
+      },
+      {
+        "id": "en_a_02",
+        "truth": "WHERE ARE YOU HEADING?",
+        "prediction": "WHERE ARE YOU HEADING?",
+        "stopped": true
+      },
+      {
+        "id": "en_a_03",
+        "truth": "THREE MONTHS LATER",
+        "prediction": "THREE MONTHS LATER",
+        "stopped": true
+      },
+      {
+        "id": "en_a_04",
+        "truth": "AOTERU.",
+        "prediction": "AOTERU.",
+        "stopped": true
+      },
+      {
+        "id": "en_a_05",
+        "truth": "DO YOU KNOW ABOUT TORYUMON?",
+        "prediction": "DO YOU KNOW ABOUT TORYUMON?",
+        "stopped": true
+      },
+      {
+        "id": "en_a_06",
+        "truth": "A VIRTUOUS MAN WHO EXCELS IN BOTH THE FINE AND MARTIAL ARTS. ALTHOUGHT HE'S STRICT, HE'S WELL RESPECTED.",
+        "prediction": "A VIRTUOUS MAN WHO EXCELS IN BOTH THE FINE AND MAR-TIAL ARTS. ALTHOUGHT HE'S STRICT, HE'S WELL RESPECTED.",
+        "stopped": true
+      },
+      {
+        "id": "en_a_07",
+        "truth": "RYU-MON MIT-SUHIDE.",
+        "prediction": "RYU-MON MIT-SUHIDE.",
+        "stopped": true
+      },
+      {
+        "id": "en_a_08",
+        "truth": "IT'S RUMOURED THAT IN THE CAPITAL, OSAKA, THOUSANDS OF PEOPLE WHO WISH TO GOVERN COME TO HIS HOUSE EVERY DAY.",
+        "prediction": "IT'S RUMOURED THAT IN THE CAPITAL, OSAKA, THOUSANDS OF PEOPLE WHO WISH TO GOVERN COME TO HIS HOUSE EVERY DAY.",
+        "stopped": true
+      }
+    ]
+  },
+  "mixed-baberu-int4-decoder-gpu": {
+    "mode": "baberu-int4",
+    "backend": "cuda-decoder",
+    "load_ms": 682.595763,
+    "passes": 3,
+    "threads": 4,
+    "max_rss_kib": 930320,
+    "quality": {
+      "all": {
+        "count": 20,
+        "cer_percent": 1.0548523206751055,
+        "content_cer_percent": 0.89086859688196,
+        "exact_count": 17,
+        "edits": 5,
+        "reference_chars": 474
+      },
+      "ja": {
+        "count": 12,
+        "cer_percent": 1.9047619047619047,
+        "content_cer_percent": 1.9900497512437811,
+        "exact_count": 10,
+        "edits": 4,
+        "reference_chars": 210
+      },
+      "en": {
+        "count": 8,
+        "cer_percent": 0.3787878787878788,
+        "content_cer_percent": 0.0,
+        "exact_count": 7,
+        "edits": 1,
+        "reference_chars": 264
+      }
+    },
+    "timing": {
+      "prepare_ms": {
+        "mean": 1.28322165,
+        "median": 1.161785,
+        "p95": 1.995809
+      },
+      "vision_ms": {
+        "mean": 162.55609171666666,
+        "median": 162.529943,
+        "p95": 162.766358
+      },
+      "prefill_ms": {
+        "mean": 24.234036133333333,
+        "median": 24.189859,
+        "p95": 24.294027
+      },
+      "decode_ms": {
+        "mean": 60.08325936666667,
+        "median": 42.672187,
+        "p95": 247.797373
+      },
+      "total_ms": {
+        "mean": 248.15754993333334,
+        "median": 231.29866099999998,
+        "p95": 436.546865
+      }
+    },
+    "truncated": 0,
+    "repetitions_consistent": true,
+    "predictions": [
+      {
+        "id": "ja_a_02",
+        "truth": "周囲の状況は？",
+        "prediction": "周囲の状況は？",
+        "stopped": true
+      },
+      {
+        "id": "ja_a_03",
+        "truth": "問題ありません",
+        "prediction": "問題ありません",
+        "stopped": true
+      },
+      {
+        "id": "ja_a_04",
+        "truth": "茸ジャマーも機能しています",
+        "prediction": "─ジャマーも機能しています",
+        "stopped": true
+      },
+      {
+        "id": "ja_a_06",
+        "truth": "遅かれ早かれ出てくるとは思っていたが",
+        "prediction": "遅かれ早かれ出てくるとは思っていたが",
+        "stopped": true
+      },
+      {
+        "id": "ja_a_07",
+        "truth": "このタイミングとはな",
+        "prediction": "このタイミングとはな",
+        "stopped": true
+      },
+      {
+        "id": "ja_a_09",
+        "truth": "知ってるんですか？",
+        "prediction": "知ってるんですか？",
+        "stopped": true
+      },
+      {
+        "id": "ja_a_12",
+        "truth": "宇宙人の高次元ジャケットに唯一適合できた人間だ",
+        "prediction": "宇宙人の高次元ジャケットに唯一適合できた人間だ",
+        "stopped": true
+      },
+      {
+        "id": "ja_a_13",
+        "truth": "そしてかつて俺達の仲間だった人だ",
+        "prediction": "そしてかつて俺達の仲間だった人だ",
+        "stopped": true
+      },
+      {
+        "id": "ja_b_01",
+        "truth": "どういうわけか今はR・R社に在籍している",
+        "prediction": "どういうわけか今はＲ・Ｒ社に在籍している",
+        "stopped": true
+      },
+      {
+        "id": "ja_b_05",
+        "truth": "当時の事を知っているのは社長や隊長…あとは一部の幹部連中だろう",
+        "prediction": "当時の事を知っているのは社長や隊長．．．あとは一部の幹部連中だろう",
+        "stopped": true
+      },
+      {
+        "id": "ja_b_08",
+        "truth": "過去に何体もの宇宙人を──…高次元ジャケットを屠ってきた実績がある",
+        "prediction": "過去に何体もの宇宙人をー．．．高次元ジャケットを尾ってきた実績がある",
+        "stopped": true
+      },
+      {
+        "id": "ja_b_09",
+        "truth": "彼女は百戦錬磨の戦士であるということだ",
+        "prediction": "彼女は百戦錬磨の戦士であるということだ",
+        "stopped": true
+      },
+      {
+        "id": "en_a_01",
+        "truth": "BOY.",
+        "prediction": "BOY.",
+        "stopped": true
+      },
+      {
+        "id": "en_a_02",
+        "truth": "WHERE ARE YOU HEADING?",
+        "prediction": "WHERE ARE YOU HEADING?",
+        "stopped": true
+      },
+      {
+        "id": "en_a_03",
+        "truth": "THREE MONTHS LATER",
+        "prediction": "THREE MONTHS LATER",
+        "stopped": true
+      },
+      {
+        "id": "en_a_04",
+        "truth": "AOTERU.",
+        "prediction": "AOTERU.",
+        "stopped": true
+      },
+      {
+        "id": "en_a_05",
+        "truth": "DO YOU KNOW ABOUT TORYUMON?",
+        "prediction": "DO YOU KNOW ABOUT TORYUMON?",
+        "stopped": true
+      },
+      {
+        "id": "en_a_06",
+        "truth": "A VIRTUOUS MAN WHO EXCELS IN BOTH THE FINE AND MARTIAL ARTS. ALTHOUGHT HE'S STRICT, HE'S WELL RESPECTED.",
+        "prediction": "A VIRTUOUS MAN WHO EXCELS IN BOTH THE FINE AND MAR-TIAL ARTS. ALTHOUGHT HE'S STRICT, HE'S WELL RESPECTED.",
+        "stopped": true
+      },
+      {
+        "id": "en_a_07",
+        "truth": "RYU-MON MIT-SUHIDE.",
+        "prediction": "RYU-MON MIT-SUHIDE.",
+        "stopped": true
+      },
+      {
+        "id": "en_a_08",
+        "truth": "IT'S RUMOURED THAT IN THE CAPITAL, OSAKA, THOUSANDS OF PEOPLE WHO WISH TO GOVERN COME TO HIS HOUSE EVERY DAY.",
+        "prediction": "IT'S RUMOURED THAT IN THE CAPITAL, OSAKA, THOUSANDS OF PEOPLE WHO WISH TO GOVERN COME TO HIS HOUSE EVERY DAY.",
+        "stopped": true
+      }
+    ]
+  },
+  "mixed-baberu-int4": {
+    "mode": "baberu-int4",
+    "backend": "cuda-vision",
+    "load_ms": 599.192708,
+    "passes": 3,
+    "threads": 4,
+    "max_rss_kib": 1098552,
+    "quality": {
+      "all": {
+        "count": 20,
+        "cer_percent": 1.0548523206751055,
+        "content_cer_percent": 0.89086859688196,
+        "exact_count": 17,
+        "edits": 5,
+        "reference_chars": 474
+      },
+      "ja": {
+        "count": 12,
+        "cer_percent": 1.9047619047619047,
+        "content_cer_percent": 1.9900497512437811,
+        "exact_count": 10,
+        "edits": 4,
+        "reference_chars": 210
+      },
+      "en": {
+        "count": 8,
+        "cer_percent": 0.3787878787878788,
+        "content_cer_percent": 0.0,
+        "exact_count": 7,
+        "edits": 1,
+        "reference_chars": 264
+      }
+    },
+    "timing": {
+      "prepare_ms": {
+        "mean": 1.2812291833333334,
+        "median": 1.153087,
+        "p95": 2.007166
+      },
+      "vision_ms": {
+        "mean": 8.5428436,
+        "median": 8.4626885,
+        "p95": 8.704136
+      },
+      "prefill_ms": {
+        "mean": 15.82173835,
+        "median": 15.799353499999999,
+        "p95": 15.946882
+      },
+      "decode_ms": {
+        "mean": 34.691060416666666,
+        "median": 24.293922000000002,
+        "p95": 141.776476
+      },
+      "total_ms": {
+        "mean": 60.33731875,
+        "median": 50.5110495,
+        "p95": 168.066548
+      }
+    },
+    "truncated": 0,
+    "repetitions_consistent": true,
+    "predictions": [
+      {
+        "id": "ja_a_02",
+        "truth": "周囲の状況は？",
+        "prediction": "周囲の状況は？",
+        "stopped": true
+      },
+      {
+        "id": "ja_a_03",
+        "truth": "問題ありません",
+        "prediction": "問題ありません",
+        "stopped": true
+      },
+      {
+        "id": "ja_a_04",
+        "truth": "茸ジャマーも機能しています",
+        "prediction": "─ジャマーも機能しています",
+        "stopped": true
+      },
+      {
+        "id": "ja_a_06",
+        "truth": "遅かれ早かれ出てくるとは思っていたが",
+        "prediction": "遅かれ早かれ出てくるとは思っていたが",
+        "stopped": true
+      },
+      {
+        "id": "ja_a_07",
+        "truth": "このタイミングとはな",
+        "prediction": "このタイミングとはな",
+        "stopped": true
+      },
+      {
+        "id": "ja_a_09",
+        "truth": "知ってるんですか？",
+        "prediction": "知ってるんですか？",
+        "stopped": true
+      },
+      {
+        "id": "ja_a_12",
+        "truth": "宇宙人の高次元ジャケットに唯一適合できた人間だ",
+        "prediction": "宇宙人の高次元ジャケットに唯一適合できた人間だ",
+        "stopped": true
+      },
+      {
+        "id": "ja_a_13",
+        "truth": "そしてかつて俺達の仲間だった人だ",
+        "prediction": "そしてかつて俺達の仲間だった人だ",
+        "stopped": true
+      },
+      {
+        "id": "ja_b_01",
+        "truth": "どういうわけか今はR・R社に在籍している",
+        "prediction": "どういうわけか今はＲ・Ｒ社に在籍している",
+        "stopped": true
+      },
+      {
+        "id": "ja_b_05",
+        "truth": "当時の事を知っているのは社長や隊長…あとは一部の幹部連中だろう",
+        "prediction": "当時の事を知っているのは社長や隊長．．．あとは一部の幹部連中だろう",
+        "stopped": true
+      },
+      {
+        "id": "ja_b_08",
+        "truth": "過去に何体もの宇宙人を──…高次元ジャケットを屠ってきた実績がある",
+        "prediction": "過去に何体もの宇宙人をー．．．高次元ジャケットを尾ってきた実績がある",
+        "stopped": true
+      },
+      {
+        "id": "ja_b_09",
+        "truth": "彼女は百戦錬磨の戦士であるということだ",
+        "prediction": "彼女は百戦錬磨の戦士であるということだ",
+        "stopped": true
+      },
+      {
+        "id": "en_a_01",
+        "truth": "BOY.",
+        "prediction": "BOY.",
+        "stopped": true
+      },
+      {
+        "id": "en_a_02",
+        "truth": "WHERE ARE YOU HEADING?",
+        "prediction": "WHERE ARE YOU HEADING?",
+        "stopped": true
+      },
+      {
+        "id": "en_a_03",
+        "truth": "THREE MONTHS LATER",
+        "prediction": "THREE MONTHS LATER",
+        "stopped": true
+      },
+      {
+        "id": "en_a_04",
+        "truth": "AOTERU.",
+        "prediction": "AOTERU.",
+        "stopped": true
+      },
+      {
+        "id": "en_a_05",
+        "truth": "DO YOU KNOW ABOUT TORYUMON?",
+        "prediction": "DO YOU KNOW ABOUT TORYUMON?",
+        "stopped": true
+      },
+      {
+        "id": "en_a_06",
+        "truth": "A VIRTUOUS MAN WHO EXCELS IN BOTH THE FINE AND MARTIAL ARTS. ALTHOUGHT HE'S STRICT, HE'S WELL RESPECTED.",
+        "prediction": "A VIRTUOUS MAN WHO EXCELS IN BOTH THE FINE AND MAR-TIAL ARTS. ALTHOUGHT HE'S STRICT, HE'S WELL RESPECTED.",
+        "stopped": true
+      },
+      {
+        "id": "en_a_07",
+        "truth": "RYU-MON MIT-SUHIDE.",
+        "prediction": "RYU-MON MIT-SUHIDE.",
+        "stopped": true
+      },
+      {
+        "id": "en_a_08",
+        "truth": "IT'S RUMOURED THAT IN THE CAPITAL, OSAKA, THOUSANDS OF PEOPLE WHO WISH TO GOVERN COME TO HIS HOUSE EVERY DAY.",
+        "prediction": "IT'S RUMOURED THAT IN THE CAPITAL, OSAKA, THOUSANDS OF PEOPLE WHO WISH TO GOVERN COME TO HIS HOUSE EVERY DAY.",
+        "stopped": true
+      }
+    ]
+  },
+  "mixed-hayai-fp32-decoder-gpu": {
+    "mode": "hayai-fp32",
+    "backend": "cuda-decoder",
+    "load_ms": 1359.426434,
+    "passes": 3,
+    "threads": 4,
+    "max_rss_kib": 1344696,
+    "quality": {
+      "all": {
+        "count": 20,
+        "cer_percent": 1.6877637130801688,
+        "content_cer_percent": 1.78173719376392,
+        "exact_count": 18,
+        "edits": 8,
+        "reference_chars": 474
+      },
+      "ja": {
+        "count": 12,
+        "cer_percent": 0.9523809523809523,
+        "content_cer_percent": 0.9950248756218906,
+        "exact_count": 11,
+        "edits": 2,
+        "reference_chars": 210
+      },
+      "en": {
+        "count": 8,
+        "cer_percent": 2.272727272727273,
+        "content_cer_percent": 2.4193548387096775,
+        "exact_count": 7,
+        "edits": 6,
+        "reference_chars": 264
+      }
+    },
+    "timing": {
+      "prepare_ms": {
+        "mean": 1.6715814333333334,
+        "median": 1.5723289999999999,
+        "p95": 2.230721
+      },
+      "vision_ms": {
+        "mean": 139.297272,
+        "median": 139.211796,
+        "p95": 139.840866
+      },
+      "prefill_ms": {
+        "mean": 5.0899662333333335,
+        "median": 5.074762,
+        "p95": 5.194403
+      },
+      "decode_ms": {
+        "mean": 51.87614321666667,
+        "median": 36.393257500000004,
+        "p95": 187.81449
+      },
+      "total_ms": {
+        "mean": 197.93592395,
+        "median": 182.8130395,
+        "p95": 334.539152
+      }
+    },
+    "truncated": 0,
+    "repetitions_consistent": true,
+    "predictions": [
+      {
+        "id": "ja_a_02",
+        "truth": "周囲の状況は？",
+        "prediction": "周囲の状況は?",
+        "stopped": true
+      },
+      {
+        "id": "ja_a_03",
+        "truth": "問題ありません",
+        "prediction": "問題ありません",
+        "stopped": true
+      },
+      {
+        "id": "ja_a_04",
+        "truth": "茸ジャマーも機能しています",
+        "prediction": "茸ジャマーも機能しています",
+        "stopped": true
+      },
+      {
+        "id": "ja_a_06",
+        "truth": "遅かれ早かれ出てくるとは思っていたが",
+        "prediction": "遅かれ早かれ出てくるとは思っていたが",
+        "stopped": true
+      },
+      {
+        "id": "ja_a_07",
+        "truth": "このタイミングとはな",
+        "prediction": "このタイミングとはな",
+        "stopped": true
+      },
+      {
+        "id": "ja_a_09",
+        "truth": "知ってるんですか？",
+        "prediction": "知ってるんですか?",
+        "stopped": true
+      },
+      {
+        "id": "ja_a_12",
+        "truth": "宇宙人の高次元ジャケットに唯一適合できた人間だ",
+        "prediction": "宇宙人の高次元ジャケットに唯一適合できた人間だ",
+        "stopped": true
+      },
+      {
+        "id": "ja_a_13",
+        "truth": "そしてかつて俺達の仲間だった人だ",
+        "prediction": "そしてかつて俺達の仲間だった人だ",
+        "stopped": true
+      },
+      {
+        "id": "ja_b_01",
+        "truth": "どういうわけか今はR・R社に在籍している",
+        "prediction": "どういうわけか今はR・R社に在籍している",
+        "stopped": true
+      },
+      {
+        "id": "ja_b_05",
+        "truth": "当時の事を知っているのは社長や隊長…あとは一部の幹部連中だろう",
+        "prediction": "当時の事を知っているのは社長や隊長...あとは一部の幹部連中だろう",
+        "stopped": true
+      },
+      {
+        "id": "ja_b_08",
+        "truth": "過去に何体もの宇宙人を──…高次元ジャケットを屠ってきた実績がある",
+        "prediction": "過去に何体もの宇宙人をーー...高次元ジャケットを屠ってきた実績がある",
+        "stopped": true
+      },
+      {
+        "id": "ja_b_09",
+        "truth": "彼女は百戦錬磨の戦士であるということだ",
+        "prediction": "彼女は百戦錬磨の戦士であるということだ",
+        "stopped": true
+      },
+      {
+        "id": "en_a_01",
+        "truth": "BOY.",
+        "prediction": "BOY.",
+        "stopped": true
+      },
+      {
+        "id": "en_a_02",
+        "truth": "WHERE ARE YOU HEADING?",
+        "prediction": "WHERE ARE YOU HEADING?",
+        "stopped": true
+      },
+      {
+        "id": "en_a_03",
+        "truth": "THREE MONTHS LATER",
+        "prediction": "THREE MONTHS LATER",
+        "stopped": true
+      },
+      {
+        "id": "en_a_04",
+        "truth": "AOTERU.",
+        "prediction": "AOTERU.",
+        "stopped": true
+      },
+      {
+        "id": "en_a_05",
+        "truth": "DO YOU KNOW ABOUT TORYUMON?",
+        "prediction": "DO YOU KNOW ABOUT TORYUMON?",
+        "stopped": true
+      },
+      {
+        "id": "en_a_06",
+        "truth": "A VIRTUOUS MAN WHO EXCELS IN BOTH THE FINE AND MARTIAL ARTS. ALTHOUGHT HE'S STRICT, HE'S WELL RESPECTED.",
+        "prediction": "A VIRTUOUS MAN WHO EXCELS IN BOTH THE FINE AND MARTS. ALTHOUGHT HE'S STRICT, HE'S WELL RESPECTED.",
+        "stopped": true
+      },
+      {
+        "id": "en_a_07",
+        "truth": "RYU-MON MIT-SUHIDE.",
+        "prediction": "RYU-MON MIT-SUHIDE.",
+        "stopped": true
+      },
+      {
+        "id": "en_a_08",
+        "truth": "IT'S RUMOURED THAT IN THE CAPITAL, OSAKA, THOUSANDS OF PEOPLE WHO WISH TO GOVERN COME TO HIS HOUSE EVERY DAY.",
+        "prediction": "IT'S RUMOURED THAT IN THE CAPITAL, OSAKA, THOUSANDS OF PEOPLE WHO WISH TO GOVERN COME TO HIS HOUSE EVERY DAY.",
+        "stopped": true
+      }
+    ]
+  },
+  "mixed-hayai-fp32-vision-gpu": {
+    "mode": "hayai-fp32",
+    "backend": "cuda-vision",
+    "load_ms": 1462.330291,
+    "passes": 3,
+    "threads": 4,
+    "max_rss_kib": 1431172,
+    "quality": {
+      "all": {
+        "count": 20,
+        "cer_percent": 1.6877637130801688,
+        "content_cer_percent": 1.78173719376392,
+        "exact_count": 18,
+        "edits": 8,
+        "reference_chars": 474
+      },
+      "ja": {
+        "count": 12,
+        "cer_percent": 0.9523809523809523,
+        "content_cer_percent": 0.9950248756218906,
+        "exact_count": 11,
+        "edits": 2,
+        "reference_chars": 210
+      },
+      "en": {
+        "count": 8,
+        "cer_percent": 2.272727272727273,
+        "content_cer_percent": 2.4193548387096775,
+        "exact_count": 7,
+        "edits": 6,
+        "reference_chars": 264
+      }
+    },
+    "timing": {
+      "prepare_ms": {
+        "mean": 1.6826609166666666,
+        "median": 1.592425,
+        "p95": 2.263953
+      },
+      "vision_ms": {
+        "mean": 5.51761165,
+        "median": 5.511611,
+        "p95": 5.585091
+      },
+      "prefill_ms": {
+        "mean": 86.16296836666666,
+        "median": 86.11548400000001,
+        "p95": 86.425339
+      },
+      "decode_ms": {
+        "mean": 87.24490349999999,
+        "median": 61.626054499999995,
+        "p95": 310.833515
+      },
+      "total_ms": {
+        "mean": 180.60900923333332,
+        "median": 155.381638,
+        "p95": 404.665945
+      }
+    },
+    "truncated": 0,
+    "repetitions_consistent": true,
+    "predictions": [
+      {
+        "id": "ja_a_02",
+        "truth": "周囲の状況は？",
+        "prediction": "周囲の状況は?",
+        "stopped": true
+      },
+      {
+        "id": "ja_a_03",
+        "truth": "問題ありません",
+        "prediction": "問題ありません",
+        "stopped": true
+      },
+      {
+        "id": "ja_a_04",
+        "truth": "茸ジャマーも機能しています",
+        "prediction": "茸ジャマーも機能しています",
+        "stopped": true
+      },
+      {
+        "id": "ja_a_06",
+        "truth": "遅かれ早かれ出てくるとは思っていたが",
+        "prediction": "遅かれ早かれ出てくるとは思っていたが",
+        "stopped": true
+      },
+      {
+        "id": "ja_a_07",
+        "truth": "このタイミングとはな",
+        "prediction": "このタイミングとはな",
+        "stopped": true
+      },
+      {
+        "id": "ja_a_09",
+        "truth": "知ってるんですか？",
+        "prediction": "知ってるんですか?",
+        "stopped": true
+      },
+      {
+        "id": "ja_a_12",
+        "truth": "宇宙人の高次元ジャケットに唯一適合できた人間だ",
+        "prediction": "宇宙人の高次元ジャケットに唯一適合できた人間だ",
+        "stopped": true
+      },
+      {
+        "id": "ja_a_13",
+        "truth": "そしてかつて俺達の仲間だった人だ",
+        "prediction": "そしてかつて俺達の仲間だった人だ",
+        "stopped": true
+      },
+      {
+        "id": "ja_b_01",
+        "truth": "どういうわけか今はR・R社に在籍している",
+        "prediction": "どういうわけか今はR・R社に在籍している",
+        "stopped": true
+      },
+      {
+        "id": "ja_b_05",
+        "truth": "当時の事を知っているのは社長や隊長…あとは一部の幹部連中だろう",
+        "prediction": "当時の事を知っているのは社長や隊長...あとは一部の幹部連中だろう",
+        "stopped": true
+      },
+      {
+        "id": "ja_b_08",
+        "truth": "過去に何体もの宇宙人を──…高次元ジャケットを屠ってきた実績がある",
+        "prediction": "過去に何体もの宇宙人をーー...高次元ジャケットを屠ってきた実績がある",
+        "stopped": true
+      },
+      {
+        "id": "ja_b_09",
+        "truth": "彼女は百戦錬磨の戦士であるということだ",
+        "prediction": "彼女は百戦錬磨の戦士であるということだ",
+        "stopped": true
+      },
+      {
+        "id": "en_a_01",
+        "truth": "BOY.",
+        "prediction": "BOY.",
+        "stopped": true
+      },
+      {
+        "id": "en_a_02",
+        "truth": "WHERE ARE YOU HEADING?",
+        "prediction": "WHERE ARE YOU HEADING?",
+        "stopped": true
+      },
+      {
+        "id": "en_a_03",
+        "truth": "THREE MONTHS LATER",
+        "prediction": "THREE MONTHS LATER",
+        "stopped": true
+      },
+      {
+        "id": "en_a_04",
+        "truth": "AOTERU.",
+        "prediction": "AOTERU.",
+        "stopped": true
+      },
+      {
+        "id": "en_a_05",
+        "truth": "DO YOU KNOW ABOUT TORYUMON?",
+        "prediction": "DO YOU KNOW ABOUT TORYUMON?",
+        "stopped": true
+      },
+      {
+        "id": "en_a_06",
+        "truth": "A VIRTUOUS MAN WHO EXCELS IN BOTH THE FINE AND MARTIAL ARTS. ALTHOUGHT HE'S STRICT, HE'S WELL RESPECTED.",
+        "prediction": "A VIRTUOUS MAN WHO EXCELS IN BOTH THE FINE AND MARTS. ALTHOUGHT HE'S STRICT, HE'S WELL RESPECTED.",
+        "stopped": true
+      },
+      {
+        "id": "en_a_07",
+        "truth": "RYU-MON MIT-SUHIDE.",
+        "prediction": "RYU-MON MIT-SUHIDE.",
+        "stopped": true
+      },
+      {
+        "id": "en_a_08",
+        "truth": "IT'S RUMOURED THAT IN THE CAPITAL, OSAKA, THOUSANDS OF PEOPLE WHO WISH TO GOVERN COME TO HIS HOUSE EVERY DAY.",
+        "prediction": "IT'S RUMOURED THAT IN THE CAPITAL, OSAKA, THOUSANDS OF PEOPLE WHO WISH TO GOVERN COME TO HIS HOUSE EVERY DAY.",
+        "stopped": true
+      }
+    ]
+  }
+}

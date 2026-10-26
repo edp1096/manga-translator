@@ -1,0 +1,75 @@
+{
+  "_id": "6a8a18f4471c561d035b6548",
+  "id": "DevilishDaoSaint/koharu-layout-rfdetr",
+  "private": false,
+  "pipeline_tag": "image-segmentation",
+  "library_name": "onnxruntime",
+  "tags": [
+    "onnxruntime",
+    "onnx",
+    "manga",
+    "comics",
+    "manhua",
+    "manhwa",
+    "rf-detr",
+    "instance-segmentation",
+    "text-detection",
+    "image-segmentation",
+    "dataset:mayocream/manga109-segmentation",
+    "license:other",
+    "region:us"
+  ],
+  "downloads": 0,
+  "likes": 0,
+  "modelId": "DevilishDaoSaint/koharu-layout-rfdetr",
+  "author": "DevilishDaoSaint",
+  "sha": "ed8e6078b9e119f6b1db89c7aea39f08046d65f8",
+  "lastModified": "2026-09-06T09:59:26.000Z",
+  "gated": false,
+  "disabled": false,
+  "model-index": null,
+  "config": {},
+  "cardData": {
+    "license": "other",
+    "library_name": "onnxruntime",
+    "pipeline_tag": "image-segmentation",
+    "datasets": [
+      "mayocream/manga109-segmentation"
+    ],
+    "tags": [
+      "manga",
+      "comics",
+      "manhua",
+      "manhwa",
+      "rf-detr",
+      "instance-segmentation",
+      "text-detection",
+      "onnx"
+    ]
+  },
+  "siblings": [
+    {
+      "rfilename": ".gitattributes",
+      "blobId": "a6344aac8c09253b3b630fb776ae94478aa0275b",
+      "size": 1519
+    },
+    {
+      "rfilename": "README.md",
+      "blobId": "881d9759f7c14c2d8bd289082a812fd79f67161e",
+      "size": 2481
+    },
+    {
+      "rfilename": "rfdetr-seg-2xlarge.onnx",
+      "blobId": "57ead710ceafe13b625a647a80687513444adf84",
+      "size": 140535993,
+      "lfs": {
+        "sha256": "78d969b86aca2d739d7b29f317d1115ce41b16983b3f1e64b1a1d983348bfc0c",
+        "size": 140535993,
+        "pointerSize": 134
+      }
+    }
+  ],
+  "spaces": [],
+  "createdAt": "2026-08-22T21:47:32.000Z",
+  "usedStorage": 425205404
+}

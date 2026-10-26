@@ -1,0 +1,14 @@
+{
+  "cpuCases": 40,
+  "cudaCases": 40,
+  "cpuTextAndTensorBitExact": true,
+  "cudaTokenSequencesExact": true,
+  "cpuActualPageBothVariants": true,
+  "cudaActualPageBothVariants": true,
+  "pythonRuntimeRequired": false,
+  "windowsActualInference": false,
+  "baberuGPUNativeLimitMiB": 3072,
+  "baberuGPUAvailableMinimumMiB": 4096,
+  "cpuNativeLimitUnchanged": true,
+  "sharedDeletionTestPassed": true
+}
