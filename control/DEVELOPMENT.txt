@@ -45,6 +45,7 @@ versions are pinned in internal/assets/bundle/catalog.json and web/package-lock.
 Windows cross-compilation is not on-device Windows inference verification.
 
 Tests
+  npm audit --prefix web
   go test -race ./internal/control
   go vet ./...
 
