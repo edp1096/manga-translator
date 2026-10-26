@@ -1,0 +1,28 @@
+{
+  "name": "mangaz",
+  "count": 7,
+  "samples": [
+    {
+      "index": 0,
+      "width": 1062,
+      "height": 1500,
+      "nonwhite": 2691
+    },
+    {
+      "index": 3,
+      "width": 1062,
+      "height": 1500,
+      "nonwhite": 2679
+    },
+    {
+      "index": 6,
+      "width": 1062,
+      "height": 1500,
+      "nonwhite": 141
+    }
+  ],
+  "allPagesLoaded": true,
+  "overlayAligned": true,
+  "noCompletionJump": true,
+  "errors": []
+}

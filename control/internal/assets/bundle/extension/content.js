@@ -4,7 +4,7 @@ const rpc=async msg=>{const r=await chrome.runtime.sendMessage(msg);if(!r?.ok)th
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 const pageIdentity=()=>{if(globalThis.MangaReaders)return MangaReaders.pageIdentity(location.href);const u=new URL(location.href);u.hash='';return u.href;};
 const captureReader=async()=>{if((await rpc({type:'settings'})).captureFallback===false)throw Error('이 뷰어는 확장 설정의 화면 캡처 허용이 필요합니다.');return rpc({type:'capture'});};
-let reader=globalThis.MangaReaders?.create({capture:captureReader})||null;
+let reader=globalThis.MangaReaders?.create({capture:captureReader,onWait:text=>status(text),cancelled:()=>running&&stopped})||null;
 let pageCache=null,exportPosition=null;
 const overlayInstance=crypto.randomUUID();
 let entries=[],running=false,stopped=false,showOriginal=false,message='이미지를 탐지하세요.',scannedURL=pageIdentity();
@@ -27,7 +27,7 @@ function readerScan(options={}){
 
 async function scan(options={}){
  if(running&&!options.loading)return snapshot();
- const samePage=scannedURL===pageIdentity();scannedURL=pageIdentity();if(!samePage){pageCache=null;for(const e of entries){e.overlay?.remove();e.resizeObserver?.disconnect();}entries=[];reader=globalThis.MangaReaders?.create({capture:captureReader})||null;}
+ const samePage=scannedURL===pageIdentity();scannedURL=pageIdentity();if(!samePage){pageCache=null;for(const e of entries){e.overlay?.remove();e.resizeObserver?.disconnect();}entries=[];reader=globalThis.MangaReaders?.create({capture:captureReader,onWait:text=>status(text),cancelled:()=>running&&stopped})||null;}
  const settings=options.settings||await rpc({type:'settings'});
  if(pageCache===null){const saved=await rpc({type:'restore'}).catch(()=>[]);pageCache=Array.isArray(saved)?saved:[];}
  if(reader)return readerScan(options);
@@ -60,7 +60,7 @@ async function scan(options={}){
 async function preload(){
  if(reader)return preloadReader();
  if(running)return;running=true;stopped=false;
- const startX=scrollX,startY=scrollY,initialURL=pageIdentity();
+ const startX=scrollX,initialURL=pageIdentity();
  const scrollStyle=document.documentElement.style.scrollBehavior;document.documentElement.style.scrollBehavior='auto';
  let settings;
  try{
@@ -79,20 +79,18 @@ async function preload(){
    if(scrollY>=after-5){bottomHits++;await sleep(700);if(bottomHits>=2)break;}else bottomHits=0;
   }
  }finally{
-  if(pageIdentity()===initialURL)scrollTo({top:startY,left:startX,behavior:'instant'});
   document.documentElement.style.scrollBehavior=scrollStyle;running=false;
   await scan({append:pageIdentity()===initialURL,settings});
  }
 }
 async function preloadReader(){
- if(running)return;running=true;stopped=false;const active=reader,position=active.position(),identity=pageIdentity();let loaded=0,failed=0;
+ if(running)return;running=true;stopped=false;const active=reader,identity=pageIdentity();let loaded=0,failed=0;
  try{
   await scan({loading:true});
   for(const e of entries){if(stopped||pageIdentity()!==identity)break;status(`${active.name} · ${e.index+1}/${entries.length} 불러오는 중`);
-   try{await readImage(e);loaded++;if(!e.result)e.state='대기';}catch(error){failed++;if(!e.result)e.state='읽기 실패: '+error.message;if(/활성화|activeTab|all_urls|화면 캡처 허용/.test(error.message))throw error;}
+   try{await readImage(e);loaded++;if(!e.result)e.state='대기';}catch(error){if(stopped)break;failed++;if(!e.result)e.state='읽기 실패: '+error.message;if(/활성화|activeTab|all_urls|화면 캡처 허용/.test(error.message))throw error;}
   }
  }finally{
-  if(pageIdentity()===identity)try{await active.restore(position);}catch{}
   try{await scan({loading:true,append:true});}finally{running=false;status(`${stopped?'불러오기 중지':'불러오기 완료'} · ${loaded}장 · 읽기 실패 ${failed}장`);}
  }
 }
@@ -192,7 +190,7 @@ async function run(keys){
  const paused=globalThis.__mangaPausedBatch;
  const sameBatch=paused&&paused.remaining.length>0&&paused.keys.length===keys.length&&paused.keys.every(key=>keys.includes(key));
  const selected=sameBatch?requested.filter(e=>paused.remaining.includes(e.key)):requested;
- globalThis.__mangaPausedBatch=null;running=true;stopped=false;const activeReader=reader,readingPosition=reader?.position(),batchIdentity=pageIdentity();
+ globalThis.__mangaPausedBatch=null;running=true;stopped=false;const batchIdentity=pageIdentity();
  const completed=new Set();let done=0,failed=0;
  try{
   for(const e of selected){
@@ -225,11 +223,11 @@ async function run(keys){
      if(Date.now()-start>900000)throw Error('처리 대기 시간 초과. 다시 실행하면 기존 작업을 확인합니다.');
      await sleep(1500);
     }
-   }catch(error){e.error=error.message;e.state='실패: '+error.message;failed++;}
+   }catch(error){if(stopped)break;e.error=error.message;e.state='실패: '+error.message;failed++;}
   }
   if(stopped)globalThis.__mangaPausedBatch={keys:[...keys],remaining:selected.filter(e=>!completed.has(e.key)).map(e=>e.key)};
   status(`${stopped?'중지됨':'처리 종료'} · ${done}장 완료 · ${failed}장 실패`);
- }finally{if(activeReader&&readingPosition&&activeReader.identity===pageIdentity())try{await activeReader.restore(readingPosition);}catch{}running=false;if(rebindPending)rebindKnownImages();}
+ }finally{running=false;if(rebindPending)rebindKnownImages();}
 }
 new ResizeObserver(()=>entries.forEach(place)).observe(document.body);
 document.addEventListener('load',ev=>{if(ev.target instanceof HTMLImageElement){entries.forEach(place);if(isKnownImage(ev.target)&&!entries.some(e=>e.img===ev.target&&e.sourceURL===urlOf(ev.target)))rebindKnownImages();}},true);

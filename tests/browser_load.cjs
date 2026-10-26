@@ -26,8 +26,8 @@ const root=path.resolve(__dirname,'../extension');
   assert.equal((await page.evaluate(()=>call({action:'status'}))).items[0].done,true);
   const first=await page.evaluate(()=>call({action:'preload'}));assert.equal(first.running,true);assert.equal(first.items.length,2);
   for(let i=0;i<100;i++){if(!(await page.evaluate(()=>call({action:'status'}))).running)break;await page.waitForTimeout(150);}
-  const after=await page.evaluate(()=>call({action:'status'}));assert.equal(after.items.length,3);assert.equal(after.items[0].key,key);assert.equal(after.items[0].done,true);assert.equal(await page.evaluate(()=>scrollY),0);
-  console.log('PASS: immediate list, lazy-image append, recreated DOM preserves result/key, scroll restored');
+  const after=await page.evaluate(()=>call({action:'status'}));assert.equal(after.items.length,3);assert.equal(after.items[0].key,key);assert.equal(after.items[0].done,true);assert(await page.evaluate(()=>scrollY>500),'refresh jumped back to its starting position');
+  console.log('PASS: immediate list, lazy-image append, recreated DOM preserves result/key, refresh keeps its final position');
   const panel=await browser.newPage();
   await panel.addInitScript(()=>{window.state={message:'loaded',running:false,items:[{key:'a',index:0,state:'완료',done:true,preview:'https://example.test/a',title:'A',width:400,height:600},{key:'b',index:1,state:'대기',preview:'https://example.test/b',title:'B',width:400,height:600}]};window.chrome={tabs:{query:async()=>[{id:1,url:'https://example.test'}],onActivated:{addListener:()=>{}}},runtime:{openOptionsPage:async()=>{},sendMessage:async m=>({ok:true,value:m.type==='thumbnail'?'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7':window.state})}};});
   await panel.goto('file://'+path.join(root,'panel.html'));await panel.waitForSelector('.item');
