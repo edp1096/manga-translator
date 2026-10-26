@@ -1,0 +1,39 @@
+0.3.13 — preserve the manga side panel across tab switches
+
+Problem:
+The extension handled sidePanel.onClosed by checking tabs.get().active and
+then disabling that tab's panel. A delayed close/hide notification delivered
+after returning to the tab could remove panel availability permanently.
+The callback has no close reason; an asynchronous active-tab check cannot
+reliably infer a manual close.
+
+Change:
+Keep tab-specific panel availability once the user opens it. Chrome owns the
+actual per-tab open/closed state. Remove the onClosed disable/save handler.
+Only an explicit toolbar click opens a panel. Unopened tabs remain disabled;
+restricted-page navigation and removed-tab cleanup retain their behavior.
+
+Verification on OP5P:
+- Regression fixture delivered a delayed close notification on the returned
+  active tab: failed against 0.3.12, passed with this change.
+- Real isolated Chromium 156.0.8078.4 side-panel UI:
+  explicit open from a user gesture, 20 rapid tab round trips, unopened tab
+  stays closed, completed native close then 5 round trips stays closed,
+  explicit reopen, two independently opened tabs, closing one preserves the
+  other, startup initializer rerun preserves both open and closed state.
+- Actual panel visibility was measured using tab viewport width.
+- Tests wait for Chrome's onClosed event after close() to account for its
+  asynchronous closing animation.
+- Startup reinitialization was tested by rerunning the initializer; this is
+  not a claim that a real service worker was forcibly stopped and restarted.
+- Existing panel connection, local pairing/token preservation, and selected
+  ZIP export tests passed.
+- Windows browser execution was not available in this environment.
+
+Update:
+git pull, build with build.ps1, and use the updated extension files.
+In chrome://extensions, reload Manga Translator. Open the manga tab's panel
+once using the extension toolbar action; subsequent tab switches preserve it.
+
+Reference:
+https://developer.chrome.com/docs/extensions/reference/api/sidePanel
