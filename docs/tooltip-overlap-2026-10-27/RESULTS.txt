@@ -1,0 +1,62 @@
+Overlapping translation tooltips — 2026-10-27
+
+Problem and fix
+On the supplied KLZ chapter, a later large effect region intercepted the mouse
+over smaller text regions. Tooltip spans previously followed detection order.
+The display now inserts larger tooltip regions first, so smaller overlapping
+regions receive mouse hover. The native help cursor and title tooltip remain.
+Only the filtered display array is sorted; cached result order, bounding boxes,
+translations, rendered canvas pixels and export data are unchanged.
+This resolves tooltip hit priority, not oversized model detection itself.
+
+Actual saved results and browser reproduction
+- Read the requested chapter cache from Edge Profile 5 without changing it.
+  The LevelDB WAL reader validated record CRC32C and complete write batches.
+- Page 1 dialogue region 29 is [481,585,559,773]; the later effect region 33
+  is [456,602,720,999]. At image coordinate [520,650], the original code
+  showed effect region 33 instead of dialogue region 29.
+- Page 1 effect region 16 was similarly hidden by the larger region 17.
+- Page 2 has a large effect region [142,63,669,610] and a small name region
+  [571,108,594,179]. Its saved ordering already exposed the name. It remains
+  accessible after the fix, and reversed detection order is covered in tests.
+- Opened the real supplied URL in installed Windows Edge 156.0.4314.42 with
+  isolated profiles and the unpacked extension. Invoked the actual extension
+  action using native Windows UI Automation mouse clicks in Edge's menu.
+- Restored the user's first two saved page results and original/cleaned PNGs
+  through a temporary localhost server accepting only those asset GETs.
+  The page itself was live; the first two image responses used the saved PNGs.
+  No inference or retranslation ran, and no user credentials were copied.
+- Closed the page panel after restoration to expose the whole manga image.
+  Checked real mouse hover and native title tooltips at five page coordinates.
+  The two failing page-1 coordinates now expose their smaller regions; the
+  large-region coordinate and both page-2 coordinates remain accessible.
+- before-edge.json and after-edge.json contain the exact checks. The matching
+  before/after page screenshots include the browser's native tooltip.
+
+Regression verification
+- tests/browser_tooltip_overlap.cjs failed before the fix: point [550,450]
+  selected region 17 when region 16 was expected.
+- After the fix, all eight cases passed on Chromium 147.0.7727.15 and headed
+  Windows Edge 156.0.4314.42. They use the actual page-1/page-2 bounding boxes
+  with synthetic text, normal/reversed input order and generic/reader overlays.
+  Checks include large and small region accessibility, resized images,
+  original toggle, edited result rebuild, no duplicate spans, unchanged
+  cached results, unchanged canvas pixels and no inference submission.
+- browser_restore.cjs, browser_restore_offline.cjs and browser_retry.cjs passed.
+- Windows Go 1.27.1: go test ./... passed; the controller was rebuilt with
+  CGO_ENABLED=0, -trimpath and -ldflags=-s -w -H windowsgui.
+- Source/bundle/live extension content.js hashes match. Only content.js changed
+  in the extension; shared panel behavior and model settings were not changed.
+
+Deployment
+- Applied to the authorized current Windows workspace, embedded extension
+  bundle and dist/manga-translator-windows-x64-0.3.15/extension/content.js.
+- Updated the portable controller so its next start exports the fixed script.
+- Backed up the previous executable and extension in
+  archive/tooltip-overlap-2026-10-27-before/. See deployment.json.
+- Existing application processes were not stopped. Models, settings,
+  credentials, original results and the regular browser profile were preserved.
+- Existing release ZIPs and OP5P files were not updated.
+- Reload Manga Translator at edge://extensions or chrome://extensions, then
+  refresh the manga tab and open its panel to restore the existing result.
+  A new build or translation is not needed for the still-cached results.

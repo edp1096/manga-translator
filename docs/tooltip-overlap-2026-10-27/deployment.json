@@ -1,0 +1,38 @@
+﻿{
+    "controllerUpdated":  true,
+    "runningProcessesBefore":  [
+                                   {
+                                       "Name":  "MangaTranslator.exe",
+                                       "ProcessId":  23628
+                                   },
+                                   {
+                                       "Name":  "llama-server.exe",
+                                       "ProcessId":  21896
+                                   },
+                                   {
+                                       "Name":  "manga-translator-server.exe",
+                                       "ProcessId":  25652
+                                   }
+                               ],
+    "runningProcessesAfter":  [
+                                  {
+                                      "Name":  "MangaTranslator.exe",
+                                      "ProcessId":  23628
+                                  },
+                                  {
+                                      "Name":  "llama-server.exe",
+                                      "ProcessId":  21896
+                                  },
+                                  {
+                                      "Name":  "manga-translator-server.exe",
+                                      "ProcessId":  25652
+                                  }
+                              ],
+    "sha256":  "C5E620BB9C64E804AFC8BF09528A6B9617C36852A0471959D58A7F4A8B994FC6",
+    "contentSHA256":  "C1EDBA78F1E30844677A0B234AB8BBE8AB3AC370BA1B1E100AA2973047D750C6",
+    "archive":  "D:\\dev\\pcbangstudio\\workspace\\manga-translator\\archive\\tooltip-overlap-2026-10-27-before",
+    "cgoEnabled":  0,
+    "goVersion":  "go1.27.1 windows/amd64",
+    "extensionReloadRequired":  true,
+    "existingReleaseZIPUnchanged":  true
+}

@@ -7,8 +7,7 @@
     "activeTab",
     "scripting",
     "storage",
-    "declarativeNetRequestWithHostAccess",
-    "sidePanel"
+    "declarativeNetRequestWithHostAccess"
   ],
   "host_permissions": [
     "http://*/*",
@@ -25,9 +24,6 @@
     }
   },
   "options_page": "options.html",
-  "side_panel": {
-    "default_path": "panel.html"
-  },
   "minimum_chrome_version": "142",
   "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAwBdz8lL7cEBdGFmgMqo4qiMvNrSdgOVCxrS4vfEbEKnZP4VOTFDWSqpkjR2zbbAm2dqN9Cyxt5aVa+0SFOECK7KD461+nEhUivCj4lSR7UBRI1Q6O2mmRLTM0Fw+yyk2B5isWYN/zaKrB7g0uctyClX56Ruf0SW7rCc3B+4jcrzgZx2/O3YDcaU4NfDdqvj75ecgl6r2iI3Kk0XOR9NZFoqGTOH0fkPAEFpkMwKmSLYIspOsr6wE2M/vET4HEZ8oS6uC2FIBw54UKHd+q57Pmt+NlRgN2bea75pNTVNYVZUSF0+xD3IK8zcqdcBxF1Q1fJmY+XGQiSm928oiah64ZQIDAQAB",
   "externally_connectable": {

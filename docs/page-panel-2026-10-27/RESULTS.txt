@@ -1,0 +1,60 @@
+Shared Chrome / Edge page panel — 2026-10-27
+
+Requested behavior
+Use the same page-local panel in Chrome and Edge. The panel stays associated
+with the tab where it was opened; other tabs do not inherit it. A user close
+remains closed. This change does not add a page-width or viewport-shrink mode.
+
+Implementation
+- panel_scope.js now contains the common page-panel manager. The UA branch,
+  separate Edge manager, native sidePanel permission and side_panel manifest
+  entry were removed. Both browsers invoke the same toolbar action handler.
+- Common state uses pagePanelTabs. Existing edgePanelTabs state is migrated
+  only when the common state does not exist. An explicitly empty common list
+  takes precedence over legacy state.
+- Chrome's former panelTabs/panelWindows values described native panel
+  availability, not actual visibility. They are deliberately not migrated
+  into open panels, avoiding unwanted panels in previously closed tabs.
+- Shared content-script globals and controls use browser-neutral names.
+- The UI remains an overlay with left/right positioning and width adjustment.
+  No site margins, transforms, viewport metrics or reader sizes are changed.
+  CSS page-space reservation could be a separate feature, but is not equivalent
+  to native viewport resizing and needs fixed/canvas reader-specific testing.
+
+Verification
+- tests/panel_scope.cjs: no native sidePanel API or UA required; migration from
+  Edge state; native availability not mistaken for open state; explicit empty
+  state; malformed/stale/restricted-tab cleanup; manual close preserved.
+- tests/panel_scope_browser.cjs passed on real Chromium 147.0.7727.15 with
+  its default UA and on installed Windows Edge 156.0.4314.42 in headed mode,
+  also using its default UA. No Edge UA override was used in either test.
+- Both runs used isolated profiles with the real unpacked extension and
+  browser pages. A temporary test hook invokes the registered toolbar action
+  handler; panel controls are clicked through Playwright's mouse input.
+- Both runs passed 20 open-state tab round trips, five closed-state round
+  trips, independent tabs, selection preservation, open/closed document reload,
+  keyboard resizing, rapid toolbar toggle, shadow isolation and restricted
+  navigation cleanup. See chromium.json and edge.json.
+- Capture covers retained identical bounds and identical screenshot pixels
+  with the panel open/closed. The initial whole-viewport comparison in headed
+  Edge included its changing OS scrollbar; the final comparison explicitly
+  checks the capture cover region, while still asserting unchanged geometry.
+- browser_panel.cjs, panel_zip.cjs and browser_connection.cjs passed.
+- Windows Go 1.27.1: go test ./... and the controller build passed with
+  CGO_ENABLED=0. No Go controller logic or native inference engine was changed.
+- Google Chrome on OP5P was not available for another hardware/browser run.
+  The earlier four-site Edge tests remain documented in the adjacent
+  edge-panel-2026-10-27 directory; this update validates the unified path.
+
+Deployment
+- Applied to the user-authorized current Windows workspace, embedded bundle,
+  and dist/manga-translator-windows-x64-0.3.15/extension.
+- Updated the Windows executable so the next application start exports the
+  common panel rather than reverting to the previous Edge-only files.
+- Previous Windows executable and extension are preserved under
+  archive/page-panel-2026-10-27-before/. See deployment.json for process IDs
+  and the new executable hash. Existing processes were not stopped.
+- Models, settings, credentials and translation results were not changed.
+  Existing release ZIPs/source tarball and OP5P files were not updated.
+- Reload the extension in chrome://extensions or edge://extensions, then
+  reload existing manga tabs. The regular user browser profile was untouched.

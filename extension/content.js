@@ -175,7 +175,10 @@ async function overlay(e){
  e.canvas.width=canvas.width;e.canvas.height=canvas.height;e.canvas.getContext('2d').drawImage(canvas,0,0);
  document.querySelectorAll('[data-manga-translator-overlay]').forEach(node=>{if(node.dataset.mangaTranslatorOverlay!==overlayInstance&&node.dataset.mangaSource===e.overlay.dataset.mangaSource)node.remove();});
  e.overlay.querySelectorAll('[data-tip]').forEach(n=>n.remove());
- for(const r of e.result.regions.filter(r=>r.mode!=='replace'&&r.translation)){
+ const tooltipRegions=e.result.regions.filter(region=>region.mode!=='replace'&&region.translation);
+ const tooltipArea=region=>(region.bbox[2]-region.bbox[0])*(region.bbox[3]-region.bbox[1]);
+ tooltipRegions.sort((left,right)=>tooltipArea(right)-tooltipArea(left));
+ for(const r of tooltipRegions){
   const tip=document.createElement('span');tip.dataset.tip='1';const [x1,y1,x2,y2]=r.bbox;
   tip.style.cssText=`position:absolute;left:${x1/e.result.width*100}%;top:${y1/e.result.height*100}%;width:${(x2-x1)/e.result.width*100}%;height:${(y2-y1)/e.result.height*100}%;border-bottom:1px dotted #078b9f;cursor:help`;
   if(e.readerPage)tip.style.pointerEvents='auto';

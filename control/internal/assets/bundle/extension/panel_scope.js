@@ -1,53 +1,55 @@
-// The extension remembers which tabs may show a panel; Chrome keeps each tab's
-// actual open/closed state. Enabling a panel is not the same as opening it.
-// A panel opened in one tab never enables another tab's panel.
 (() => {
-  const enabledTabs = new Set();
-  const ready = chrome.storage.session.get(['panelTabs','panelWindows']).then(saved => {
-    const ids=Array.isArray(saved.panelTabs)?saved.panelTabs:Object.values(saved.panelWindows||{});
-    for(const id of ids)if(Number.isInteger(id))enabledTabs.add(id);
+  const openedTabs=new Set(),pending=new Map();
+  const ready=chrome.storage.session.get(['pagePanelTabs','edgePanelTabs']).then(saved=>{
+    const tabIds=Array.isArray(saved.pagePanelTabs)?saved.pagePanelTabs:Array.isArray(saved.edgePanelTabs)?saved.edgePanelTabs:[];
+    for(const tabId of tabIds)if(Number.isInteger(tabId))openedTabs.add(tabId);
   });
-  const save=()=>ready.then(()=>chrome.storage.session.set({panelTabs:[...enabledTabs]}));
   const eligible=tab=>/^https?:/.test(tab.url||'')&&!/^http:\/\/(127\.0\.0\.1|localhost):8794(?:\/|$)/.test(tab.url||'');
-  const disabled=tabId=>chrome.sidePanel.setOptions({tabId,enabled:false}).catch(()=>{});
-  chrome.sidePanel.setPanelBehavior({openPanelOnActionClick:false}).catch(()=>{});
-  chrome.sidePanel.setOptions({enabled:false}).catch(()=>{});
-
-  async function openPanel(tab){
-    if(!Number.isInteger(tab.id)||!eligible(tab))return;
-    enabledTabs.add(tab.id);
-    try{
-      // Both calls must be dispatched before awaiting to preserve the gesture.
-      const configured=chrome.sidePanel.setOptions({tabId:tab.id,path:`panel.html?tab=${tab.id}`,enabled:true});
-      const opening=chrome.sidePanel.open({tabId:tab.id});
-      await Promise.all([configured,opening]);await save();
-    }catch(error){enabledTabs.delete(tab.id);await disabled(tab.id);await save();console.error('Cannot open Manga Translator panel:',error);}
+  let writes=Promise.resolve(),assets;
+  const save=()=>writes=writes.catch(()=>{}).then(()=>chrome.storage.session.set({pagePanelTabs:[...openedTabs]}));
+  function queue(tabId,operation){
+    const task=(pending.get(tabId)||ready).catch(()=>{}).then(operation);
+    pending.set(tabId,task);
+    task.finally(()=>{if(pending.get(tabId)===task)pending.delete(tabId);}).catch(()=>{});
+    return task;
   }
-  chrome.action.onClicked.addListener(openPanel);
-  chrome.tabs.onActivated.addListener(async({tabId})=>{
-    await ready;
-    // Do not close or disable the previous tab: Chrome preserves that tab's panel.
-    if(!enabledTabs.has(tabId))await disabled(tabId);
-  });
-  // Do not disable a tab in onClosed: delayed notifications have no close
-  // reason, and checking tabs.get().active races with switching back to the
-  // original tab. A close notification must not revoke panel availability.
-  // Keeping its options enabled lets Chrome restore the panel on return while
-  // still remembering a completed user close. Only the toolbar opens a panel.
-  chrome.tabs.onUpdated.addListener(async(tabId,change,tab)=>{
-    if(!change.url&&change.status!=='complete')return;
-    await ready;
-    if(!eligible(tab)){enabledTabs.delete(tabId);await disabled(tabId);await save();}
-    else if(!enabledTabs.has(tabId))await disabled(tabId);
-  });
-  chrome.tabs.onRemoved.addListener(async tabId=>{await ready;enabledTabs.delete(tabId);await save();});
-  ready.then(async()=>{
-    const tabs=await chrome.tabs.query({});const live=new Set(tabs.map(tab=>tab.id));
-    for(const id of enabledTabs)if(!live.has(id))enabledTabs.delete(id);
-    for(const tab of tabs){
-      if(enabledTabs.has(tab.id)&&eligible(tab))await chrome.sidePanel.setOptions({tabId:tab.id,path:`panel.html?tab=${tab.id}`,enabled:true});
-      else{enabledTabs.delete(tab.id);await disabled(tab.id);}
-    }
+  async function mount(tab,toggle=false){
+    if(!eligible(tab))return;
+    assets ||= Promise.all(['panel.html','ui.css'].map(file=>fetch(chrome.runtime.getURL(file)).then(response=>{
+      if(!response.ok)throw Error('패널 파일을 읽을 수 없습니다.');return response.text();
+    }))).catch(error=>{assets=undefined;throw error;});
+    const [html,css]=await assets;
+    const target={tabId:tab.id,frameIds:[0]};
+    await chrome.scripting.executeScript({target,files:['panel_embed.js']});
+    const [result]=await chrome.scripting.executeScript({target,func:options=>MangaPagePanel.mount(options),args:[{tabId:tab.id,html,css,toggle}]});
+    if(result.result.initialize)await chrome.scripting.executeScript({target,files:['zip.js','panel.js']});
+    if(result.result.open)openedTabs.add(tab.id);else openedTabs.delete(tab.id);
     await save();
-  }).catch(()=>{});
+  }
+  const report=error=>console.error('Cannot open Manga Translator page panel:',error);
+  globalThis.MangaPagePanels={closed:sender=>queue(sender.tab?.id,async()=>{
+    if(sender.frameId!==0||!Number.isInteger(sender.tab?.id))return;
+    openedTabs.delete(sender.tab.id);await save();
+  })};
+  chrome.action.onClicked.addListener(tab=>{
+    if(!Number.isInteger(tab.id)||!eligible(tab))return;
+    return queue(tab.id,()=>mount(tab,true)).catch(report);
+  });
+  chrome.tabs.onUpdated.addListener((tabId,change,tab)=>{
+    if(!change.url&&change.status!=='complete')return;
+    queue(tabId,async()=>{
+      if(!eligible(tab)){openedTabs.delete(tabId);await save();}
+      else if(change.status==='complete'&&openedTabs.has(tabId))await mount(tab);
+    }).catch(report);
+  });
+  chrome.tabs.onRemoved.addListener(tabId=>queue(tabId,async()=>{openedTabs.delete(tabId);await save();}).catch(report));
+  ready.then(async()=>{
+    const tabs=await chrome.tabs.query({}),live=new Set(tabs.map(tab=>tab.id));
+    for(const tabId of openedTabs)if(!live.has(tabId))openedTabs.delete(tabId);
+    await Promise.all(tabs.map(tab=>queue(tab.id,async()=>{
+      if(!eligible(tab))openedTabs.delete(tab.id);
+      else if(openedTabs.has(tab.id))await mount(tab);
+    }).catch(report)));
+    await save();
+  }).catch(report);
 })();

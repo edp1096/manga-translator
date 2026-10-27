@@ -1,62 +1,70 @@
-// Run with MANGA_PLAYWRIGHT pointing to a Playwright installation.
-// Uses an isolated Chromium profile and a temporary copy of the extension.
 const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),os=require('node:os'),http=require('node:http');
 const {chromium}=require(process.env.MANGA_PLAYWRIGHT||'playwright');
 (async()=>{
- const root=fs.mkdtempSync(path.join(os.tmpdir(),'manga-panel-scope-')),extension=path.join(root,'extension');fs.cpSync(path.join(__dirname,'../extension'),extension,{recursive:true});
- const scope=path.join(extension,'panel_scope.js');fs.writeFileSync(scope,fs.readFileSync(scope,'utf8').replace('chrome.action.onClicked.addListener(openPanel);','globalThis.__testOpenPanel=openPanel;chrome.action.onClicked.addListener(openPanel);').replace('  ready.then(async()=>{','  globalThis.__testScopeReady=ready.then(async()=>{'));
- fs.writeFileSync(path.join(extension,'background.js'),`globalThis.__testEvents=[];chrome.sidePanel.onOpened.addListener(info=>__testEvents.push({type:'opened',info}));chrome.sidePanel.onClosed.addListener(info=>__testEvents.push({type:'closed',info}));globalThis.__testErrors=[];console.error=(...args)=>__testErrors.push(args.join(' '));importScripts('panel_scope.js');chrome.runtime.onMessage.addListener((message,sender,reply)=>{if(message.type==='test-open-panel'){__testOpenPanel(sender.tab).then(()=>reply({done:true}));return true;}});`);
- const server=http.createServer((req,res)=>{res.writeHead(200,{'Content-Type':'text/html'});res.end('<!doctype html><title>Panel scope test</title><h1>Test manga page</h1>');});await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
+ const root=fs.mkdtempSync(path.join(os.tmpdir(),'manga-page-panel-')),extension=path.join(root,'extension');
+ fs.cpSync(path.resolve(__dirname,'../extension'),extension,{recursive:true});
+ const script=path.join(extension,'panel_scope.js');
+ fs.writeFileSync(script,fs.readFileSync(script,'utf8').replace('chrome.action.onClicked.addListener(tab=>{','chrome.action.onClicked.addListener(globalThis.__testOpenPanel=tab=>{'));
+ const server=http.createServer((request,response)=>{
+  if(request.url.endsWith('.svg')){response.writeHead(200,{'Content-Type':'image/svg+xml'});response.end('<svg xmlns="http://www.w3.org/2000/svg" width="500" height="600"><rect width="500" height="600" fill="white"/><text x="50" y="100">Test page</text></svg>');return;}
+  response.writeHead(200,{'Content-Type':'text/html'});response.end('<!doctype html><title>Page panel test</title><style>body{margin:0}img{display:block;width:500px;height:600px}button{background:red!important}</style><img src="/one.svg" alt="Page 1"><img src="/two.svg" alt="Page 2">');
+ });
+ await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
  let context;
  try{
-  context=await chromium.launchPersistentContext(path.join(root,'profile'),{channel:'chromium',headless:true,args:[`--disable-extensions-except=${extension}`,`--load-extension=${extension}`]});
-  let worker=context.serviceWorkers()[0]||await context.waitForEvent('serviceworker');
+  context=await chromium.launchPersistentContext(path.join(root,'profile'),{channel:process.env.MANGA_BROWSER_CHANNEL||'chromium',headless:process.env.MANGA_HEADED!=='1',viewport:{width:1280,height:900},args:[`--disable-extensions-except=${extension}`,`--load-extension=${extension}`]});
+  const worker=context.serviceWorkers()[0]||await context.waitForEvent('serviceworker');
+  await worker.evaluate(()=>{if(typeof MangaPagePanels!=='object')throw Error('Shared page panel not active');});
   const base='http://127.0.0.1:'+server.address().port;
-  const first=await context.newPage();await first.goto(base+'/a');await first.bringToFront();
-  const tabId=await worker.evaluate(async url=>(await chrome.tabs.query({})).find(t=>t.url===url).id,base+'/a');
-  const fullWidth=await worker.evaluate(async id=>(await chrome.tabs.get(id)).width,tabId);
-  const visible=async(id,open)=>worker.evaluate(async({id,open,fullWidth})=>{for(let n=0;n<100;n++){const w=(await chrome.tabs.get(id)).width;if(open?w<fullWidth:w===fullWidth)return;await new Promise(r=>setTimeout(r,50));}throw Error('Panel visibility timeout: '+id+' '+open);},{id,open,fullWidth});
-  const closePanel=async id=>{
-   // close() resolves before Chrome's closing animation and onClosed event.
-   // Wait for the completed native close before testing a later tab switch.
-   await worker.evaluate(async id=>{
-    const count=()=>__testEvents.filter(e=>e.type==='closed'&&e.info.tabId===id).length,before=count();
-    await chrome.sidePanel.close({tabId:id});
-    for(let n=0;n<100;n++){if(count()>before)return;await new Promise(r=>setTimeout(r,50));}
-    throw Error('Native close event timeout');
-   },id);
-   await visible(id,false);
+  const first=await context.newPage(),second=await context.newPage();
+  await first.goto(base+'/a');await second.goto(base+'/b');await first.bringToFront();
+  const tabId=async page=>worker.evaluate(async url=>(await chrome.tabs.query({})).find(tab=>tab.url===url).id,page.url());
+  const firstId=await tabId(first),secondId=await tabId(second);
+  const execute=async(tabId,func,args=[])=>{
+   const [result]=await worker.evaluate(({tabId,source,args})=>chrome.scripting.executeScript({target:{tabId},func:async(source,args)=>{
+    if(source==='state')return {open:globalThis.MangaPagePanel?.isOpen()||false,count:document.querySelectorAll('[data-manga-translator-panel]').length,items:globalThis.MangaPagePanel?.root?.querySelectorAll('.item').length||0,selected:globalThis.MangaPagePanel?.root?.querySelectorAll('.item input:checked').length||0};
+    if(source==='bounds'){const bounds=MangaPagePanel.root.querySelector(args[0]).getBoundingClientRect();return {x:bounds.x+bounds.width/2,y:bounds.y+bounds.height/2};}
+   },args:[source,args]}),{tabId,source:func,args});
+   return result.result;
   };
-  await worker.evaluate(async id=>chrome.scripting.executeScript({target:{tabId:id},func:()=>{let button=document.createElement('button');button.id='open-panel-test';button.textContent='Open panel';button.onclick=()=>{chrome.runtime.sendMessage({type:'test-open-panel'},()=>button.dataset.done='true')};document.body.append(button);}}),tabId);
-  await first.locator('#open-panel-test').click();await first.waitForFunction(()=>document.querySelector('#open-panel-test')?.dataset.done==='true');
-  let options=await worker.evaluate(id=>chrome.sidePanel.getOptions({tabId:id}),tabId);let errors=await worker.evaluate(()=>__testErrors);assert.equal(options.enabled,true,JSON.stringify(errors));
-  assert.equal(options.path,`panel.html?tab=${tabId}`);await visible(tabId,true);
-  const second=await context.newPage();await second.goto(base+'/b');await second.bringToFront();await second.waitForTimeout(300);
-  const secondId=await worker.evaluate(async url=>(await chrome.tabs.query({})).find(t=>t.url===url).id,base+'/b');
-  await visible(secondId,false);
-  options=await worker.evaluate(id=>chrome.sidePanel.getOptions({tabId:id}),tabId);assert.equal(options.enabled,true,'switching tabs discarded a user-opened panel');
-  assert.equal((await worker.evaluate(id=>chrome.sidePanel.getOptions({tabId:id}),secondId)).enabled,false,'unopened tab inherited another tab panel');
-  await first.bringToFront();await visible(tabId,true);assert.equal((await worker.evaluate(id=>chrome.sidePanel.getOptions({tabId:id}),tabId)).enabled,true);
-  for(let n=0;n<20;n++){await second.bringToFront();await first.bringToFront();}
-  await first.waitForTimeout(300);await visible(tabId,true);
-  assert.equal((await worker.evaluate(id=>chrome.sidePanel.getOptions({tabId:id}),tabId)).enabled,true,'rapid tab switching discarded panel availability');
-  await closePanel(tabId);
-  assert.equal((await worker.evaluate(id=>chrome.sidePanel.getOptions({tabId:id}),tabId)).enabled,true,'closing visibility unnecessarily disabled the tab');
-  for(let n=0;n<5;n++){await second.bringToFront();await first.bringToFront();}
-  await first.waitForTimeout(200);await visible(tabId,false);
-  await first.locator('#open-panel-test').evaluate(button=>delete button.dataset.done);await first.locator('#open-panel-test').click();await first.waitForFunction(()=>document.querySelector('#open-panel-test')?.dataset.done==='true');
-  options=await worker.evaluate(id=>chrome.sidePanel.getOptions({tabId:id}),tabId);assert.equal(options.enabled,true,'explicit reopen failed');
-  await worker.evaluate(async id=>chrome.scripting.executeScript({target:{tabId:id},func:()=>{const button=document.createElement('button');button.id='second-open';button.textContent='Open';button.onclick=()=>chrome.runtime.sendMessage({type:'test-open-panel'},()=>button.dataset.done='true');document.body.append(button);}}),secondId);
-  await second.bringToFront();await second.locator('#second-open').click();await second.waitForFunction(()=>document.querySelector('#second-open').dataset.done==='true');await visible(secondId,true);
-  await first.bringToFront();await visible(tabId,true);await closePanel(tabId);
-  await second.bringToFront();await visible(secondId,true);assert.equal((await worker.evaluate(id=>chrome.sidePanel.getOptions({tabId:id}),secondId)).enabled,true,'closing one tab affected another opened tab');
-  // Re-run the same startup initializer used when the background worker wakes.
-  // Availability restoration must not change Chrome's own visibility state.
-  await worker.evaluate(async()=>{importScripts('panel_scope.js');await __testScopeReady;});
-  await first.bringToFront();await visible(tabId,false);
-  await second.bringToFront();await visible(secondId,true);
-  assert.equal((await worker.evaluate(id=>chrome.sidePanel.getOptions({tabId:id}),tabId)).enabled,true,'startup discarded previously enabled tab');
-  errors=await worker.evaluate(()=>__testErrors);assert.deepEqual(errors,[]);
-  console.log(JSON.stringify({ok:true,browser:context.browser()?.version(),realUserGesture:true,userOpenedTabPreserved:true,unopenedTabStaysClosed:true,userClosedTabStaysClosed:true,manualReopen:true,actualPanelVisibility:true,twoOpenedTabsIndependent:true,rapidTabRoundTrips:20,closedTabRoundTrips:5,startupReinitialization:true}));
- }finally{if(context)await context.close();await new Promise(resolve=>server.close(resolve));fs.rmSync(root,{recursive:true,force:true});}
-})().catch(e=>{console.error(e);process.exitCode=1;});
+  const wait=async(tabId,check)=>{for(let attempt=0;attempt<60;attempt++){const value=await execute(tabId,'state');if(check(value))return value;await new Promise(resolve=>setTimeout(resolve,100));}throw Error('Panel state timeout: '+JSON.stringify(await execute(tabId,'state')));};
+  const open=tabId=>worker.evaluate(async tabId=>__testOpenPanel(await chrome.tabs.get(tabId)),tabId);
+  const click=async(page,tabId,selector)=>{const bounds=await execute(tabId,'bounds',[selector]);await page.mouse.click(bounds.x,bounds.y);};
+  await open(firstId);await wait(firstId,state=>state.open&&state.items===2);
+  assert.equal(await first.evaluate(()=>document.querySelector('[data-manga-translator-panel]').shadowRoot),null);
+  assert.equal(await first.evaluate(()=>document.querySelectorAll('.item').length),0);
+  const width=await first.locator('[data-manga-translator-panel]').evaluate(node=>node.getBoundingClientRect().width);
+  await click(first,firstId,'.page-resize');await first.keyboard.press('ArrowLeft');
+  assert.equal(await first.locator('[data-manga-translator-panel]').evaluate(node=>node.getBoundingClientRect().width),width+20);
+  await click(first,firstId,'.item input');
+  assert.equal((await execute(firstId,'state')).selected,1);
+  for(let round=0;round<20;round++){await second.bringToFront();assert.equal((await execute(secondId,'state')).open,false);await first.bringToFront();}
+  assert.deepEqual(await execute(firstId,'state'),{open:true,count:1,items:2,selected:1});
+  await click(first,firstId,'button[aria-label="패널 닫기"]');await wait(firstId,state=>!state.open);
+  for(let round=0;round<5;round++){await second.bringToFront();await first.bringToFront();}
+  assert.equal((await execute(firstId,'state')).open,false);
+  await open(firstId);assert.equal((await execute(firstId,'state')).selected,1);
+  await second.bringToFront();await open(secondId);await wait(secondId,state=>state.open&&state.items===2);
+  await click(second,secondId,'button[aria-label="패널 닫기"]');await first.bringToFront();assert.equal((await execute(firstId,'state')).open,true);
+  await first.reload();await wait(firstId,state=>state.open&&state.items===2);
+  await first.evaluate(()=>{const cover=document.createElement('div');cover.id='capture-test';cover.style.cssText='position:fixed;inset:0;background:rgb(17,34,51);z-index:2147483646';document.documentElement.append(cover);});
+  const captureBounds=await first.locator('#capture-test').boundingBox();
+  const captureClip={x:captureBounds.x,y:captureBounds.y,width:Math.floor(captureBounds.width),height:Math.floor(captureBounds.height)};
+  const coveredOpen=await first.screenshot({clip:captureClip});
+  await open(firstId);await wait(firstId,state=>!state.open);
+  assert.deepEqual(await first.locator('#capture-test').boundingBox(),captureBounds,'panel changed the capture viewport');
+  const coveredClosed=await first.screenshot({clip:captureClip});
+  if(!coveredClosed.equals(coveredOpen)){
+   const artifacts=process.env.MANGA_TEST_ARTIFACTS||fs.mkdtempSync(path.join(os.tmpdir(),'manga-panel-capture-'));
+   fs.mkdirSync(artifacts,{recursive:true});fs.writeFileSync(path.join(artifacts,'open.png'),coveredOpen);fs.writeFileSync(path.join(artifacts,'closed.png'),coveredClosed);
+   fs.writeFileSync(path.join(artifacts,'geometry.json'),JSON.stringify(await first.evaluate(()=>({innerWidth,innerHeight,clientWidth:document.documentElement.clientWidth,cover:document.getElementById('capture-test').getBoundingClientRect().toJSON(),color:getComputedStyle(document.getElementById('capture-test')).backgroundColor})),null,2));
+   assert.fail('capture layer differs: '+artifacts);
+  }
+  await first.evaluate(()=>document.getElementById('capture-test').remove());
+  await first.reload();await new Promise(resolve=>setTimeout(resolve,400));assert.equal((await execute(firstId,'state')).open,false);
+  await Promise.all([open(firstId),open(firstId)]);assert.equal((await execute(firstId,'state')).open,false);
+  await open(firstId);await first.goto('about:blank');await new Promise(resolve=>setTimeout(resolve,300));
+  assert.equal((await worker.evaluate(()=>chrome.storage.session.get('pagePanelTabs'))).pagePanelTabs.includes(firstId),false);
+  console.log(JSON.stringify({ok:true,browser:context.browser().version(),sharedPagePanel:true,userAgent:await worker.evaluate(()=>navigator.userAgent),rapidTabRoundTrips:20,closedTabRoundTrips:5,selectionPreserved:true,unopenedTabStaysClosed:true,independentTabs:true,documentReload:true,closedReload:true,captureLayerUnchanged:true,shadowIsolation:true,rapidToolbarToggle:true,restrictedNavigation:true}));
+ }finally{await context?.close();await new Promise(resolve=>server.close(resolve));fs.rmSync(root,{recursive:true,force:true});}
+})().catch(error=>{console.error(error);process.exitCode=1;});

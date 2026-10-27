@@ -1,0 +1,26 @@
+{
+  "files": [
+    {
+      "file": "panel_scope.js",
+      "sha256LF": "63721780e3aa8db895a042b400044bb24f542c50db6f1eb9e410d1641fbb3ec0"
+    },
+    {
+      "file": "panel_embed.js",
+      "sha256LF": "4efb2ab82c0e1b1e658acc70f41c249d702edff56d64bc48775417964017a695"
+    },
+    {
+      "file": "panel.js",
+      "sha256LF": "1d962446cfbd7dd4c2091a5c3f2f34df93d05edfe2fe7c463b47e31fbe2823b6"
+    },
+    {
+      "file": "background.js",
+      "sha256LF": "06d818166f9d7942c123438eb4679cc9b5fe6f677d5840dd1a068eb52832fd43"
+    },
+    {
+      "file": "manifest.json",
+      "sha256LF": "0fbea2a65d5e9c37b66971f2c32f00ff0cd7ec7013267d6e1544a679a2bb3fce"
+    }
+  ],
+  "sourceBundlePortableMatch": true,
+  "nativeSidePanelRemoved": true
+}

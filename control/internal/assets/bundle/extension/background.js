@@ -52,6 +52,7 @@ function rememberPage(msg,sender){
 chrome.runtime.onMessage.addListener((msg,sender,respond)=>{
   (async()=>{
     switch(msg.type){
+      case 'page-panel-closed':await globalThis.MangaPagePanels?.closed(sender);return true;
       case 'settings':return settings();
       case 'connect':{
         if(!Number.isInteger(msg.tabId)||msg.tabId<0)throw Error('만화 페이지를 선택한 뒤 새로고침을 눌러주세요.');

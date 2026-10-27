@@ -1,4 +1,5 @@
-const $=id=>document.getElementById(id),selected=new Set();
+const embeddedPanel=globalThis.MangaPagePanel;
+const $=id=>(embeddedPanel?.root||document).getElementById(id),selected=new Set();
 let tabId,known=new Set(),busy=false,pageURL='',noticeUntil=0,autoSelectNew=true,saving=false,running=false;
 const thumbs=new Map(),thumbTasks=new Map(),rows=new Map();
 const rpc=async msg=>{const r=await chrome.runtime.sendMessage(msg);if(!r?.ok)throw Error(r?.error||'확장 오류');if(r.value?.error)throw Error(r.value.error);return r.value;};
@@ -64,8 +65,8 @@ async function connect(){
  if(connection)return connection;
  connection=(async()=>{
   const forced=Number(new URLSearchParams(location.search).get('tab'));
-  let tab;
-  if(Number.isInteger(forced)&&forced>0){try{tab=await chrome.tabs.get(forced);}catch{}}
+  let tab=embeddedPanel?{id:embeddedPanel.tabId,url:location.href}:undefined;
+  if(!embeddedPanel&&Number.isInteger(forced)&&forced>0){try{tab=await chrome.tabs.get(forced);}catch{}}
   if(!tab||!/^https?:/.test(tab.url||'')){
    const tabs=await chrome.tabs.query({active:true,lastFocusedWindow:true});
    tab=tabs.find(t=>/^https?:/.test(t.url||''));
@@ -86,12 +87,12 @@ async function control(action,extra={}){
  }catch(e){noticeUntil=Date.now()+6000;$('status').textContent=e.message;}
 }
 $('preload').onclick=()=>control('preload');
-$('run').onclick=()=>control('run',{keys:[...selected]});$('stop').onclick=()=>control('stop');$('toggle').onclick=()=>control('toggle');$('settings').onclick=()=>chrome.runtime.openOptionsPage();
+$('run').onclick=()=>control('run',{keys:[...selected]});$('stop').onclick=()=>control('stop');$('toggle').onclick=()=>control('toggle');$('settings').onclick=()=>embeddedPanel?rpc({type:'openOptions'}):chrome.runtime.openOptionsPage();
 $('all').querySelector('input').onchange=e=>{autoSelectNew=e.target.checked;selected.clear();if(e.target.checked)for(const key of known)selected.add(key);control('status');};
 (async()=>{try{await connect();}catch(e){$('status').textContent=e.message;}})();
-setInterval(async()=>{if(busy||!Number.isInteger(tabId))return;busy=true;try{await control('status');}finally{busy=false;}},1500);
+setInterval(async()=>{if(busy||!Number.isInteger(tabId)||embeddedPanel&&(!embeddedPanel.isOpen()||document.hidden))return;busy=true;try{await control('status');}finally{busy=false;}},1500);
 // The default side panel can open before Chrome supplies a tab-specific path.
-chrome.tabs.onActivated.addListener(()=>{
+chrome.tabs?.onActivated?.addListener(()=>{
  if(new URLSearchParams(location.search).has('tab'))return;
  connect().catch(e=>{$('status').textContent=e.message;});
 });

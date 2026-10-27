@@ -1,0 +1,17 @@
+{
+  "ok": true,
+  "browser": "156.0.4314.42",
+  "sharedPagePanel": true,
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Safari/537.36 Edg/156.0.0.0",
+  "rapidTabRoundTrips": 20,
+  "closedTabRoundTrips": 5,
+  "selectionPreserved": true,
+  "unopenedTabStaysClosed": true,
+  "independentTabs": true,
+  "documentReload": true,
+  "closedReload": true,
+  "captureLayerUnchanged": true,
+  "shadowIsolation": true,
+  "rapidToolbarToggle": true,
+  "restrictedNavigation": true
+}

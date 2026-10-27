@@ -1,0 +1,15 @@
+﻿{
+    "controllerUpdated":  true,
+    "runningProcessesBefore":  [
+                                   12636
+                               ],
+    "runningProcessesAfter":  [
+                                  12636
+                              ],
+    "sha256":  "CA857A9186068B91C0A2232EB272693652C9C2861738C1749CD6CEA828F64C60",
+    "archive":  "D:\\dev\\pcbangstudio\\workspace\\manga-translator\\archive\\page-panel-2026-10-27-before\\MangaTranslator.previous.exe",
+    "cgoEnabled":  0,
+    "goVersion":  "go1.27.1 windows/amd64",
+    "extensionReloadRequired":  true,
+    "existingReleaseZIPUnchanged":  true
+}

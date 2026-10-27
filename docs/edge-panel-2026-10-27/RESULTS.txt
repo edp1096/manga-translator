@@ -1,0 +1,86 @@
+Windows 11 / Edge tab-local panel — 2026-10-27
+
+Scope and authorization
+- OP5P 192.168.100.25 was unreachable from both WSL and Windows.
+- The user explicitly authorized this Windows workspace as the destination
+  for this change and selected an Edge-only in-page panel implementation.
+- Chrome retains the native sidePanel implementation. Desktop Edge is
+  detected by the Edg/ UA token before entering that implementation.
+
+Reproduction
+- Installed Microsoft Edge 156.0.4314.42, visible isolated profile.
+- Loaded the extension, pinned it using Edge's own extensions menu, and
+  clicked the real toolbar icon using Windows UI Automation and mouse input.
+- All four user-supplied URLs reproduced the native panel disappearance.
+  The page viewport was 872 CSS px with the native panel and 1258 CSS px
+  after returning to the manga tab, with the panel no longer visible.
+- A direct sidePanel.open call from tabs.onActivated was rejected even when
+  the browser tab was selected using actual native mouse input. Reapplying
+  enabled:true did not restore the native panel.
+- native-before.json records the URLs, titles, viewport widths and API error.
+
+Implementation
+- Edge renders the existing panel markup and shared panel.js inside a closed
+  ShadowRoot, in the extension's isolated content-script world.
+- No iframe, web-accessible resource, permission increase, site script API,
+  or browser-global auto-open behavior was added.
+- Toolbar click toggles only that tab. Close removes the panel, not the
+  ongoing translation. Returning to another tab never opens its panel.
+- The same DOM retains selections and scrolling across tab switches and
+  close/reopen. Session storage restores an open panel on document reload.
+- Position and width can be adjusted. This is an overlay on the webpage,
+  not a resized native browser viewport; readers keep their original layout.
+- Existing capture covers have higher stacking order than the panel.
+
+Actual Windows Edge validation
+- KLZ chapter 88, supplied Kadocomi episode, supplied Tonari episode, and
+  Mangaz book 43776 at i:150: native toolbar/tab clicks, open-state return,
+  unopened-tab isolation, explicit close remaining closed, explicit reopen,
+  and checked-image selection preservation all passed.
+- Detected Kadocomi 18 pages, Tonari 38 pages and Mangaz 215 pages. KLZ is
+  lazy-loaded; the short panel check initially detected three images. This
+  test does not claim full-chapter preload or translation verification.
+- 20 additional tab round trips preserved the open panel and selections.
+- ServiceWorker.stopWorker produced stopping/stopped/starting/running
+  events. The panel and selections survived with exactly one host element.
+  Edge reused the worker target, so waiting for a new Playwright worker
+  event was unsuitable; CDP lifecycle events confirmed the restart.
+- Left/right positioning, pointer resizing, keyboard resizing, and opening
+  the extension settings page were exercised in the actual Edge browser.
+- Actual Tonari canvas capture, first page, 800 x 1137: four capture calls
+  across the visible/hidden panel comparison. Both encoded PNG results had
+  SHA-256 267db96638e388dbf81ab89b9fc98111d0fad1fd6b0338531c4c039eabf9cdd8.
+- edge-after.json, edge-extra.json, capture-parity.json and PNG screenshots
+  contain the measured results. No translation jobs or inference were run.
+
+Regression and build validation
+- tests/panel_edge_browser.cjs passed using real Chromium 147.0.7727.15
+  with an Edge UA to exercise the Edge branch: 20 open and five closed tab
+  round trips, independent opened tabs, selection preservation, open/closed
+  reload, capture-layer screenshot parity, shadow isolation, keyboard
+  resizing, rapid toolbar toggle and restricted navigation cleanup.
+- Native Chromium panel_scope_browser.cjs passed: 20 rapid open round trips,
+  five closed round trips, two independent tabs, explicit reopen and startup
+  initializer replay. panel_scope.cjs, browser_panel.cjs, browser_load.cjs,
+  panel_zip.cjs and browser_connection.cjs passed as well.
+- Windows Go 1.27.1: go test ./..., go vet ./..., and portable controller build
+  passed with CGO_ENABLED=0. Native inference engines were not changed.
+
+Application
+- Source extension, embedded Go bundle, and the existing Windows portable
+  extension directory match (extension-sync.json).
+- Updated dist/manga-translator-windows-x64-0.3.15/MangaTranslator.exe while
+  preserving the existing controller PID 12636 and image API PID 11692.
+  The running process continues its current code; the next launch uses the
+  updated embedded extension instead of restoring the previous files.
+- Previous executable and extension are in archive/edge-panel-2026-10-27-before/.
+- Model downloads, config, access keys and translation jobs were not modified.
+- Existing release ZIPs and source tarball were not rebuilt.
+- To use the changed files in an existing Edge profile, reload Manga
+  Translator at edge://extensions, then reload the manga pages. The user's
+  regular browser profile was not reloaded or stopped by this test.
+
+References
+https://learn.microsoft.com/en-us/microsoft-edge/extensions/developer-guide/sidebar
+https://github.com/microsoft/MicrosoftEdge-Extensions/issues/142
+https://developer.chrome.com/docs/extensions/reference/api/sidePanel

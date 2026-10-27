@@ -1,0 +1,33 @@
+{
+  "moveLeft": true,
+  "widthBefore": 390,
+  "widthAfter": 390,
+  "rapidTabRoundTrips": 20,
+  "retained": true,
+  "workerRestart": {
+    "states": [
+      "running",
+      "stopping",
+      "stopped",
+      "starting"
+    ],
+    "open": true,
+    "selectionPreserved": true,
+    "hostCount": 1
+  },
+  "resize": {
+    "before": 390,
+    "after": 410,
+    "keyboard": true
+  },
+  "pointerResize": {
+    "before": 410,
+    "after": 466.5874938964844
+  },
+  "settingsPage": {
+    "url": "chrome-extension://namkdikenjddkgkhfdpbbepgbelliidp/options.html",
+    "frames": [
+      "chrome-extension://namkdikenjddkgkhfdpbbepgbelliidp/options.html"
+    ]
+  }
+}
