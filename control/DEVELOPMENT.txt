@@ -3,9 +3,9 @@ Build the portable app (no Python required)
 Requirements: Go 1.26.5+, Node.js 24 and npm.
 From the project root:
 
-  make dist
+  ./build.sh
 
-Or: ./build.sh (Linux), ./build.ps1 (Windows PowerShell).
+Windows PowerShell: ./build.ps1.
 Arguments are passed to the Go packager, e.g. ./build.sh --output /absolute/path.
 
 This builds Svelte, runs Go tests/vet, builds the Linux ARM64/x64 and Windows x64
@@ -54,8 +54,8 @@ The main executable directory is the default portable root. No working-directory
 parent-config or user-profile data lookup is used. --root is an explicit absolute
 override. Workers, caches, models and temporary files stay beneath that root.
 
-Model-conversion provenance is in docs/model-provenance/koharu768/ (beside the
-control module in the source bundle). It is not invoked by the application build
+Local model-conversion provenance is in research/docs/model-provenance/koharu768/.
+It is excluded from source archives and is not required by the application build
 or runtime. The obsolete Python/Docker application has been removed.
 
 License

@@ -161,7 +161,7 @@ func archiveSource(project, path string) error {
 	gz := gzip.NewWriter(f)
 	tw := tar.NewWriter(gz)
 	// Explicit source allowlist: never package models, config, jobs or backups.
-	for _, name := range []string{"AGENTS.md", "README.md", "THIRD_PARTY_NOTICES.md", ".gitignore", "Makefile", "build.sh", "build.ps1", "control", "native", "extension", "tests", "docs", "deployment/orangepi/services"} {
+	for _, name := range []string{"AGENTS.md", "README.md", "THIRD_PARTY_NOTICES.md", ".gitignore", "build.sh", "build.ps1", "control", "native", "extension", "tests", "deployment/orangepi/services"} {
 		if name == "THIRD_PARTY_NOTICES.md" {
 			if _, err := os.Stat(filepath.Join(project, name)); os.IsNotExist(err) {
 				continue // Individual dependency notices are included under control/.

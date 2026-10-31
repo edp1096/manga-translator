@@ -1,4 +1,4 @@
-Manga Translator 0.3.8 — Local control app
+Manga Translator 0.4.0 — Local control app
 
 Windows x64, Linux ARM64 and Linux x64. Go serves the bundled Svelte management interface.
 Python, Node.js, Go, a C++ compiler and separately installed model tools are NOT

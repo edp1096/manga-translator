@@ -29,7 +29,7 @@ Changing a runtime release
 5. Check the release's CLI/API and native ABI compatibility. If the C APIs or
    linked SONAME change, rebuild the affected native engines with compatible SDKs.
    SDK build inputs are recorded separately in tools/build-inputs.json.
-6. Run make dist (Windows: ./build.ps1), go test -race ./internal/control, and
+6. Run ./build.sh (Windows: ./build.ps1), go test -race ./internal/control, and
    actual inference with the pinned releases before distributing. For rebuilt
    engines pass --linux-native, --linux-x64-native and --windows-native to build.sh/build.ps1.
 
