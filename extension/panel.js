@@ -1,7 +1,66 @@
 const embeddedPanel=globalThis.MangaPagePanel;
 const $=id=>(embeddedPanel?.root||document).getElementById(id),selected=new Set();
-let tabId,known=new Set(),busy=false,pageURL='',noticeUntil=0,autoSelectNew=true,saving=false,running=false;
+let tabId,known=new Set(),busy=false,pageURL='',noticeUntil=0,autoSelectNew=true,saving=false,running=false,displayBusy=false,changingDisplay=false;
 const thumbs=new Map(),thumbTasks=new Map(),rows=new Map();
+let nameWork=null,namePageURL='';
+const helpTopics={
+ reader:['패널 사용',[
+  '뒤쪽 이미지가 목록에 없으면 새로고침을 누르세요. 스크롤하거나 지원 뷰어의 페이지를 넘겨 본문을 불러옵니다.',
+  '새로고침이나 번역이 끝나도 시작 위치로 돌아가지 않습니다. 토나리노 영점프처럼 화면을 읽는 뷰어는 만화 탭을 활성 상태로 유지하세요.',
+  '전체 선택과 체크박스로 번역·저장할 페이지를 고릅니다. 이동은 해당 이미지를 보여주고, 편집에서는 번역문과 배치를 개별 수정할 수 있습니다.',
+ '한 페이지의 번역과 선택한 흰 배경·이미지 복원을 마친 뒤 다음 페이지로 넘어갑니다. 목록의 완료는 최종 표시까지 끝났다는 뜻입니다. 표시 적용 오류는 완료된 번역을 보관하며, 다시 적용으로 이어갈 수 있습니다.',
+  '사이트에는 번역 이미지만 표시하며 처리는 확장에서 합니다. 단색 배경의 대사는 직접 표시하고, 복잡한 그림은 원본을 보존합니다.']],
+ names:['명칭 사전',[
+  '작품과 번역 언어에 맞는 사전에 인물명·장소·용어·호칭을 등록하면 다음 번역부터 적용됩니다.',
+  '명칭 통일은 현재 작품의 불러온 결과와 저장된 다른 화에 적용합니다. 명칭 되돌림으로 교정을 되돌릴 수 있습니다.']],
+ display:['말풍선 표시',[
+  '말풍선 흰 배경 자동은 확인된 말풍선의 툴팁을 흰 배경 번역문으로 바꿉니다. 기본 표시로 돌아가면 이전 표시를 복원합니다.',
+  '선택 여부와 관계없이 모든 번역 페이지에 적용하고, 다음 번역에도 선택을 유지합니다. 개별 편집은 유지합니다.',
+  '재번역 없이 표시만 바뀝니다. 경계가 확인되지 않은 페이지는 처음 적용할 때 분석 시간이 필요할 수 있습니다.']],
+ outside:['대사·독백 표시',[
+  '말풍선 밖 대사·독백을 툴팁, 흰 배경, 이미지 복원 중에서 선택합니다. 이미지 복원은 말풍선 안에서 툴팁으로 남은 대사에도 적용합니다. 툴팁을 고르면 복원한 부분이 원문으로 돌아갑니다.',
+  '이미 직접 표시된 대사, 효과음으로 검출된 영역과 개별 편집은 변경하지 않습니다. 주변 글자를 가리거나 번역문이 들어가지 않는 영역은 툴팁으로 유지합니다.',
+  '흰 배경은 그림을 가립니다. 이미지 복원은 원문을 지우고 가려진 그림을 추정하므로 선이나 무늬가 달라질 수 있습니다. 처음에는 복원 시간이 필요하고, 이후에는 재번역 없이 전환됩니다.']]
+};
+let helpButton=null,helpTopic='';
+const helpOpen=()=>$('panel-help').matches(':popover-open');
+function helpStatus(){
+ const current=$('help-current');
+ current.textContent=helpTopic==='names'?(nameWork?'현재 사전: '+nameWork.title+' · '+nameWork.entries.length+'개':'현재 작품과 번역 언어에 등록된 명칭 사전이 없습니다.'):['display','outside'].includes(helpTopic)?$('display-status').textContent:'';
+ current.hidden=!current.textContent;
+}
+function positionHelp(){
+ if(!helpOpen()||!helpButton?.isConnected)return;
+ const help=$('panel-help'),main=help.closest('main').getBoundingClientRect(),anchor=helpButton.getBoundingClientRect();
+ const width=Math.max(0,Math.min(340,main.width-16,innerWidth-16));
+ help.style.width=width+'px';help.style.maxHeight=Math.max(0,innerHeight-16)+'px';
+ const height=help.getBoundingClientRect().height;
+ help.style.left=Math.max(8,Math.min(main.right-width-8,innerWidth-width-8))+'px';
+ help.style.top=Math.max(8,Math.min(anchor.bottom+6,innerHeight-height-8))+'px';
+}
+function closeHelp(restore=false){
+ const previous=helpButton;if(helpOpen())$('panel-help').hidePopover();
+ previous?.setAttribute('aria-expanded','false');helpButton=null;helpTopic='';
+ if(restore&&previous?.isConnected)previous.focus();
+}
+for(const button of (embeddedPanel?.root||document).querySelectorAll('[data-help]')){
+ let pressedOpen=false;
+ button.onpointerdown=()=>{pressedOpen=helpOpen()&&helpButton===button;};
+ button.onclick=event=>{
+ const wasOpen=event.detail>0&&pressedOpen;pressedOpen=false;
+ if(wasOpen||helpOpen()&&helpButton===button){closeHelp();return;}
+ closeHelp();helpButton=button;helpTopic=button.dataset.help;
+ const [title,paragraphs]=helpTopics[helpTopic];$('help-title').textContent=title;
+ $('help-body').replaceChildren(...paragraphs.map(text=>{const paragraph=document.createElement('p');paragraph.textContent=text;return paragraph;}));
+ helpStatus();button.setAttribute('aria-expanded','true');$('panel-help').showPopover();positionHelp();$('help-close').focus({preventScroll:true});
+ };
+}
+$('help-close').onclick=()=>closeHelp(true);
+$('panel-help').addEventListener('keydown',event=>{if(event.key==='Escape'){event.preventDefault();event.stopPropagation();closeHelp(true);}});
+$('panel-help').addEventListener('toggle',()=>{if(!helpOpen())closeHelp();});
+addEventListener('resize',positionHelp);
+new ResizeObserver(positionHelp).observe($('panel-header'));
+$('panel-header').addEventListener('scroll',positionHelp,{passive:true});
 const rpc=async msg=>{const r=await chrome.runtime.sendMessage(msg);if(!r?.ok)throw Error(r?.error||'확장 오류');if(r.value?.error)throw Error(r.value.error);return r.value;};
 function thumbnail(record,e){
  if(record.preview===e.preview)return;
@@ -21,13 +80,24 @@ function thumbnail(record,e){
  });record.observer.observe(img);
 }
 function selectionState(){
- $('run').disabled=running||saving;$('preload').disabled=running||saving;
- $('zip').disabled=running||saving||!selected.size;$('zip').textContent=`선택 저장 (${selected.size})`;
+ $('run').disabled=running||saving||displayBusy;$('preload').disabled=running||saving||displayBusy;
+ $('zip').disabled=running||saving||displayBusy||!selected.size;$('zip').textContent=`선택 저장 (${selected.size})`;
+ $('display-mode').disabled=saving||changingDisplay;$('outside-text-mode').disabled=saving||changingDisplay;$('display-retry').disabled=saving||changingDisplay||running||displayBusy;
+ if($('names-correct'))$('names-correct').disabled=running||saving||displayBusy||!nameWork?.entries?.some(entry=>entry.kind!=='honorific');
+ if($('names-undo'))$('names-undo').disabled=running||saving||displayBusy;
  const all=$('all').querySelector('input');all.checked=known.size>0&&selected.size===known.size;all.indeterminate=selected.size>0&&selected.size<known.size;
 }
 function display(s){
  running=!!s.running;
+ displayBusy=!!s.displayBusy;
+ if(!changingDisplay){$('display-mode').value=s.displayMode||'auto';$('outside-text-mode').value=s.outsideTextMode||'tooltip';}
+ $('display-status').textContent=s.displayMessage||'';$('display-status').hidden=!s.displayMessage||!s.displayBusy&&!s.displayPaused;$('display-retry').hidden=!s.displayPaused;
  if(s.pageURL){pageURL=s.pageURL;$('page').textContent=new URL(pageURL).hostname;}
+ if($('name-status')){
+  $('name-status').textContent=s.nameMessage||'';$('name-status').hidden=!s.nameMessage;
+  if(namePageURL!==pageURL){namePageURL=pageURL;rpc({type:'namesContext',pageURL}).then(context=>{nameWork=context.work;helpStatus();positionHelp();selectionState();}).catch(()=>{});}
+ }
+ if(helpOpen()){helpStatus();positionHelp();}
  if(!saving&&Date.now()>noticeUntil)$('status').textContent=s.message;
  $('run').disabled=s.running;$('preload').disabled=s.running;
  const active=new Set(s.items.map(e=>e.key));
@@ -49,7 +119,7 @@ function display(s){
    locate.onclick=()=>control('locate',{key:r.entry.key,sourceURL:r.entry.preview});
    edit.onclick=()=>control('edit',{key:r.entry.key});
   }
-  r.entry=e;r.check.checked=selected.has(e.key);r.edit.hidden=!e.done;
+  r.entry=e;r.check.checked=selected.has(e.key);r.edit.hidden=!e.done;r.edit.disabled=running||displayBusy||saving;
   const label=`${e.index+1}. ${e.state}`;
   r.node.title=`${e.title||'이미지'} · ${e.width||'?'}×${e.height||'?'}`;
   if(r.label.textContent!==label)r.label.textContent=label;
@@ -87,8 +157,22 @@ async function control(action,extra={}){
  }catch(e){noticeUntil=Date.now()+6000;$('status').textContent=e.message;}
 }
 $('preload').onclick=()=>control('preload');
+$('display-mode').onchange=async()=>{const mode=$('display-mode').value;changingDisplay=true;selectionState();try{await control('displayMode',{mode});}finally{changingDisplay=false;await control('status');}};
+$('outside-text-mode').onchange=async()=>{const mode=$('outside-text-mode').value;changingDisplay=true;selectionState();try{await control('outsideTextMode',{mode});}finally{changingDisplay=false;await control('status');}};
+$('display-retry').onclick=()=>control('displayRetry');
+if($('names-settings'))$('names-settings').onclick=()=>rpc({type:'openNames',tabId}).catch(error=>{$('name-status').textContent=error.message;$('name-status').hidden=false;});
+if($('names-correct'))$('names-correct').onclick=()=>control('namesCorrect');
+if($('names-undo'))$('names-undo').onclick=()=>control('namesUndo');
+chrome.storage?.onChanged?.addListener((changes,area)=>{if(area==='local'&&(changes.nameWorks||changes.target)){namePageURL='';nameWork=null;control('status');}});
 $('run').onclick=()=>control('run',{keys:[...selected]});$('stop').onclick=()=>control('stop');$('toggle').onclick=()=>control('toggle');$('settings').onclick=()=>embeddedPanel?rpc({type:'openOptions'}):chrome.runtime.openOptionsPage();
-$('all').querySelector('input').onchange=e=>{autoSelectNew=e.target.checked;selected.clear();if(e.target.checked)for(const key of known)selected.add(key);control('status');};
+$('all').querySelector('input').onchange=e=>{
+ autoSelectNew=e.target.checked;selected.clear();
+ if(autoSelectNew)for(const key of known)selected.add(key);
+ // Selection belongs to this panel. A slow or disconnected page must not
+ // delay its checkboxes until a status RPC completes.
+ for(const [key,row]of rows)row.check.checked=selected.has(key);
+ selectionState();
+};
 (async()=>{try{await connect();}catch(e){$('status').textContent=e.message;}})();
 setInterval(async()=>{if(busy||!Number.isInteger(tabId)||embeddedPanel&&(!embeddedPanel.isOpen()||document.hidden))return;busy=true;try{await control('status');}finally{busy=false;}},1500);
 // The default side panel can open before Chrome supplies a tab-specific path.
@@ -98,7 +182,7 @@ chrome.tabs?.onActivated?.addListener(()=>{
 });
 
 $('zip').onclick=async()=>{
- if(saving||running||!selected.size)return;
+ if(saving||running||displayBusy||!selected.size)return;
  const chosen=[...rows.values()].map(r=>r.entry).filter(e=>selected.has(e.key)).sort((a,b)=>a.index-b.index),files=[],manifest=[];saving=true;selectionState();
  try{
   await rpc({type:'control',tabId,action:'exportStart'});

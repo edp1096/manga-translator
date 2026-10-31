@@ -107,7 +107,13 @@
         "ocr-kv-fp32-hayai_encoder_onnx",
         "ocr-kv-fp32-hayai_encoder_onnx_data",
         "ocr-kv-fp32-position_base_npy",
-        "ocr-kv-fp32-tokenizer_json"
+        "ocr-kv-fp32-tokenizer_json",
+        "ocr-baberu-license",
+        "ocr-baberu-readme-md",
+        "ocr-baberu-tokenizer-vocab-json",
+        "ocr-baberu-onnx-decoder-prefill-int8-onnx",
+        "ocr-baberu-onnx-decoder-step-int8-onnx",
+        "ocr-baberu-onnx-vision-int4-onnx"
       ],
       "dependencies": [
         "ort",
@@ -117,7 +123,7 @@
       "id": "hayai-onnx-fp32-kv",
       "name": "Hayai v2 · ONNX FP32 + KV",
       "memoryGiB": 2,
-      "note": "이전 선정 후보 · FP32 원본 정밀도, KV 캐시 사용 · 메모리가 더 필요합니다"
+      "note": "FP32 정밀도 · KV 캐시 · 한 글자 인식이 불안정할 때 Baberu로 재검증"
     },
     {
       "group": "translation",
@@ -148,6 +154,31 @@
       "name": "Gemma 4 E4B · Q4_0",
       "memoryGiB": 12,
       "note": "더 큰 번역 모델 · 메모리와 처리 시간이 더 필요합니다"
+    },
+    {
+      "llm": {
+        "flashAttention": {
+          "cuda": "on",
+          "vulkan": "auto"
+        },
+        "draftPath": "models/gemma-4-12B-it-qat-GGUF/mtp-gemma-4-12B-it.gguf",
+        "draftTokens": 4,
+        "draftBackend": "cuda"
+      },
+      "group": "translation",
+      "artifacts": [
+        "gemma-12b-qat",
+        "gemma-12b-mtp"
+      ],
+      "dependencies": [
+        "llama",
+        "vcredist"
+      ],
+      "path": "models/gemma-4-12B-it-qat-GGUF/gemma-4-12B-it-qat-UD-Q4_K_XL.gguf",
+      "id": "gemma-12b-qat",
+      "name": "Gemma 4 12B QAT · UD-Q4_K_XL",
+      "memoryGiB": 16,
+      "note": "RTX 4070 SUPER 12GB 실측 · CUDA MTP4 가속 · GPU 메모리 여유가 작습니다. CPU·Vulkan은 일반 생성"
     }
   ],
   "runtimes": [
@@ -371,6 +402,23 @@
         "nvidia-cudnn-cu13-linux-arm64",
         "nvidia-cuda-nvrtc-linux-arm64",
         "nvidia-nvjitlink-linux-arm64"
+      ]
+    },
+    {
+      "id": "llama-cuda",
+      "version": "0.7.0",
+      "platform": "windows-amd64",
+      "artifact": "llama-cuda-windows-amd64",
+      "releaseUrl": "https://github.com/ggml-org/llama.cpp/releases/tag/b11669",
+      "buildTag": "b11669",
+      "executable": "runtime/llama-cuda-0.7.0/llama-server.exe",
+      "libraryDirs": [
+        "runtime/llama-cuda-0.7.0"
+      ],
+      "family": "llama",
+      "backend": "cuda",
+      "additionalArtifacts": [
+        "llama-cudart-windows-amd64"
       ]
     }
   ],
@@ -875,14 +923,14 @@
       "group": "application",
       "platform": "windows-amd64",
       "url": "embedded:engine/windows-amd64.gz",
-      "sha256": "fa7423584d9a94508d1f4c5ecdde4d12ba5ae5e8dee74f790961b8f4dec4c5a8",
-      "size": 1212861,
+      "sha256": "08c5874757bac14f5786765cb42f1cdffa65cb5f7e17e029f8401b0ba57ef16e",
+      "size": 2301317,
       "format": "gzip",
       "files": [
         {
           "path": "bin/manga-translator-server.exe",
-          "sha256": "8557bea60df2d14fac77bd139ba063a299c60fd29b7cf0d15f196c0e0db72b46",
-          "size": 3346944,
+          "sha256": "612e5f41b043c8d06b12d222103418c218d7d46f0a9088fc7706494f89a75327",
+          "size": 7179092,
           "executable": true
         }
       ]
@@ -2513,6 +2561,233 @@
           "size": 172917304
         }
       ]
+    },
+    {
+      "id": "llama-cuda-windows-amd64",
+      "name": "llama.cpp CUDA 13.4 (Windows x64)",
+      "group": "runtime",
+      "platform": "windows-amd64",
+      "url": "https://github.com/ggml-org/llama.cpp/releases/download/b11669/llama-b11669-bin-win-cuda-13.4-x64.zip",
+      "sha256": "3b92d5c064f5032e603e531d3ec8961f3bd6613e5dfad047399a92dec8e95dbc",
+      "size": 154582227,
+      "format": "zip",
+      "files": [
+        {
+          "entry": "LICENSE-LLVM-OpenMP",
+          "path": "runtime/llama-cuda-0.7.0/LICENSE-LLVM-OpenMP",
+          "sha256": "fdad1758a9e1f9d5a81e18879b3406772115edc92c24bfa36b70c654f325e8e4",
+          "size": 19741
+        },
+        {
+          "entry": "ggml-base.dll",
+          "path": "runtime/llama-cuda-0.7.0/ggml-base.dll",
+          "sha256": "0a259689ea3c105a8122159eb97fb53733f2531fadd3e9739689961cdab27600",
+          "size": 803840
+        },
+        {
+          "entry": "ggml-cpu-alderlake.dll",
+          "path": "runtime/llama-cuda-0.7.0/ggml-cpu-alderlake.dll",
+          "sha256": "98b3bd12a84e848f57686f6d5f0969654ec79cda0c7636498933ea1063d14aa6",
+          "size": 1420288
+        },
+        {
+          "entry": "ggml-cpu-cannonlake.dll",
+          "path": "runtime/llama-cuda-0.7.0/ggml-cpu-cannonlake.dll",
+          "sha256": "fef636daea23b26f935cf5983be9a29b79f0541cd148b9d64a32bc9ea0cec704",
+          "size": 1598976
+        },
+        {
+          "entry": "ggml-cpu-cascadelake.dll",
+          "path": "runtime/llama-cuda-0.7.0/ggml-cpu-cascadelake.dll",
+          "sha256": "b32ee94fa0a366886cd03be48f80f1d8c1bbb338d71fc734a263753ec46aa8fd",
+          "size": 1583616
+        },
+        {
+          "entry": "ggml-cpu-cooperlake.dll",
+          "path": "runtime/llama-cuda-0.7.0/ggml-cpu-cooperlake.dll",
+          "sha256": "e67357a558e71b834360b6f6d62abc6b9fe19930f6f7dd21ee0339e7b144306e",
+          "size": 1593344
+        },
+        {
+          "entry": "ggml-cpu-haswell.dll",
+          "path": "runtime/llama-cuda-0.7.0/ggml-cpu-haswell.dll",
+          "sha256": "d33deb9bf3dd25427404f0f94a13c6b3da92b9b57b794199a9f354c3a327efb6",
+          "size": 1425408
+        },
+        {
+          "entry": "ggml-cpu-icelake.dll",
+          "path": "runtime/llama-cuda-0.7.0/ggml-cpu-icelake.dll",
+          "sha256": "41abb00a64bbf099c137cdb3b9547c7eb90bcd9c1d7b83238cbf10a74f97addd",
+          "size": 1590272
+        },
+        {
+          "entry": "ggml-cpu-ivybridge.dll",
+          "path": "runtime/llama-cuda-0.7.0/ggml-cpu-ivybridge.dll",
+          "sha256": "d674c12b3f40d657b0989801699560e68247dbe9509823651b055ac3816ba37c",
+          "size": 1301504
+        },
+        {
+          "entry": "ggml-cpu-piledriver.dll",
+          "path": "runtime/llama-cuda-0.7.0/ggml-cpu-piledriver.dll",
+          "sha256": "bb5215c806397adf56e986f52aa0c75b04b3b5b33203a722f647254eae2b94b2",
+          "size": 1294336
+        },
+        {
+          "entry": "ggml-cpu-sandybridge.dll",
+          "path": "runtime/llama-cuda-0.7.0/ggml-cpu-sandybridge.dll",
+          "sha256": "55d5659b45afcbe7a1d7611ab1914d2888476fc3024933e4b82122cdc58d6fd5",
+          "size": 1291264
+        },
+        {
+          "entry": "ggml-cpu-sapphirerapids.dll",
+          "path": "runtime/llama-cuda-0.7.0/ggml-cpu-sapphirerapids.dll",
+          "sha256": "83af3cacf3bf32b98626791358f950da4b45a22af85bde63afe537fe51e60848",
+          "size": 1869824
+        },
+        {
+          "entry": "ggml-cpu-skylakex.dll",
+          "path": "runtime/llama-cuda-0.7.0/ggml-cpu-skylakex.dll",
+          "sha256": "20722299dc5e4703056ff95b7ef329c223390ab87469c822721c1e67e4cc2a24",
+          "size": 1592320
+        },
+        {
+          "entry": "ggml-cpu-sse42.dll",
+          "path": "runtime/llama-cuda-0.7.0/ggml-cpu-sse42.dll",
+          "sha256": "1c0fc615b6d97a79e58f33e8a7fb4e8de1834ad0f3f0e00e8943a4d416ddd242",
+          "size": 916992
+        },
+        {
+          "entry": "ggml-cpu-x64.dll",
+          "path": "runtime/llama-cuda-0.7.0/ggml-cpu-x64.dll",
+          "sha256": "7c9df996db7fe98510571524e3e62dd267a4034350185014814418dbad3c25ea",
+          "size": 909824
+        },
+        {
+          "entry": "ggml-cpu-zen4.dll",
+          "path": "runtime/llama-cuda-0.7.0/ggml-cpu-zen4.dll",
+          "sha256": "83ae254f6204670e9011e11db84786122567bde2fab07354e7c4827c18589ee1",
+          "size": 1600000
+        },
+        {
+          "entry": "ggml-cuda.dll",
+          "path": "runtime/llama-cuda-0.7.0/ggml-cuda.dll",
+          "sha256": "3e749ce6ec7ae18da1fe002cae5bdf446a123be1d11412f494eb03d5afabcd83",
+          "size": 149247488
+        },
+        {
+          "entry": "ggml-rpc.dll",
+          "path": "runtime/llama-cuda-0.7.0/ggml-rpc.dll",
+          "sha256": "b52bd8eddb79ebd1dc0b832b34483bef23d44a34c6d5639301d92cb971f874a4",
+          "size": 231424
+        },
+        {
+          "entry": "ggml.dll",
+          "path": "runtime/llama-cuda-0.7.0/ggml.dll",
+          "sha256": "2649a5d914934188cccbe2c58e4642d2d4408bcda0f7068d58390686bd7ea62f",
+          "size": 78848
+        },
+        {
+          "entry": "libomp.dll",
+          "path": "runtime/llama-cuda-0.7.0/libomp.dll",
+          "sha256": "a12116ba72d1d6820407cf30be23da04ce79d6bb8a71a5ee71759c5a1faa6f1c",
+          "size": 768000
+        },
+        {
+          "entry": "llama-common.dll",
+          "path": "runtime/llama-cuda-0.7.0/llama-common.dll",
+          "sha256": "9adf40bc08e99005699d6397bcacb72c3aced68c9db01f13b5bd31c6abc7b2b5",
+          "size": 8037376
+        },
+        {
+          "entry": "llama-server-impl.dll",
+          "path": "runtime/llama-cuda-0.7.0/llama-server-impl.dll",
+          "sha256": "24b1249ddd19e3ba3551804707dbe2f3c154c007542899ea8b16d69a94ab6597",
+          "size": 9259520
+        },
+        {
+          "entry": "llama-server.exe",
+          "path": "runtime/llama-cuda-0.7.0/llama-server.exe",
+          "sha256": "6a4635aeb35656153d4bfeeddf761d24ed84aada9c9108d580737cbed465141b",
+          "size": 9216,
+          "executable": true
+        },
+        {
+          "entry": "llama.dll",
+          "path": "runtime/llama-cuda-0.7.0/llama.dll",
+          "sha256": "aacb073c9c0d30090dd3e56f49772545452ccc4fd311efbfdb7d1bba7bbb0bda",
+          "size": 3541504
+        },
+        {
+          "entry": "mtmd.dll",
+          "path": "runtime/llama-cuda-0.7.0/mtmd.dll",
+          "sha256": "bd4a9dac32ba8b14cf95da3361495380ac556b34f48434ebe477ffef23f40bd1",
+          "size": 1847808
+        }
+      ]
+    },
+    {
+      "id": "llama-cudart-windows-amd64",
+      "name": "CUDA 13.4 libraries for llama.cpp",
+      "group": "runtime",
+      "platform": "windows-amd64",
+      "url": "https://github.com/ggml-org/llama.cpp/releases/download/b11669/cudart-llama-bin-win-cuda-13.4-x64.zip",
+      "sha256": "738f8c251ac22b70c3ae6f83a10cf222725df0395246a2cf58f32bdb85fbe668",
+      "size": 423535356,
+      "format": "zip",
+      "files": [
+        {
+          "entry": "cublas64_13.dll",
+          "path": "runtime/llama-cuda-0.7.0/cublas64_13.dll",
+          "sha256": "1119dbca0a808e0c8850bb4221e330daf0b5ddb348d62d37b6ac533854723df9",
+          "size": 54942320
+        },
+        {
+          "entry": "cublasLt64_13.dll",
+          "path": "runtime/llama-cuda-0.7.0/cublasLt64_13.dll",
+          "sha256": "0f5bc315fef706b5626248ebd74e8a48a9e82fa2f0cad38330f5f70984913107",
+          "size": 492752496
+        },
+        {
+          "entry": "cudart64_13.dll",
+          "path": "runtime/llama-cuda-0.7.0/cudart64_13.dll",
+          "sha256": "05bfafcb97bd53b0089568a96e1e5bd6921637bd0853ff7f5342bd31a6a16890",
+          "size": 551024
+        }
+      ]
+    },
+    {
+      "id": "gemma-12b-qat",
+      "name": "Gemma 4 12B QAT",
+      "group": "translation",
+      "platform": "all",
+      "url": "https://huggingface.co/unsloth/gemma-4-12B-it-qat-GGUF/resolve/980b060c40a8539ac159e0501a3e0f66a6365af3/gemma-4-12B-it-qat-UD-Q4_K_XL.gguf",
+      "sha256": "90fd44e29e0d7cffeb0fd00dc73cfdab9ed0b0e95306ecf7821ea634c940c370",
+      "size": 6716356800,
+      "format": "raw",
+      "files": [
+        {
+          "path": "models/gemma-4-12B-it-qat-GGUF/gemma-4-12B-it-qat-UD-Q4_K_XL.gguf",
+          "sha256": "90fd44e29e0d7cffeb0fd00dc73cfdab9ed0b0e95306ecf7821ea634c940c370",
+          "size": 6716356800
+        }
+      ]
+    },
+    {
+      "id": "gemma-12b-mtp",
+      "name": "Gemma 4 12B MTP",
+      "group": "translation",
+      "platform": "all",
+      "url": "https://huggingface.co/unsloth/gemma-4-12B-it-qat-GGUF/resolve/980b060c40a8539ac159e0501a3e0f66a6365af3/mtp-gemma-4-12B-it.gguf",
+      "sha256": "fcb35dea42c71333db904cee11baac525c9ef872818ee3753f6cb156f3c6f4f6",
+      "size": 253708800,
+      "format": "raw",
+      "files": [
+        {
+          "path": "models/gemma-4-12B-it-qat-GGUF/mtp-gemma-4-12B-it.gguf",
+          "sha256": "fcb35dea42c71333db904cee11baac525c9ef872818ee3753f6cb156f3c6f4f6",
+          "size": 253708800
+        }
+      ]
     }
   ],
   "licenses": [
@@ -2570,6 +2845,11 @@
       "name": "Baberu OCR · weights and code",
       "url": "https://huggingface.co/genshiai-daichi/baberu-ocr/tree/b9868433dbda3ed9ba1357d008599ff4ada873d5",
       "license": "Apache-2.0"
+    },
+    {
+      "name": "Clipper2-ts",
+      "url": "https://github.com/countertype/clipper2-ts",
+      "license": "BSL-1.0 (Boost Software License 1.0)"
     }
   ]
 }

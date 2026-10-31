@@ -57,6 +57,9 @@ func Run(dataRoot string, bundle fs.FS, noSetup, noOpen bool) error {
 		return e
 	}
 	defer unlock()
+	if e = recoverMigration(root); e != nil {
+		return e
+	}
 	p := filepath.Join(root, "data", "control.log")
 	if st, e := os.Stat(p); e == nil && st.Size() > 5*1024*1024 {
 		os.Remove(p + ".1")

@@ -1,0 +1,36 @@
+Completed 2026-10-28, Windows11 Edge156.0.4314.42.
+Target: https://klz9.com/isshou-senkin-chapter-0.html
+
+Actual user Profile5 extension was restarted through its own Edge extension detail UI. All26 current chapter pages were translated by clicking the real panel, with0failures and0nameWarnings. Existing saved 一勝千金 dictionary was automatically passed to all26 jobs. Page6 was retranslated for the additional label/name-fragment fixes. Final job: 17a3e8da-83b0-4657-8c0c-f423ea246598.
+
+Root causes and implemented fixes
+- Response mapping: C++ JSON schema sorted original numeric-string region IDs lexicographically, while source rows were in reading order. Actual Gemma reproduced exact dialogue/effect permutations. Translation/correction now use zero-padded internal IDs, and responses map back to original public region IDs. Independent name-context classification retains original semantic IDs with input order aligned to schema. Name split suggestions receive one full name per row and explicit family/given requests. No LLM tool calls are used.
+- Duplicate OCR regions: Koharu can return whole sentences plus overlapping fragments; Hayai reads those crops slightly differently, defeating exact substring suppression. Spatial containment, bounded character distance, detector confidence, full-vs-fragment coverage, and close coincident label checks now resolve these cases. Fuzzy fragments are resolved before combined-parent choices. Removed text extents are retained where needed for clean display. Short arbitrary names and unrelated effect strokes are protected.
+- Page6 large 本郷姫奈: full-name OCR was already complete. Separate overlapping effect detections 本郷, 姫, 奈 produced smaller tooltip targets (혼고/공주/나), covering the correct full name. A dictionary-confirmed complete-name region now suppresses contained exact name fragments across text/effect classes. Names in separate dialogue and unrelated effect letters remain intact. Final cached result contains 本郷姫奈=>혼고 히나, without those three competing fragments. Exact cached result rendered with current content/render code in Windows Edge: all4 main glyph centers hit the complete-name tooltip; see name-hit-test.json.
+- Work URL scope: the user's earlier undefined URL stored translations with no dictionary. Generic undefined/null/NaN chapter suffixes now normalize to the same work. The user corrected the target to chapter-0; actual0 already showed the saved dictionary, and all new0 jobs applied it. No new names were silently added.
+- Late image discovery: connected page images now retain DOM reading order when a preceding image loads late. Detached virtual reader entries remain preserved. This also prevents misleading page numbering during review.
+
+Page numbering
+Initial cache-before.json and images/NN-before.png are in cache WRITE order, not page order. The initial informal cache-slot labels4/5/8/16 correspond to actual chapter0 pages2/3/6/11. Final cache-after.json, render-after.json, images-after/, dialogue-after.txt and names-after.json follow verified document order from browser/panel-order.json. The undefined result cache and its native jobs remain preserved.
+
+Validation
+- Sparse/double-digit IDs, retries, named fields, missing/unknown/duplicate IDs; work identity/isolation; background/cache races and name correction/undo; actual Edge name browser regression.
+- Native duplicate regression includes complete raw p11 overlapping detections, OCR variants, isolated names, effect separation, confidence, truncated crops, full glyph bounds, exact registered-name fragments and outside-name exclusions.
+- Existing26+20 saved pages compared. Latest registered-name suppression removes3fragments on actual0p6 and one containedル fragment in88p17; other regions preserved. The added close-label rule affected only current0p6 among final26 results.
+- Actual model/native API: ordinary 希望 remains희망, direct name and mixed usage become노조미 appropriately; all3 approved name split suggestions exact. Fresh native images and headed Edge verified current0 dialogue IDs, name application, duplicate removal, reload and original-job preservation. Site first-click ads were closed only in isolated tests. Delayed site loading required one additional actual refresh after reload; all26 results recovered.
+- Current user browser:26translated,0failures; all26dictionary metadata present,0warnings. Actual full chapter rendered again in Windows Edge and visually inspected; names-after.json records confirmed uses. Latest page6 single-name tooltip verified at4glyph centers.
+- Windows Go tests and CGO_ENABLED=0 GUI build passed. See regressions.json, browser/result.json, native-probe.json, label-native.json, name-fragment-native.json and name-hit-test.json.
+
+Deployment and preservation
+Live release: dist/manga-translator-windows-x64-0.3.15
+Native SHA256: 202b55344d2155c32ad11dc038cc9095efae6801bb147e3b1e8fbf7b2a36b8df
+Controller SHA256: 80cc7ca83d797e2103fdce8ee8014ebffc6e5f38e9809068e30f4b0127a1d290
+Idle services were checked before each update. Original1065 settings/credential/jobPNG+JSON files were rehashed after user translation and remained identical. Final deployment additionally protected1227files accumulated through the first passes. No models or unrelated project files replaced. Existing release ZIP unchanged. Current Windows workspace is explicitly authorized by prior user reply; OP5P/DGX were not overwritten.
+Backups: archive/chapter-zero-review-2026-10-27-before, ...-before-label, ...-before-name-fragments.
+No user build or extension restart is needed for the installed fixes.
+
+Remaining quality limits (not claimed solved)
+- Decorative lettering and ruby still produce OCR misreads, e.g. some 戦乙女 labels and an extra mixed-title/name crop. Correct whole-name OCR does not make every badly misread crop semantically correct.
+- 東條蘭 is a new character absent from the approved3-entry dictionary; the current model still varies its Korean spelling (토죠/토고 etc). No canonical entry was invented or silently added.
+- Some ordinary dialogue/terminology mistranslations remain. This work fixes structural mapping, verified duplicate cases and application of approved names; it does not establish perfect OCR/translation on every future manga.
+- Decorative text without a safe background can still use original-preserving tooltips. The large Hongo Hina name remains in this presentation mode, now with one complete-name target.

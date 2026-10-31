@@ -32,8 +32,8 @@ func (m *Manager) runtimeForSettings(family string, settings Settings) *Runtime 
 	id := family
 	switch family {
 	case "llama":
-		if execution(settings.LLMExecution) == "vulkan" {
-			id = "llama-vulkan"
+		if backend := execution(settings.LLMExecution); backend != "cpu" {
+			id = "llama-" + backend
 		}
 	case "ort":
 		backend := execution(settings.LayoutExecution)

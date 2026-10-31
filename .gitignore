@@ -12,3 +12,8 @@ control/.build/
 
 dist/
 archive/
+
+# Local experiments, captures, logs and build evidence
+/research/
+
+control/tools/geometry/node_modules/

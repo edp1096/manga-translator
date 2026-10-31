@@ -1,0 +1,104 @@
+Selective white-background translation — 2026-10-27
+
+Implemented behavior
+- The editor has a White background translation display mode and a background
+  extent selector: speech-bubble interior or text-box area. It is opt-in for
+  each region. Tooltip/original display remains available.
+- Existing saved jobs can request bubble geometry without OCR or translation.
+  The authenticated native POST /api/jobs/{id}/bubbles endpoint loads the
+  original and runs the selected layout model/provider only. It does not
+  modify the saved job, translation or cleaned image.
+- Geometry includes high-confidence bubble masks as compact run-length data.
+  The mask is clipped to the detection bounds and inset before being sent.
+  Display smoothing removes the visible grid steps of the lower-resolution
+  layout mask. The original bubble outline and exterior artwork are retained.
+- The browser requires almost complete text-box coverage, rejects oversized
+  candidates, effects and bubbles containing another text region, and offers
+  an explicit text-box alternative. It never silently fills a large uncertain
+  region. Busy translation jobs reject boundary requests with HTTP 409.
+- White backgrounds are drawn before all translated text; text is black.
+  Moving a text-box background paints the original and destination boxes
+  separately, preserving the artwork between them. Bubble-mode text dragging
+  is constrained to the white interior. Empty translations do not erase text.
+- The same renderer supplies the editor preview, manga overlay, PNG and page
+  export used by ZIP saving. Serialized edits retain the mask across reloads.
+  Switching back to tooltip restores the original rendering exactly.
+- The editor opens in the originating manga window, including when the site
+  opens an advertisement in a separate window.
+
+Actual five-page experiment
+- Tested page 5 of https://klz9.com/isshou-senkin-chapter-88.html using the
+  user's existing job 0f65f8c9-6d8a-415f-9de1-096f58a0f25b.
+- A layout-only CPU probe first confirmed the two transparent balloons were
+  detected separately. The final Windows tests used the rebuilt native API
+  with the user's selected DirectML layout provider and existing model files.
+- Detected bubble bounds: right [454,78,645,282], left [70,76,248,264]. Both
+  selected text regions were covered. No replacement translation was needed.
+- Ran the real unpacked extension on installed Windows Edge 156.0.4314.42,
+  using an isolated profile and temporary native API/job directory. The manga
+  page was live; its fifth image response used the exact saved original PNG.
+- Invoked the browser's actual extension action through Windows UI Automation;
+  clicked editor controls with browser mouse input, selected both white modes,
+  applied them, downloaded PNG, restored after page reload, then reverted both
+  to tooltip. The native toolbar helper uses InvokePattern where available.
+- The site's advertisement popup intercepted an initial edit click. The test
+  closed that isolated advertisement tab and retried the edit button. This
+  harness now waits specifically for the extension editor and uses native
+  InvokePattern to avoid toolbar focus timing errors. Editor creation also
+  targets the originating window. The final workflow passed. See edge.json.
+- Visually reviewed the rendered result. Initial unsmoothed mask edges showed
+  grid steps; smoothing was added and the final exported image reviewed again.
+- page-five-before.png and page-five-after.png are renderer exports;
+  edge-page-five-after.png shows the actual browser. page-five-edited.json and
+  page-five-geometry.json retain the tested geometry and display settings.
+- Pixel comparison: 48,278 changed pixels, zero changes outside the two bubble
+  bounds with a small boundary allowance. Other eight result regions and all
+  original text bounding boxes were unchanged. See pixel-check.json.
+
+Verification
+- tests/editor_white_background.cjs passed on Chromium 147.0.7727.15 and
+  installed Edge 156.0.4314.42: white fill/black text, unchanged exterior,
+  unselected-region preservation, JSON round trip, exact tooltip reversal,
+  empty text preservation, missing/shared-boundary rejection, busy retry,
+  explicit box fallback, constrained dragging and unchanged intervening art.
+- tests/browser_tooltip_overlap.cjs: all eight cases passed after the change.
+- tests/editor_zip.cjs, browser_restore.cjs, browser_retry.cjs and panel_zip.cjs
+  passed. Actual editor PNG bytes also matched the page-export PNG exactly.
+- control/tests/native/bubble-geometry.cpp passed: confidence/class filtering,
+  boundary inset, clipping, run encoding and empty-mask handling.
+- A fresh full page-5 translation ran on the rebuilt Windows native engine in
+  a temporary job directory: DirectML layout/OCR, Vulkan LLM, ten regions and
+  four bubbles, about 10.1 seconds. Existing user jobs were not retranscribed.
+  The same test checked busy rejection and missing-job rejection. See
+  native-smoke.json. Actual browser testing also checked unauthenticated 401.
+- Windows Go 1.27.1: go test ./... passed. Controller built with CGO_ENABLED=0,
+  -trimpath and -ldflags=-s -w -H windowsgui. Source/bundle extension files and
+  compressed/uncompressed native catalog hashes were verified.
+
+Build and deployment
+- Native Windows build: MinGW GCC 13 posix cross compiler, CMake Release,
+  ONNX Runtime API 24 headers from v1.24.4, LiteRT v2.3.1 C headers with its
+  generated CPU-only header toggles, verified libwebp 1.6.0 sources. The
+  selected installed ONNX Runtime/DirectML DLLs and model files were reused.
+- Updated the Windows native engine, its embedded gzip/catalog entry,
+  extension source/bundle and portable controller. Backups are under
+  archive/white-bubble-2026-10-27-before/.
+- Checked that user translation jobs were idle before service shutdown.
+  The first new controller start encountered the previous process's root lock
+  while shutdown was finishing. Closed that failed process's error dialog and
+  successfully retried after the previous processes exited. No live data was
+  restored from an older copy. See deployment.json for final service status.
+- Verified preserved settings, credentials and selected original job files
+  across successful restart, exact source/live extension parity, and a real
+  boundary request through the updated live API.
+- Models/settings were not changed. Linux native binaries, OP5P and existing
+  release ZIPs were not updated. The source implementation is platform-neutral;
+  those native distributions need a rebuild to provide the new boundary API.
+- This feature uses an opaque white fill, not generative background restoration.
+  Artwork inside the chosen white area is deliberately covered.
+
+Usage
+Reload the extension and the manga tab. Open the panel and the page's editor,
+select a dialogue region, choose White background translation and Speech-bubble
+interior, then Apply to page. Choose Text-box area if a reliable single-bubble
+boundary is unavailable. Existing cached results do not need retranslating.

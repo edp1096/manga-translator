@@ -69,7 +69,7 @@ struct OrtEngine:Engine{
  OrtEngine(const fs::path& dir,int threads,bool quant):Engine(dir/"tokenizer.json",256),nova(false),env(private_ort_env("hayai-ocr")),options(ort_options(threads)),enc(env,(dir/(quant?"hayai_encoder_dynamic_quant.onnx":"hayai_encoder.onnx")).c_str(),options),dec(env,(dir/(quant?"hayai_decoder_dynamic_quant.onnx":"hayai_decoder.onnx")).c_str(),options),base(read_positions(dir/"position_base.npy")){env.DisableTelemetryEvents();}
  std::string name()const override{return nova?"onnx-nova":"onnx-v2";}
  Result run(const fs::path& image,int max_tokens)override{
-  Result result;auto total=Clock::now(),phase=total;Prepared p=prepare(image,budget,!nova,base);result.prepare_ms=ms(phase);result.patches=p.patches;result.ph=p.ph;result.pw=p.pw;dump_prepared(dump,p);
+  Result result;auto total=Clock::now(),phase=total;Prepared p=prepare(image,budget,!nova,base,max_tokens);result.prepare_ms=ms(phase);result.patches=p.patches;result.ph=p.ph;result.pw=p.pw;dump_prepared(dump,p);
   phase=Clock::now();std::vector<Ort::Value> inputs;std::vector<const char*> names;std::vector<int64_t> grid{p.ph,p.pw};
   if(nova){names={"p_grid","pixel_values"};inputs.push_back(tensor(grid,{2}));inputs.push_back(tensor(p.pixels,{1,p.patches,768}));}else{names={"pixel_values","attention_mask","pos_embeds"};inputs.push_back(tensor(p.pixels,{1,256,768}));inputs.push_back(tensor(p.mask,{1,256}));inputs.push_back(tensor(p.pos,{1,256,768}));}
   auto output_name=enc.GetOutputNameAllocated(0,Ort::AllocatorWithDefaultOptions());const char* output_names[]={output_name.get()};auto vision_output=enc.Run(Ort::RunOptions{nullptr},names.data(),inputs.data(),inputs.size(),output_names,1);result.encoder_ms=ms(phase);

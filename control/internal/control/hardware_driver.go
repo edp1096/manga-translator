@@ -26,9 +26,11 @@ var nvmlLibrary = sync.OnceValues(func() (driverLibrary, error) { return openDri
 var cudaLibrary = sync.OnceValues(func() (driverLibrary, error) { return openDriverLibrary("cuda") })
 
 type cudaHardware struct {
-	Index  int
-	Shared bool
-	LUID   string
+	ComputeCapability int
+	DriverVersion     int
+	Index             int
+	Shared            bool
+	LUID              string
 }
 
 var integratedCUDA = sync.OnceValue(func() map[string]cudaHardware {
@@ -47,6 +49,11 @@ var integratedCUDA = sync.OnceValue(func() map[string]cudaHardware {
 	if !bindDriver(lib, "cuInit", &initialize) || !bindDriver(lib, "cuDeviceGetCount", &count) || !bindDriver(lib, "cuDeviceGet", &get) || !bindDriver(lib, "cuDeviceGetAttribute", &attr) || !bindDriver(lib, "cuDeviceGetPCIBusId", &pci) || initialize(0) != 0 {
 		return result
 	}
+	var driverVersion int32
+	var version func(*int32) int32
+	if bindDriver(lib, "cuDriverGetVersion", &version) {
+		version(&driverVersion)
+	}
 	var n int32
 	if count(&n) != 0 || n < 0 || n > 128 {
 		return result
@@ -55,7 +62,11 @@ var integratedCUDA = sync.OnceValue(func() map[string]cudaHardware {
 		var device, value int32
 		var bus [32]byte
 		if get(&device, i) == 0 && attr(&value, 18, device) == 0 && pci(&bus[0], int32(len(bus)), device) == 0 {
-			info := cudaHardware{Shared: value != 0, Index: int(i)}
+			info := cudaHardware{Shared: value != 0, Index: int(i), DriverVersion: int(driverVersion)}
+			var major, minor int32
+			if attr(&major, 75, device) == 0 && attr(&minor, 76, device) == 0 {
+				info.ComputeCapability = int(major*10 + minor)
+			}
 			if luid != nil {
 				var bytes [8]byte
 				var nodeMask uint32
@@ -121,6 +132,8 @@ func nvidiaGPUs() []GPUInfo {
 		if found {
 			index := info.Index
 			g.CUDAIndex = &index
+			g.CUDAComputeCapability = info.ComputeCapability
+			g.CUDADriverVersion = info.DriverVersion
 		}
 		if info.LUID != "" {
 			g.ID = info.LUID

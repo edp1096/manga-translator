@@ -4,3 +4,5 @@
 .settings-card{display:block}.settings-card .settings-fields{display:grid;grid-template-columns:repeat(4,minmax(0,1fr)) minmax(240px,1.35fr);align-items:end;gap:16px 20px;margin-top:18px;min-width:0;width:100%}.settings-fields>.toggle-label,.settings-fields>.button{grid-column:1/-1}.settings-fields>.button{justify-self:end}.settings-fields .threads-label>span{white-space:nowrap}.settings-fields .threads-label select{min-height:38px}
 @media(max-width:1200px){.settings-card .settings-fields{grid-template-columns:repeat(2,minmax(0,1fr))}.settings-fields>.threads-label:last-of-type{grid-column:1/-1}}
 @media(max-width:650px){.settings-card .settings-fields{grid-template-columns:minmax(0,1fr)}.settings-fields>.button{justify-self:start}}
+
+.migration-card{margin:20px 0;padding:20px}.migration-card label{display:block;margin:12px 0 6px}.migration-card input{display:block;width:100%;box-sizing:border-box;margin-bottom:12px;padding:10px 12px;border:1px solid #dce5e8;border-radius:8px;font:inherit;background:#fff}.migration-card p{font-size:13px;color:var(--muted,#607080)}

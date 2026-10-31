@@ -24,17 +24,19 @@ type CPUInfo struct {
 }
 
 type GPUInfo struct {
-	VulkanIndex   *int    `json:"vulkanIndex,omitempty"`
-	CUDAIndex     *int    `json:"cudaIndex,omitempty"`
-	DirectMLIndex *int    `json:"directmlIndex,omitempty"`
-	ID            string  `json:"id"`
-	Name          string  `json:"name"`
-	Vendor        string  `json:"vendor"`
-	MemoryKind    string  `json:"memoryKind"` // dedicated, shared, unknown
-	MemoryTotal   *uint64 `json:"memoryTotal"`
-	MemoryUsed    *uint64 `json:"memoryUsed"`
-	MemoryFree    *uint64 `json:"memoryFree"`
-	Source        string  `json:"source"`
+	CUDAComputeCapability int     `json:"cudaComputeCapability,omitempty"`
+	CUDADriverVersion     int     `json:"cudaDriverVersion,omitempty"`
+	VulkanIndex           *int    `json:"vulkanIndex,omitempty"`
+	CUDAIndex             *int    `json:"cudaIndex,omitempty"`
+	DirectMLIndex         *int    `json:"directmlIndex,omitempty"`
+	ID                    string  `json:"id"`
+	Name                  string  `json:"name"`
+	Vendor                string  `json:"vendor"`
+	MemoryKind            string  `json:"memoryKind"` // dedicated, shared, unknown
+	MemoryTotal           *uint64 `json:"memoryTotal"`
+	MemoryUsed            *uint64 `json:"memoryUsed"`
+	MemoryFree            *uint64 `json:"memoryFree"`
+	Source                string  `json:"source"`
 }
 
 type HardwareInfo struct {

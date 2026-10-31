@@ -299,6 +299,13 @@ func (m *Manager) visionRequirements() (int64, int64) {
 		limit = max(limit, 3*1024*1024*1024)
 		available = max(available, 4*1024*1024*1024)
 	}
+	// The KV OCR pipeline also loads an independent CPU verifier for uncertain
+	// glyphs and restoration. Budget both models, even when the primary uses
+	// DirectML/CUDA; GPU execution does not eliminate their host allocations.
+	if model := m.modelForGroup(settings.OCR, "ocr"); model != nil && model.Backend == "onnx-v2-kv" && m.modelForGroup("baberu-int4", "ocr") != nil {
+		limit = max(limit, 3*1024*1024*1024)
+		available = max(available, 4*1024*1024*1024)
+	}
 	return limit, available
 }
 

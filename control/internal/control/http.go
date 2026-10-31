@@ -51,6 +51,15 @@ func (m *Manager) Handler() http.Handler {
 			}
 		})
 	}
+	mux.HandleFunc("POST /api/import", func(w http.ResponseWriter, r *http.Request) {
+		var body struct {
+			Source string `json:"source"`
+		}
+		if !decode(w, r, &body) {
+			return
+		}
+		action(w, m.ImportData(body.Source))
+	})
 	mux.HandleFunc("POST /api/setup", func(w http.ResponseWriter, r *http.Request) { action(w, m.BeginSetup()) })
 	mux.HandleFunc("POST /api/pause", func(w http.ResponseWriter, r *http.Request) { m.Pause(); action(w, nil) })
 	mux.HandleFunc("POST /api/start", func(w http.ResponseWriter, r *http.Request) { action(w, m.Start()) })

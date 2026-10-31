@@ -569,8 +569,23 @@ func (m *Manager) writeNativeConfig() error {
 	cfg["llm_execution"] = execution(settings.LLMExecution)
 	cfg["layout_execution"] = execution(settings.LayoutExecution)
 	cfg["ocr_execution"] = execution(settings.OCRExecution)
+	// Restoration is an optional local model. Its absence must not block normal
+	// translation or cause an implicit model download at startup.
+	const restorationModel = "models/manga-lama/manga-lama-512.onnx"
+	if info, err := os.Stat(filepath.Join(m.root, filepath.FromSlash(restorationModel))); err == nil && info.Mode().IsRegular() {
+		cfg["inpaint_model"] = restorationModel
+		cfg["inpaint_execution"] = execution(settings.LayoutExecution)
+	}
 	if ort := m.runtimeForSettings("ort", settings); ort != nil && ort.Library != "" {
 		cfg["ort_library"] = ort.Library
+	}
+	// The verifier runs only for a single unstable Han glyph; the selected
+	// primary OCR and its execution backend stay unchanged.
+	if m.selectedOCRBackend() == "onnx-v2-kv" {
+		if verifier := m.modelForGroup("baberu-int4", "ocr"); verifier != nil {
+			cfg["ocr_verifier_dir"] = verifier.Path
+			cfg["ocr_verifier_execution"] = "cpu"
+		}
 	}
 	cfg["ocr_encoder_execution"] = execution(settings.OCRExecution)
 	cfg["ocr_decoder_execution"] = execution(settings.OCRExecution)
@@ -713,9 +728,10 @@ func (m *Manager) start(ctx context.Context) error {
 		return fmt.Errorf("번역 모델을 선택하세요")
 	}
 	args := []string{"-m", filepath.Join(m.root, filepath.FromSlash(model.Path)), "--device", "none", "--gpu-layers", "0", "--no-op-offload", "--threads", fmt.Sprint(threads), "--threads-batch", fmt.Sprint(threads), "--ctx-size", "4096", "--parallel", "1", "--batch-size", "512", "--ubatch-size", "512", "--flash-attn", "off", "--cache-ram", "0", "--host", "127.0.0.1", "--port", fmt.Sprint(LLMPort), "--alias", modelID, "--api-key-file", filepath.Join(m.root, "data", "api-key"), "--jinja", "--reasoning", "off", "--reasoning-budget", "0", "--n-predict", "2048"}
-	if execution(settings.LLMExecution) == "vulkan" {
-		args = append(args[:2], args[7:]...)
-		args = append(args, "--device", "Vulkan0", "--gpu-layers", "999", "-lv", "4")
+	args = llmExecutionArgs(args, settings.LLMExecution)
+	args, modelArgsError := m.llmModelArgs(args, *model, settings.LLMExecution)
+	if modelArgsError != nil {
+		return modelArgsError
 	}
 	r := m.runtimeForSettings("llama", settings)
 	if r == nil {
@@ -766,13 +782,13 @@ func (m *Manager) launch(name, binary string, args []string) error {
 	m.mu.Lock()
 	settings := m.settings
 	m.mu.Unlock()
-	if name == "llm" && settings.LLMExecution == "vulkan" {
+	if name == "llm" && execution(settings.LLMExecution) != "cpu" {
 		gpu, err := selectedGPU(settings, executionGPUs(probeGPUs()))
 		if err != nil {
 			f.Close()
 			return err
 		}
-		cmd.Env = replaceEnvironment(cmd.Env, map[string]string{"GGML_VK_VISIBLE_DEVICES": fmt.Sprint(*gpu.VulkanIndex)})
+		cmd.Env = replaceEnvironment(cmd.Env, llmGPUEnvironment(settings.LLMExecution, gpu))
 	}
 	cmd.Stdout = f
 	cmd.Stderr = f

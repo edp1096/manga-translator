@@ -3,7 +3,7 @@ const assert=require('node:assert/strict'),path=require('node:path');
 const {chromium}=require(process.env.MANGA_PLAYWRIGHT);
 const source=process.env.MANGA_EXTENSION||path.resolve(__dirname,'../extension');
 (async()=>{
- const browser=await chromium.launch({headless:true});
+ const browser=await chromium.launch({headless:true,...(process.env.MANGA_BROWSER_CHANNEL?{channel:process.env.MANGA_BROWSER_CHANNEL}:{})});
  try{
   const page=await browser.newPage();
   await page.route('https://comic-walker.com/**',r=>r.fulfill({contentType:'text/html',body:'<div class="splide"><div class="splide__track"><div class="splide__list"><div class="splide__slide is-active" data-type="contents"><canvas mode="pc" width="400" height="600"></canvas></div><div class="splide__slide" data-type="contents"><canvas mode="pc" width="400" height="600"></canvas></div></div></div></div>'}));

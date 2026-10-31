@@ -1,0 +1,166 @@
+{
+  "expected": "うん...\nうん、",
+  "height": 1361,
+  "reads": [
+    {
+      "box": [
+        174,
+        934,
+        196,
+        992
+      ],
+      "inverse": false,
+      "scale": 1,
+      "text": "うん..."
+    },
+    {
+      "box": [
+        174,
+        934,
+        196,
+        992
+      ],
+      "inverse": true,
+      "scale": 1,
+      "text": "うん..."
+    },
+    {
+      "box": [
+        174,
+        934,
+        196,
+        992
+      ],
+      "inverse": false,
+      "scale": 2,
+      "text": "うん..."
+    },
+    {
+      "box": [
+        174,
+        934,
+        196,
+        992
+      ],
+      "inverse": true,
+      "scale": 2,
+      "text": "うん..."
+    },
+    {
+      "box": [
+        153,
+        934,
+        174,
+        992
+      ],
+      "inverse": false,
+      "scale": 1,
+      "text": "うん、"
+    },
+    {
+      "box": [
+        153,
+        934,
+        174,
+        992
+      ],
+      "inverse": true,
+      "scale": 1,
+      "text": "うん、"
+    },
+    {
+      "box": [
+        153,
+        934,
+        174,
+        992
+      ],
+      "inverse": false,
+      "scale": 2,
+      "text": "うん、"
+    },
+    {
+      "box": [
+        153,
+        934,
+        174,
+        992
+      ],
+      "inverse": true,
+      "scale": 2,
+      "text": "うん、"
+    }
+  ],
+  "row": {
+    "backgroundColor": "#ffffff",
+    "bbox": [
+      153,
+      934,
+      196,
+      992
+    ],
+    "box": [
+      153,
+      934,
+      196,
+      992
+    ],
+    "color": "#494949",
+    "detectorConfidence": 0.8966183662414551,
+    "fontSize": 32,
+    "hitMask": {
+      "height": 192,
+      "imageHeight": 1361,
+      "imageWidth": 960,
+      "kind": "detector-text-region",
+      "pixels": 20,
+      "runs": [
+        25375,
+        2,
+        25381,
+        2,
+        25568,
+        1,
+        25573,
+        2,
+        25760,
+        1,
+        25765,
+        1,
+        25951,
+        1,
+        25957,
+        1,
+        26143,
+        3,
+        26148,
+        3,
+        26337,
+        1,
+        26533,
+        1,
+        26725,
+        1
+      ],
+      "sourceBox": [
+        153,
+        934,
+        196,
+        992
+      ],
+      "sourceText": "うん...",
+      "version": 1,
+      "width": 192
+    },
+    "id": 3,
+    "kind": "dialogue",
+    "mode": "replace",
+    "ocrTruncated": false,
+    "regionId": "3",
+    "safe": true,
+    "text": "うん...",
+    "translation": "응...",
+    "type": "text"
+  },
+  "width": 960
+}

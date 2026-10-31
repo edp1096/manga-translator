@@ -43,7 +43,9 @@ inline double peak_rss_mib(){
 }
 inline void replace_file(const std::filesystem::path& from,const std::filesystem::path& to){
 #ifdef _WIN32
- if(!MoveFileExW(from.c_str(),to.c_str(),MOVEFILE_REPLACE_EXISTING|MOVEFILE_WRITE_THROUGH))throw std::runtime_error("Cannot replace file: "+std::to_string(GetLastError()));
+ DWORD failure=ERROR_SUCCESS;
+ for(unsigned attempt=0;attempt<100;++attempt){if(MoveFileExW(from.c_str(),to.c_str(),MOVEFILE_REPLACE_EXISTING|MOVEFILE_WRITE_THROUGH))return;failure=GetLastError();if(failure!=ERROR_ACCESS_DENIED&&failure!=ERROR_SHARING_VIOLATION&&failure!=ERROR_LOCK_VIOLATION)break;Sleep(10);}
+ throw std::runtime_error("Cannot replace file: "+std::to_string(failure));
 #else
  std::filesystem::rename(from,to);
 #endif

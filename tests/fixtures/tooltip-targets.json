@@ -1,0 +1,664 @@
+[
+  {
+    "name": "inside-letter-hole",
+    "regions": [
+      {
+        "id": 1,
+        "bbox": [
+          100,
+          100,
+          200,
+          200
+        ],
+        "hitMask": {
+          "version": 1,
+          "kind": "detector-text-region",
+          "imageWidth": 720,
+          "imageHeight": 1020,
+          "width": 72,
+          "height": 102,
+          "sourceBox": [
+            100,
+            100,
+            200,
+            200
+          ],
+          "sourceText": "Source 1",
+          "runs": [
+            803,
+            8,
+            875,
+            1,
+            882,
+            1,
+            947,
+            1,
+            954,
+            1,
+            1019,
+            1,
+            1026,
+            1,
+            1091,
+            1,
+            1098,
+            1,
+            1163,
+            1,
+            1170,
+            1,
+            1235,
+            1,
+            1242,
+            1,
+            1307,
+            8
+          ],
+          "pixels": 28
+        }
+      }
+    ],
+    "points": [
+      {
+        "position": [
+          150,
+          150
+        ],
+        "id": 1
+      },
+      {
+        "position": [
+          110,
+          140
+        ],
+        "id": 1
+      },
+      {
+        "position": [
+          95,
+          150
+        ],
+        "id": null
+      }
+    ]
+  },
+  {
+    "name": "between-word-glyphs",
+    "regions": [
+      {
+        "id": 1,
+        "bbox": [
+          300,
+          100,
+          400,
+          300
+        ],
+        "hitMask": {
+          "version": 1,
+          "kind": "detector-text-region",
+          "imageWidth": 720,
+          "imageHeight": 1020,
+          "width": 72,
+          "height": 102,
+          "sourceBox": [
+            300,
+            100,
+            400,
+            300
+          ],
+          "sourceText": "Source 1",
+          "runs": [
+            896,
+            6,
+            968,
+            6,
+            1040,
+            6,
+            1112,
+            6,
+            1760,
+            6,
+            1832,
+            6,
+            1904,
+            6,
+            1976,
+            6
+          ],
+          "pixels": 48
+        }
+      }
+    ],
+    "points": [
+      {
+        "position": [
+          350,
+          200
+        ],
+        "id": 1
+      },
+      {
+        "position": [
+          350,
+          120
+        ],
+        "id": 1
+      },
+      {
+        "position": [
+          305,
+          200
+        ],
+        "id": null
+      }
+    ]
+  },
+  {
+    "name": "tilted-caption",
+    "regions": [
+      {
+        "id": 1,
+        "bbox": [
+          400,
+          400,
+          600,
+          600
+        ],
+        "hitMask": {
+          "version": 1,
+          "kind": "detector-text-region",
+          "imageWidth": 720,
+          "imageHeight": 1020,
+          "width": 72,
+          "height": 102,
+          "sourceBox": [
+            400,
+            400,
+            600,
+            600
+          ],
+          "sourceText": "Source 1",
+          "runs": [
+            3066,
+            4,
+            3138,
+            4,
+            3210,
+            4,
+            3282,
+            4,
+            3431,
+            4,
+            3503,
+            4,
+            3575,
+            4,
+            3647,
+            4,
+            3796,
+            4,
+            3868,
+            4,
+            3940,
+            4,
+            4012,
+            4
+          ],
+          "pixels": 48
+        }
+      }
+    ],
+    "points": [
+      {
+        "position": [
+          465,
+          465
+        ],
+        "id": 1
+      },
+      {
+        "position": [
+          490,
+          490
+        ],
+        "id": 1
+      },
+      {
+        "position": [
+          410,
+          580
+        ],
+        "id": null
+      }
+    ]
+  },
+  {
+    "name": "small-label-hole-over-large",
+    "regions": [
+      {
+        "id": 1,
+        "bbox": [
+          100,
+          100,
+          500,
+          500
+        ],
+        "hitMask": {
+          "version": 1,
+          "kind": "detector-text-region",
+          "imageWidth": 720,
+          "imageHeight": 1020,
+          "width": 72,
+          "height": 102,
+          "sourceBox": [
+            100,
+            100,
+            500,
+            500
+          ],
+          "sourceText": "Source 1",
+          "runs": [
+            730,
+            40,
+            802,
+            40,
+            874,
+            40,
+            946,
+            40,
+            1018,
+            40,
+            1090,
+            40,
+            1162,
+            40,
+            1234,
+            40,
+            1306,
+            40,
+            1378,
+            40,
+            1450,
+            40,
+            1522,
+            40,
+            1594,
+            40,
+            1666,
+            40,
+            1738,
+            40,
+            1810,
+            40,
+            1882,
+            40,
+            1954,
+            40,
+            2026,
+            40,
+            2098,
+            40,
+            2170,
+            40,
+            2242,
+            40,
+            2314,
+            40,
+            2386,
+            40,
+            2458,
+            40,
+            2530,
+            40,
+            2602,
+            40,
+            2674,
+            40,
+            2746,
+            40,
+            2818,
+            40,
+            2890,
+            40,
+            2962,
+            40,
+            3034,
+            40,
+            3106,
+            40,
+            3178,
+            40,
+            3250,
+            40,
+            3322,
+            40,
+            3394,
+            40,
+            3466,
+            40,
+            3538,
+            40
+          ],
+          "pixels": 1600
+        }
+      },
+      {
+        "id": 2,
+        "bbox": [
+          240,
+          240,
+          280,
+          280
+        ],
+        "hitMask": {
+          "version": 1,
+          "kind": "detector-text-region",
+          "imageWidth": 720,
+          "imageHeight": 1020,
+          "width": 72,
+          "height": 102,
+          "sourceBox": [
+            240,
+            240,
+            280,
+            280
+          ],
+          "sourceText": "Source 2",
+          "runs": [
+            1752,
+            4,
+            1824,
+            1,
+            1827,
+            1,
+            1896,
+            1,
+            1899,
+            1,
+            1968,
+            4
+          ],
+          "pixels": 12
+        }
+      }
+    ],
+    "points": [
+      {
+        "position": [
+          260,
+          260
+        ],
+        "id": 2
+      },
+      {
+        "position": [
+          245,
+          255
+        ],
+        "id": 2
+      },
+      {
+        "position": [
+          150,
+          150
+        ],
+        "id": 1
+      }
+    ]
+  },
+  {
+    "name": "large-cannot-steal-small-envelope-corner",
+    "regions": [
+      {
+        "id": 1,
+        "bbox": [
+          100,
+          100,
+          500,
+          500
+        ],
+        "hitMask": {
+          "version": 1,
+          "kind": "detector-text-region",
+          "imageWidth": 720,
+          "imageHeight": 1020,
+          "width": 72,
+          "height": 102,
+          "sourceBox": [
+            100,
+            100,
+            500,
+            500
+          ],
+          "sourceText": "Source 1",
+          "runs": [
+            730,
+            40,
+            802,
+            40,
+            874,
+            40,
+            946,
+            40,
+            1018,
+            40,
+            1090,
+            40,
+            1162,
+            40,
+            1234,
+            40,
+            1306,
+            40,
+            1378,
+            40,
+            1450,
+            40,
+            1522,
+            40,
+            1594,
+            40,
+            1666,
+            40,
+            1738,
+            40,
+            1810,
+            40,
+            1882,
+            40,
+            1954,
+            40,
+            2026,
+            40,
+            2098,
+            40,
+            2170,
+            40,
+            2242,
+            40,
+            2314,
+            40,
+            2386,
+            40,
+            2458,
+            40,
+            2530,
+            40,
+            2602,
+            40,
+            2674,
+            40,
+            2746,
+            40,
+            2818,
+            40,
+            2890,
+            40,
+            2962,
+            40,
+            3034,
+            40,
+            3106,
+            40,
+            3178,
+            40,
+            3250,
+            40,
+            3322,
+            40,
+            3394,
+            40,
+            3466,
+            40,
+            3538,
+            40
+          ],
+          "pixels": 1600
+        }
+      },
+      {
+        "id": 2,
+        "bbox": [
+          200,
+          200,
+          350,
+          350
+        ],
+        "hitMask": {
+          "version": 1,
+          "kind": "detector-text-region",
+          "imageWidth": 720,
+          "imageHeight": 1020,
+          "width": 72,
+          "height": 102,
+          "sourceBox": [
+            200,
+            200,
+            350,
+            350
+          ],
+          "sourceText": "Source 2",
+          "runs": [
+            1533,
+            2,
+            1605,
+            2,
+            1971,
+            2,
+            2043,
+            2
+          ],
+          "pixels": 8
+        }
+      }
+    ],
+    "points": [
+      {
+        "position": [
+          250,
+          250
+        ],
+        "id": 2
+      },
+      {
+        "position": [
+          330,
+          220
+        ],
+        "id": null
+      },
+      {
+        "position": [
+          150,
+          150
+        ],
+        "id": 1
+      }
+    ]
+  },
+  {
+    "name": "word-gap-over-painted-translation",
+    "regions": [
+      {
+        "id": 1,
+        "bbox": [
+          300,
+          100,
+          400,
+          300
+        ],
+        "hitMask": {
+          "version": 1,
+          "kind": "detector-text-region",
+          "imageWidth": 720,
+          "imageHeight": 1020,
+          "width": 72,
+          "height": 102,
+          "sourceBox": [
+            300,
+            100,
+            400,
+            300
+          ],
+          "sourceText": "Source 1",
+          "runs": [
+            896,
+            6,
+            968,
+            6,
+            1040,
+            6,
+            1112,
+            6,
+            1760,
+            6,
+            1832,
+            6,
+            1904,
+            6,
+            1976,
+            6
+          ],
+          "pixels": 48
+        }
+      },
+      {
+        "id": 2,
+        "bbox": [
+          330,
+          180,
+          370,
+          220
+        ],
+        "box": [
+          330,
+          180,
+          370,
+          220
+        ],
+        "fontSize": 11,
+        "mode": "white",
+        "whiteBackground": {
+          "kind": "box"
+        }
+      }
+    ],
+    "tooltipCount": 1,
+    "points": [
+      {
+        "position": [
+          350,
+          200
+        ],
+        "id": null
+      },
+      {
+        "position": [
+          350,
+          150
+        ],
+        "id": 1
+      }
+    ]
+  }
+]

@@ -1,0 +1,8 @@
+#include "../../../native/restoration_flat_paper.hpp"
+#include <cassert>
+int main(){PageImage image{40,40,std::vector<uint8_t>(40*40*3,255)};RestorationMask mask;mask.bounds={10,10,20,20};mask.pixels.assign(100,1);mask.count=100;std::vector<uint8_t> rgba(40*40*4);for(int y=10;y<20;y++)for(int x=10;x<20;x++){auto p=(y*40+x)*4;rgba[p]=rgba[p+1]=rgba[p+2]=100;rgba[p+3]=255;}const auto before=rgba;size_t checks=0;assert(restoration_flat_paper(image,mask,rgba)==100);for(int y=0;y<40;y++)for(int x=0;x<40;x++){auto p=(y*40+x)*4;if(x>=10&&x<20&&y>=10&&y<20)assert(rgba[p]==255&&rgba[p+3]==255);else for(int c=0;c<4;c++)assert(rgba[p+c]==before[p+c]);}checks++;
+ for(int value:{0,128,239}){rgba=before;image.rgb[(9*40+15)*3]=value;assert(restoration_flat_paper(image,mask,rgba)==0&&rgba==before);checks++;}image.rgb.assign(40*40*3,247);rgba=before;assert(restoration_flat_paper(image,mask,rgba)==0&&rgba==before);checks++;image.rgb.assign(40*40*3,255);image.rgb[(9*40+15)*3]=242;rgba=before;assert(restoration_flat_paper(image,mask,rgba)==100);checks++;image.rgb.assign(40*40*3,250);rgba=before;assert(restoration_flat_paper(image,mask,rgba)==100&&rgba[(15*40+15)*4]==250);checks++;
+ rgba=before;rgba[(15*40+15)*4+3]=0;auto untouched=rgba[(15*40+15)*4];assert(restoration_flat_paper(image,mask,rgba)==99&&rgba[(15*40+15)*4]==untouched&&rgba[(15*40+15)*4+3]==0);checks++;
+ mask.bounds={0,0,10,10};rgba=before;assert(restoration_flat_paper(image,mask,rgba)==0&&rgba==before);checks++;
+ mask.bounds={10,10,20,20};mask.pixels.resize(99);assert(restoration_flat_paper(image,mask,rgba)==0);checks++;
+ std::cout<<"PASS "<<checks<<" flat paper guards\n";}

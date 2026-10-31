@@ -50,18 +50,19 @@ type License struct {
 	License string `json:"license"`
 }
 type Model struct {
-	InputSize       int      `json:"inputSize,omitempty"`
-	VisionLimitMiB  int      `json:"visionLimitMiB,omitempty"`
-	MinAvailableMiB int      `json:"minAvailableMiB,omitempty"`
-	Backend         string   `json:"backend,omitempty"`
-	Group           string   `json:"group"`
-	Artifacts       []string `json:"artifacts"`
-	Dependencies    []string `json:"dependencies"`
-	Path            string   `json:"path"`
-	ID              string   `json:"id"`
-	Name            string   `json:"name"`
-	MemoryGiB       int      `json:"memoryGiB"`
-	Note            string   `json:"note"`
+	LLM             *LLMModelOptions `json:"llm,omitempty"`
+	InputSize       int              `json:"inputSize,omitempty"`
+	VisionLimitMiB  int              `json:"visionLimitMiB,omitempty"`
+	MinAvailableMiB int              `json:"minAvailableMiB,omitempty"`
+	Backend         string           `json:"backend,omitempty"`
+	Group           string           `json:"group"`
+	Artifacts       []string         `json:"artifacts"`
+	Dependencies    []string         `json:"dependencies"`
+	Path            string           `json:"path"`
+	ID              string           `json:"id"`
+	Name            string           `json:"name"`
+	MemoryGiB       int              `json:"memoryGiB"`
+	Note            string           `json:"note"`
 }
 type Catalog struct {
 	Models    []Model    `json:"models"`
@@ -189,6 +190,9 @@ func loadCatalog(bundle fs.FS, platform string) (Catalog, error) {
 			}
 			localArtifacts[id] = true
 			modelArtifacts[id] = true
+		}
+		if err := validateLLMModel(model, result.Artifacts); err != nil {
+			return result, err
 		}
 	}
 	for _, a := range result.Artifacts {

@@ -1,0 +1,16 @@
+const assert=require('node:assert/strict'),path=require('node:path');
+const {chromium}=require(process.env.MANGA_PLAYWRIGHT||'playwright');
+(async()=>{const browser=await chromium.launch({channel:process.env.MANGA_BROWSER_CHANNEL||'chromium',headless:true});try{
+ const page=await browser.newPage();await page.addScriptTag({path:path.resolve(__dirname,'../extension/render.js')});
+ const report=await page.evaluate(()=>{
+  const source={id:1,type:'text',mode:'tooltip',text:'Source caption',translation:'표시할 번역문',bbox:[300,500,480,640],box:[300,500,480,640],detectorConfidence:.95};
+  const effect={id:2,type:'effect',mode:'tooltip',text:'Effect',translation:'효과음',bbox:[100,400,410,590],box:[100,400,410,590],detectorConfidence:.21};
+  const result={width:960,height:1340,regions:[source,effect]},geometry={version:3,width:960,height:1340,bubbles:[]};
+  const proof={id:2,method:'weighted-effect-mask',sourceText:effect.text,sourceBox:[...effect.bbox],sourceConfidence:.95,geometry:{width:96,height:134,bbox:[...effect.bbox],confidence:.21,runs:[42*96+12,5]}};
+  const mask={id:1,sourceText:source.text,sourceBox:[...source.bbox],scope:'outside',bounds:[300,500,480,640],runs:[0,180*140],effectProtection:{version:1,method:'weighted-effect-mask',regions:[proof]}};
+  const meta={version:1,width:960,height:1340,regions:[mask]},check=(v,m)=>{if(!v)throw Error(m)};
+  const cases=[['valid',()=>{},'restore'],['missing score',(r)=>delete r.regions[1].detectorConfidence],['stale effect text',r=>r.regions[1].text+='x'],['stale effect box',r=>r.regions[1].bbox[0]++],['manual effect',r=>r.regions[1].manual=true],['strong effect',r=>r.regions[1].detectorConfidence=.8],['stale source confidence',(r,m)=>m.regions[0].effectProtection.regions[0].sourceConfidence=.99],['stale source text',(r,m)=>m.regions[0].sourceText+='x'],['truncated source',r=>r.regions[0].ocrTruncated=true],['manual source',r=>r.regions[0].manual=true],['stale geometry box',(r,m)=>m.regions[0].effectProtection.regions[0].geometry.bbox[0]++],['stale geometry confidence',(r,m)=>m.regions[0].effectProtection.regions[0].geometry.confidence=.25],['empty mask',(r,m)=>m.regions[0].effectProtection.regions[0].geometry.runs=[]],['bad runs',(r,m)=>m.regions[0].effectProtection.regions[0].geometry.runs=[-1,5]],['duplicate proof',(r,m)=>m.regions[0].effectProtection.regions.push(structuredClone(proof))],['actual ink collision',(r,m)=>{const g=m.regions[0].effectProtection.regions[0].geometry;g.runs=[];for(let y=49;y<65;y++)g.runs.push(y*96+29,20)}]];
+  for(const [name,mutate,expected='tooltip']of cases){const r=structuredClone(result),m=structuredClone(meta);mutate(r,m);const before=JSON.stringify(r),shown=MangaRender.presentation(r,'auto',geometry,'restore',m);check(shown.regions[0].mode===expected,name+': '+shown.regions[0].mode);check(JSON.stringify(r)===before,'base mutated '+name);check(shown.regions[1].mode==='tooltip','effect altered '+name);}
+  check(MangaRender.presentation(result,'auto',geometry,'tooltip',meta).regions[0].mode==='tooltip','toggle off');return{cases:cases.length,inkCollisionRejected:true,sourcePreserved:true};
+ });assert.equal(report.cases,16);console.log(JSON.stringify(report));
+ }finally{await browser.close()}})().catch(e=>{console.error(e);process.exitCode=1});

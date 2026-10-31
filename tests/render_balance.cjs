@@ -1,0 +1,20 @@
+const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path');
+const {chromium}=require(process.env.MANGA_PLAYWRIGHT||'playwright');
+(async()=>{const browser=await chromium.launch({channel:process.env.MANGA_BROWSER_CHANNEL||'chromium',headless:true});try{
+ const page=await browser.newPage();await page.addScriptTag({path:path.resolve(process.env.MANGA_RENDERER||path.join(__dirname,'../extension/render.js'))});
+ const fixture=JSON.parse(fs.readFileSync(path.join(__dirname,'fixtures/uneven-connected-bubble.json'),'utf8'));
+ const report=await page.evaluate(f=>{const checks=[],check=(name,ok)=>{if(!ok)throw Error(name);checks.push(name);},before=JSON.stringify(f),shown=MangaRender.presentation(f.result,'white',f.geometry),[short,long]=shown.regions;
+ check('both phrases visible',shown.regions.every(r=>r.mode==='white'&&MangaRender.direct(r)));
+ check('long question readable',MangaRender.textLayout(long).fontSize>=20);
+ check('short phrase remains readable',MangaRender.textLayout(short).fontSize>=24);
+ check('font sizes balanced',Math.max(short.fontSize,long.fontSize)/Math.min(short.fontSize,long.fontSize)<=1.5);
+ check('whole words preserved',shown.regions.every(r=>MangaRender.textLayout(r).breaks===0));
+ check('within balloon mask',shown.regions.every(r=>MangaRender.coverage(r.whiteBackground,shown,r.box)>=.98));
+ check('separate slots',Math.min(short.box[2],long.box[2])<=Math.max(short.box[0],long.box[0])||Math.min(short.box[3],long.box[3])<=Math.max(short.box[1],long.box[1]));
+ check('top phrase before lower question',short.box[3]<=long.box[1]);
+ check('source unchanged',JSON.stringify(f)===before);
+ const edited=structuredClone(f);edited.result.regions[0].layoutOverride=true;edited.result.regions[0].fontSize=12;const manual=MangaRender.presentation(edited.result,'white',edited.geometry).regions[0];
+ check('manual box preserved',JSON.stringify(manual.box)===JSON.stringify(edited.result.regions[0].box));check('manual font preserved',manual.fontSize===12);
+ return {checks,fonts:shown.regions.map(r=>MangaRender.textLayout(r).fontSize)};
+ },fixture);assert(report.checks.length===11);console.log(JSON.stringify({...report,browser:browser.version()}));
+ }finally{await browser.close()}})().catch(e=>{console.error(e);process.exitCode=1});

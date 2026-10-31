@@ -1,0 +1,175 @@
+{
+  "provenance": "Isshou Senkin chapter 3 page 8; automatically cropped source glyphs and actual Hayai DirectML readings, attempt111. No credentials.",
+  "text": "1000円、5000円、1000円か。わかりやすくていいじゃん。",
+  "expected": "1000円、5000円、10000円か。わかりやすくていいじゃん。",
+  "reads": [
+    {
+      "box": [
+        110,
+        0,
+        134,
+        161
+      ],
+      "inverse": false,
+      "scale": 1,
+      "stopped": true,
+      "text": "1000円、"
+    },
+    {
+      "box": [
+        110,
+        0,
+        134,
+        161
+      ],
+      "inverse": false,
+      "scale": 2,
+      "stopped": true,
+      "text": "1000円、"
+    },
+    {
+      "box": [
+        110,
+        0,
+        134,
+        161
+      ],
+      "inverse": true,
+      "scale": 1,
+      "stopped": true,
+      "text": "1000円、"
+    },
+    {
+      "box": [
+        80,
+        0,
+        110,
+        161
+      ],
+      "inverse": false,
+      "scale": 1,
+      "stopped": true,
+      "text": "5000円、"
+    },
+    {
+      "box": [
+        80,
+        0,
+        110,
+        161
+      ],
+      "inverse": false,
+      "scale": 2,
+      "stopped": true,
+      "text": "5000円、"
+    },
+    {
+      "box": [
+        80,
+        0,
+        110,
+        161
+      ],
+      "inverse": true,
+      "scale": 1,
+      "stopped": true,
+      "text": "5000円、"
+    },
+    {
+      "box": [
+        50,
+        0,
+        80,
+        161
+      ],
+      "inverse": false,
+      "scale": 1,
+      "stopped": true,
+      "text": "1000円か。"
+    },
+    {
+      "box": [
+        50,
+        0,
+        80,
+        161
+      ],
+      "inverse": false,
+      "scale": 2,
+      "stopped": true,
+      "text": "1000円か。"
+    },
+    {
+      "box": [
+        50,
+        0,
+        80,
+        161
+      ],
+      "inverse": true,
+      "scale": 1,
+      "stopped": true,
+      "text": "1000円か。"
+    },
+    {
+      "box": [
+        50,
+        112,
+        80,
+        161
+      ],
+      "inverse": false,
+      "scale": 1,
+      "stopped": true,
+      "text": "円か。"
+    },
+    {
+      "box": [
+        50,
+        112,
+        80,
+        161
+      ],
+      "inverse": false,
+      "scale": 2,
+      "stopped": true,
+      "text": "円か。"
+    },
+    {
+      "box": [
+        50,
+        112,
+        80,
+        161
+      ],
+      "inverse": true,
+      "scale": 1,
+      "stopped": true,
+      "text": "円か。"
+    },
+    {
+      "box": [
+        22,
+        0,
+        50,
+        161
+      ],
+      "inverse": false,
+      "scale": 1,
+      "stopped": true,
+      "text": "わかりやすくて"
+    },
+    {
+      "box": [
+        0,
+        0,
+        22,
+        161
+      ],
+      "inverse": false,
+      "scale": 1,
+      "stopped": true,
+      "text": "いいじゃん。"
+    }
+  ]
+}

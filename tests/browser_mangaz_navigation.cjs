@@ -19,7 +19,7 @@ const {chromium}=require(process.env.MANGA_PLAYWRIGHT||'playwright');
   return {rounds,clicks,dropped};
  });
 
- const evidence=process.env.MANGA_EVIDENCE||path.resolve(__dirname,'../docs/control-0.3.15');fs.mkdirSync(evidence,{recursive:true});
+ const evidence=process.env.MANGA_EVIDENCE||path.resolve(__dirname,'../research/control-0.3.15');fs.mkdirSync(evidence,{recursive:true});
  fs.writeFileSync(path.join(evidence,'mangaz-navigation-stress.json'),JSON.stringify({browser:b.version(),imageDelayMs:350,viewport:{width:1100,height:800},deviceScaleFactor:1.25,...report},null,2)+'\n');
  assert(report.rounds.every(r=>r.length===7&&r.every(p=>p.ok)),JSON.stringify(report));assert(report.dropped>0);
  console.log(JSON.stringify({ok:true,reads:21,droppedClicks:report.dropped,clicks:report.clicks,imageDelayMs:350}));

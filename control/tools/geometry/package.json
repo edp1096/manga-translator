@@ -1,0 +1,1 @@
+{"name":"manga-tooltip-geometry-build","private":true,"type":"module","scripts":{"build":"node build.mjs"},"devDependencies":{"clipper2-ts":"2.0.1-18","esbuild":"0.25.12"}}
