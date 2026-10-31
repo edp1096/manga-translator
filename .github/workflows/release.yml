@@ -1,0 +1,242 @@
+name: Release portable applications
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Existing version tag to release (vX.Y.Z)
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ inputs.tag || github.ref_name }}
+  cancel-in-progress: false
+
+jobs:
+  prepare:
+    runs-on: ubuntu-24.04
+    outputs:
+      tag: ${{ steps.release.outputs.tag }}
+      commit: ${{ steps.release.outputs.commit }}
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          ref: ${{ github.workflow_sha }}
+          path: automation
+          persist-credentials: false
+      - name: Validate tag input
+        id: tag
+        env:
+          TAG: ${{ inputs.tag || github.ref_name }}
+        run: |
+          [[ "$TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          ref: refs/tags/${{ steps.tag.outputs.tag }}
+          path: source
+          persist-credentials: false
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: '24'
+      - name: Validate release versions and freeze source commit
+        id: release
+        env:
+          TAG: ${{ steps.tag.outputs.tag }}
+        run: |
+          node automation/.github/scripts/release.mjs version source "$TAG"
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          echo "commit=$(git -C source rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+
+  native:
+    needs: prepare
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: linux-amd64
+            runner: ubuntu-22.04
+          - platform: linux-arm64
+            runner: ubuntu-22.04-arm
+          - platform: windows-amd64
+            runner: ubuntu-24.04
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          ref: ${{ github.workflow_sha }}
+          path: automation
+          persist-credentials: false
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          ref: ${{ needs.prepare.outputs.commit }}
+          path: source
+          persist-credentials: false
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: '24'
+      - name: Install native build tools
+        env:
+          PLATFORM: ${{ matrix.platform }}
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cmake g++ unzip
+          if [[ "$PLATFORM" == windows-amd64 ]]; then
+            sudo apt-get install -y gcc-mingw-w64-x86-64-posix g++-mingw-w64-x86-64-posix
+          fi
+      - name: Build engine from release source with verified dependencies
+        env:
+          PLATFORM: ${{ matrix.platform }}
+        run: node automation/.github/scripts/release.mjs native source "$PLATFORM" native-build
+      - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
+        with:
+          name: native-${{ matrix.platform }}
+          path: native-build/out/*
+          if-no-files-found: error
+          retention-days: 7
+
+  package:
+    needs: [prepare, native]
+    runs-on: ubuntu-22.04
+    timeout-minutes: 45
+    env:
+      CGO_ENABLED: '0'
+      TAG: ${{ needs.prepare.outputs.tag }}
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          ref: ${{ github.workflow_sha }}
+          path: automation
+          persist-credentials: false
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          ref: ${{ needs.prepare.outputs.commit }}
+          path: source
+          persist-credentials: false
+      - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6
+        with:
+          go-version-file: source/control/go.mod
+          cache-dependency-path: source/control/go.sum
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: source/control/web/package-lock.json
+      - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
+        with:
+          pattern: native-*
+          path: engines
+      - name: Test and package all platforms
+        run: |
+          bash source/build.sh \
+            --linux-native "$PWD/engines/native-linux-arm64/manga-translator-server" \
+            --linux-x64-native "$PWD/engines/native-linux-amd64/manga-translator-server" \
+            --windows-native "$PWD/engines/native-windows-amd64/manga-translator-server.exe" \
+            --output "$PWD/dist"
+          node automation/.github/scripts/release.mjs verify dist "$TAG"
+      - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
+        with:
+          name: release-dist
+          path: |
+            dist/*.zip
+            dist/*.tar.gz
+            dist/*-SHA256SUMS.txt
+          if-no-files-found: error
+          retention-days: 14
+
+  smoke:
+    needs: [prepare, package]
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: linux-x64
+            runner: ubuntu-22.04
+            executable: manga-control
+          - platform: linux-arm64
+            runner: ubuntu-22.04-arm
+            executable: manga-control
+          - platform: windows-x64
+            runner: windows-2025
+            executable: MangaTranslator.exe
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 15
+    env:
+      TAG: ${{ needs.prepare.outputs.tag }}
+      PLATFORM: ${{ matrix.platform }}
+      EXECUTABLE: ${{ matrix.executable }}
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          ref: ${{ github.workflow_sha }}
+          path: automation
+          persist-credentials: false
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: '24'
+      - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
+        with:
+          name: release-dist
+          path: dist
+      - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
+        if: runner.os == 'Windows'
+        with:
+          name: native-windows-amd64
+          path: engine
+      - name: Verify archives
+        shell: bash
+        run: node automation/.github/scripts/release.mjs verify dist "$TAG"
+      - name: Linux startup check
+        if: runner.os == 'Linux'
+        run: |
+          unzip -q "dist/manga-translator-$PLATFORM-${TAG#v}.zip" -d app
+          chmod +x "app/$EXECUTABLE"
+          node automation/.github/scripts/release.mjs smoke "app/$EXECUTABLE" "$TAG"
+      - name: Windows startup check
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          Expand-Archive "dist/manga-translator-$env:PLATFORM-$($env:TAG.Substring(1)).zip" app
+          node automation/.github/scripts/release.mjs smoke "app/$env:EXECUTABLE" "$env:TAG" engine/manga-translator-server.exe
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+  publish:
+    needs: [prepare, package, smoke]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      contents: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+      TAG: ${{ needs.prepare.outputs.tag }}
+      SOURCE_COMMIT: ${{ needs.prepare.outputs.commit }}
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          ref: ${{ github.workflow_sha }}
+          path: automation
+          persist-credentials: false
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          ref: refs/tags/${{ needs.prepare.outputs.tag }}
+          path: source
+          persist-credentials: false
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: '24'
+      - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
+        with:
+          name: release-dist
+          path: dist
+      - name: Publish verified assets
+        run: |
+          test "$(git -C source rev-parse HEAD)" = "$SOURCE_COMMIT"
+          node automation/.github/scripts/release.mjs verify dist "$TAG"
+          bash automation/.github/scripts/publish-release.sh
