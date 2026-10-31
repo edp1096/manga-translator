@@ -38,6 +38,13 @@ if (mode === 'version') {
   await dependency(work, archive, ort.url, ort.sha256);
   await dependency(work, 'libwebp-1.6.0.tar.gz', 'https://storage.googleapis.com/downloads.webmproject.org/releases/webp/libwebp-1.6.0.tar.gz', 'e4ab7009bf0629fd11982d4c2aa83964cf244cffba7347ecd39019a9e38c4564');
   await dependency(work, 'litert.tar.gz', 'https://codeload.github.com/google-ai-edge/LiteRT/tar.gz/refs/tags/v2.3.1', 'ce1656ee13c887ad7fa0954a0b1f04ee1a354560420ba64cf3d1cd84ee022bb0');
+  // LiteRT source archives omit this generated public header. Match the
+  // CPU-only LiteRT C API used by the app; ORT CUDA/DirectML are independent.
+  const configHeader = path.join(work, 'LiteRT-2.3.1/litert/build_common/build_config.h');
+  const template = fs.readFileSync(`${configHeader}.in`, 'utf8');
+  const header = template.replace(/^#cmakedefine01 (LITERT_BUILD_CONFIG_DISABLE_(?:GPU|NPU))$/gm, '#define $1 1');
+  assert(!header.includes('#cmakedefine'), 'Unrecognized LiteRT build configuration');
+  fs.writeFileSync(configHeader, header);
   const ortRoot = path.join(work, archive.replace(/\.(tgz|zip)$/, ''));
   const config = ['-S', path.join(source, 'native'), '-B', path.join(work, 'build'), '-DCMAKE_BUILD_TYPE=Release', `-DORT_ROOT=${ortRoot}`, `-DLITERT_SDK=${work}/LiteRT-2.3.1`, `-DWEBP_SOURCE_DIR=${work}/libwebp-1.6.0`];
   if (platform === 'windows-amd64') config.push('-DCMAKE_SYSTEM_NAME=Windows', '-DCMAKE_SYSTEM_PROCESSOR=x86_64', '-DCMAKE_C_COMPILER=x86_64-w64-mingw32-gcc-posix', '-DCMAKE_CXX_COMPILER=x86_64-w64-mingw32-g++-posix', '-DCMAKE_RC_COMPILER=x86_64-w64-mingw32-windres');
