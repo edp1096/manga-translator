@@ -2,6 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
 import { execFileSync, spawnSync } from 'node:child_process';
+import { assertWindowsGUI } from './windows-gui.mjs';
 const [mode, ...args] = process.argv.slice(2);
 const read = p => JSON.parse(fs.readFileSync(p, 'utf8'));
 const hash = p => crypto.createHash('sha256').update(fs.readFileSync(p)).digest('hex');
@@ -92,8 +93,12 @@ if (mode === 'version') {
     seen.add(m[2]); assert(hash(path.join(dist, m[2])) === m[1], `${m[2]}: checksum mismatch`);
   }
   console.log(`Verified ${expected.length} release archives`);
+} else if (mode === 'windows-gui') {
+  assertWindowsGUI(path.resolve(args[0]));
+  console.log('Verified Windows GUI subsystem');
 } else if (mode === 'smoke') {
   const [app, tag, native] = args;
+  if (app.toLowerCase().endsWith('.exe')) assertWindowsGUI(path.resolve(app));
   const r = spawnSync(path.resolve(app), ['--version'], { encoding: 'utf8', timeout: 30000 });
   assert(r.status === 0 && r.stdout.trim() === tag.slice(1), `Controller startup failed: ${r.stdout} ${r.stderr} ${r.error || ''}`);
   if (native) {

@@ -320,6 +320,9 @@ func main() {
 		}
 		env := append(os.Environ(), "GOOS="+target.goos, "GOARCH="+target.arch, "CGO_ENABLED=0")
 		must(run(root, env, "go", "build", "-trimpath", "-ldflags="+flags, "-o", filepath.Join(app, target.filename), "."))
+		if target.goos == "windows" {
+			must(verifyWindowsGUI(filepath.Join(app, target.filename)))
+		}
 		must(copyFile(filepath.Join(root, "README.txt"), filepath.Join(app, "README.txt")))
 		must(copyFile(filepath.Join(bundle, "catalog.json"), filepath.Join(app, "DOWNLOADS.json")))
 		names := []string{target.filename, "README.txt", "DOWNLOADS.json"}
