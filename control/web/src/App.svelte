@@ -5,7 +5,9 @@
  let state=$state(null),view=$state('overview'),error=$state(''),notice=$state(''),offline=$state(false),quitting=$state(false);
  let extension=$state({installed:false,connected:false}),probing=$state(false),acting=$state(false),logTab=$state('control'),logText=$state('기록을 불러오는 중…');
  let draftRestoration=$state('onnx'),draftLLM=$state('cpu'),draftLayout=$state('cpu'),draftOCR=$state('cpu'),draftGPU=$state('');
- let importSource=$state('');
+ let importSource=$state(''),importJobs=$state('all'),importPreview=$state(null);
+ let jobList=$state(null),jobLoading=$state(false),jobQuery=$state(''),jobFilter=$state(''),jobOffset=$state(0),jobSelection=$state([]),jobConfirm=$state(''),jobDays=$state(1),cacheStats=$state(null);
+ let appUpdate=$state(null),updateResult=$state(null),restartExpected=$state(false);
  let draftThreads=$state(0),draftAuto=$state(false),draftLoaded=false,deleteID=$state('');
  const modelGroups=[['layout','말풍선·글자 탐지'],['ocr','글자 인식 (OCR)'],['translation','대사 번역 (언어모델)'],['restoration','배경 이미지 복원']];
  const isBaberu=model=>model?.backend?.startsWith('baberu-');
@@ -14,7 +16,7 @@
  const chosen=()=>Boolean(state?.settings.layout&&state?.settings.ocr&&state?.settings.model);
  const locked=()=>acting||state?.busy||running()||quitting;
  const selectedName=group=>group==='restoration'?(state?.settings?.restorationBackend==='libtorch'?'LibTorch CUDA · API 시작 시 상주 로딩':state?.models?.some(m=>m.id==='manga-lama'&&m.installed)?'설치됨 · 복원 사용 가능':'선택 기능 · 복원하려면 다운로드하세요'):state?.models?.find(m=>m.group===group&&m.selected)?.name||'모델을 선택하세요';
- const menus=[['overview','grid','개요'],['setup','download','설치 관리'],['extension','chrome','크롬 확장'],['logs','activity','실행 기록']];
+ const menus=[['overview','grid','개요'],['setup','download','설치 관리'],['jobs','folder','작업 데이터'],['extension','chrome','크롬 확장'],['logs','activity','실행 기록']];
  const groupIcons={application:'server',runtime:'cpu',layout:'bubble',ocr:'text',translation:'translate'};
  const descriptions={application:'페이지 분석부터 번역 결과까지 처리합니다.',runtime:'이 기기에 맞는 네이티브 실행 환경입니다.',layout:'Koharu 768 · 말풍선과 글자 영역을 찾습니다.',ocr:'Hayai v2 INT8 · 원문을 읽습니다.',translation:'선택한 언어모델로 대사를 옮깁니다.'};
  const stages={verifying:'파일 확인 중',downloading:'다운로드 중',installing:'설치 중',prerequisites:'실행 환경 확인',done:'준비 완료',paused:'일시 정지',error:'준비 실패'};
@@ -23,14 +25,26 @@
  const platform=()=>state?.platform==='windows-amd64'?'Windows x64':state?.platform==='linux-arm64'?'Linux ARM64':state?.platform||'환경 확인 중';
  const percent=()=>Math.min(100,Math.round((state?.progress.bytes||0)/Math.max(1,state?.progress.total||1)*100));
  const title=()=>running()?'번역 준비가 완료됐습니다.':state?.phase==='starting'?'번역 API를 시작하고 있습니다.':state?.phase==='preparing'?'이 기기의 번역 환경을 준비합니다.':state?.phase==='paused'?'준비를 잠시 멈췄습니다.':state?.ready?'번역 API를 시작해 보세요.':'사용할 모델을 먼저 선택하세요.';
- async function request(path,body){const options=body===undefined?{}:{method:'POST',headers:{'Content-Type':'application/json','X-Manga-Control':'1'},body:JSON.stringify(body)};const response=await fetch('/api/'+path,{...options,signal:AbortSignal.timeout(12000)});const value=await response.json();if(!response.ok)throw Error(value.error||'요청을 처리하지 못했습니다.');return value;}
- async function refresh(){if(quitting)return;try{const priorPhase=state?.phase;state=await request('state');offline=false;if(state.phase==='imported'&&priorPhase!=='imported')draftLoaded=false;if(!draftLoaded){draftThreads=state.settings.threadsAuto?0:state.settings.threads;draftAuto=state.settings.autoStart;draftRestoration=state.settings.restorationBackend||'onnx';draftLLM=state.settings.llmExecution||'cpu';draftLayout=state.settings.layoutExecution||'cpu';draftOCR=state.settings.ocrExecution||'cpu';draftGPU=state.settings.gpu||'';draftLoaded=true;}}catch(e){offline=true;}}
+ async function request(path,body,timeout=12000){const options=body===undefined?{}:{method:'POST',headers:{'Content-Type':'application/json','X-Manga-Control':'1'},body:JSON.stringify(body)};const response=await fetch('/api/'+path,{...options,signal:AbortSignal.timeout(timeout)});const value=await response.json();if(!response.ok)throw Error(value.error||'요청을 처리하지 못했습니다.');return value;}
+ async function refresh(){if(quitting)return;try{const priorPhase=state?.phase;const next=await request('state');if(state?.version&&next.version!==state.version){location.reload();return;}state=next;offline=false;const u=await request('update/state');appUpdate=u.update;updateResult=u.result||null;if(['downloading','restarting'].includes(appUpdate?.status))restartExpected=true;else restartExpected=false;if(state.phase==='imported'&&priorPhase!=='imported')draftLoaded=false;if(!draftLoaded){draftThreads=state.settings.threadsAuto?0:state.settings.threads;draftAuto=state.settings.autoStart;draftRestoration=state.settings.restorationBackend||'onnx';draftLLM=state.settings.llmExecution||'cpu';draftLayout=state.settings.layoutExecution||'cpu';draftOCR=state.settings.ocrExecution||'cpu';draftGPU=state.settings.gpu||'';draftLoaded=true;}}catch(e){offline=true;}}
  async function applyProfile(profile){draftLoaded=false;await act('settings',{...profile.settings,restorationBackend:state.settings.restorationBackend,autoStart:state.settings.autoStart});}
  async function act(path,body={}){if(acting)return;acting=true;error='';notice='';try{await request(path,body);if(['settings','models/select','models/clear'].includes(path))draftLoaded=false;await refresh();}catch(e){error=e.message;}finally{acting=false;}}
  function extensionMessage(message){return new Promise((resolve,reject)=>{if(!globalThis.chrome?.runtime?.sendMessage||!state?.extensionId){reject(Error('확장을 설치한 뒤 이 화면을 새로고침하세요.'));return;}chrome.runtime.sendMessage(state.extensionId,message,response=>{if(chrome.runtime.lastError){reject(Error('확장이 아직 연결되지 않았습니다. 설치 후 이 화면을 새로고침하세요.'));return;}if(!response?.ok){reject(Error(response?.error||'확장 응답을 받지 못했습니다.'));return;}resolve(response.value);});});}
  async function probe(){if(probing)return;probing=true;try{extension=await extensionMessage({type:'control-status'});}catch{extension={installed:false,connected:false};}finally{probing=false;}}
  async function pair(){error='';notice='';acting=true;try{const {code}=await request('pair-code',{});extension=await extensionMessage({type:'control-pair',code});notice=extension.connected?'크롬 확장이 로컬 API에 연결됐습니다.':'연결 설정을 저장했습니다. API가 시작되면 번역할 수 있습니다.';}catch(e){error=e.message;}finally{acting=false;}}
  async function copy(text){try{await navigator.clipboard.writeText(text);notice='클립보드에 복사했습니다.';}catch{error='복사하지 못했습니다. 표시된 경로를 직접 선택해 복사하세요.';}}
+
+ async function loadJobs(offset=jobOffset){jobLoading=true;error='';try{jobOffset=offset;jobList=await request('jobs/data?offset='+offset+'&q='+encodeURIComponent(jobQuery)+'&filter='+encodeURIComponent(jobFilter),undefined,120000);jobDays=jobList.policy.retentionDays;jobSelection=[];jobConfirm='';try{cacheStats=await extensionMessage({type:'control-cache-stats'});}catch{cacheStats=null;}}catch(e){error=e.message;}finally{jobLoading=false;}}
+ async function keepJobs(keep){acting=true;error='';try{await request('jobs/keep',{ids:jobSelection,keep});await loadJobs();}catch(e){error=e.message;}finally{acting=false;}}
+ async function removeJobs(){acting=true;error='';notice='';try{
+  if(jobConfirm==='cache'){cacheStats=await extensionMessage({type:'control-cache-prune',all:true});notice='브라우저 결과·편집 캐시를 정리했습니다. 명칭 사전과 설정은 유지됩니다.';jobConfirm='';return;}
+  const response=await fetch('/api/jobs/delete',{method:'POST',headers:{'Content-Type':'application/json','X-Manga-Control':'1'},body:JSON.stringify({ids:jobSelection,allUnkept:jobConfirm==='unkept'}),signal:AbortSignal.timeout(120000)}),result=await response.json();
+  if(result.deleted?.length){notice=result.deleted.length+'개 작업을 삭제했습니다.';try{cacheStats=await extensionMessage({type:'control-cache-prune',ids:result.deleted});}catch{notice+=' 확장 캐시는 확장을 새로고침한 뒤 별도로 정리하세요.';}}
+  await loadJobs(0);if(!response.ok)throw Error(result.error||'삭제 실패');
+ }catch(e){error=e.message;}finally{acting=false;}}
+ const jobStatus=s=>({done:'완료',error:'실패',queued:'대기',layout:'영역 탐지',ocr:'글자 인식',translation:'번역',unknown:'상태 없음'}[s]||s);
+ const jobURL=u=>/^https?:\/\//i.test(u||'')?u:null;
+ async function previewImport(){acting=true;error='';try{importPreview=await request('import/preview',{source:importSource,jobs:importJobs},120000);}catch(e){error=e.message;}finally{acting=false;}}
  async function logs(){try{logText=(await request('logs?name='+logTab)).text;}catch(e){logText=e.message;}}
  async function quit(){error='';try{await request('quit',{});quitting=true;}catch(e){error=e.message;}}
  onMount(()=>{let stopped=false,timer,iteration=0;async function poll(){await refresh();if(state&&iteration++%5===0)probe();if(!stopped&&!quitting)timer=setTimeout(poll,1000);}poll();return()=>{stopped=true;clearTimeout(timer);};});
@@ -42,17 +56,27 @@
  <aside class="sidebar">
   <a class="brand" href="#overview" onclick={(e)=>{e.preventDefault();view='overview';}}><span class="brand-icon"><Icon name="bubble" size={24}/></span><span>Manga Translator<small>LOCAL WORKSPACE</small></span></a>
   <div class="nav-label">워크스페이스</div>
-  <nav aria-label="관리 메뉴">{#each menus as [id,icon,label]}<button class:chosen={view===id} onclick={()=>{view=id;error='';notice='';}}><Icon name={icon}/><span>{label}</span>{#if id==='extension'&&extension.connected}<span class="nav-dot"></span>{/if}</button>{/each}</nav>
+  <nav aria-label="관리 메뉴">{#each menus as [id,icon,label]}<button class:chosen={view===id} onclick={()=>{view=id;error='';notice='';if(id==='jobs')loadJobs(0);}}><Icon name={icon}/><span>{label}</span>{#if id==='extension'&&extension.connected}<span class="nav-dot"></span>{/if}</button>{/each}</nav>
   <div class="sidebar-bottom"><button class="exit" onclick={quit} disabled={quitting}><Icon name="power" size={16}/>API를 중지하고 앱 종료</button><span class="version">v{state?.version||'…'}</span></div>
  </aside>
  <div class="workspace">
   <header class="topbar"><span class="breadcrumb">워크스페이스 <span>/</span> <strong>{menus.find(m=>m[0]===view)?.[2]}</strong></span><div class="top-actions"><span class="platform"><Icon name="cpu" size={15}/>{platform()}</span><button class="icon-button" aria-label="상태 새로고침" onclick={()=>{refresh();probe();}} disabled={quitting}><Icon name="refresh" size={17}/></button></div></header>
   <main>
    {#if quitting}<div class="banner neutral" role="status"><Icon name="check"/>관리 앱과 API가 종료되었습니다. 이 탭을 닫아도 됩니다.</div>
-   {:else if offline}<div class="banner danger" role="alert"><Icon name="warning"/>관리 앱에 연결할 수 없습니다. Manga Translator를 다시 실행하세요.</div>{/if}
+   {:else if offline}<div class="banner danger" role="alert"><Icon name="warning"/>{restartExpected?'업데이트 적용 후 앱을 다시 시작하고 있습니다. 잠시 기다리세요.':'관리 앱에 연결할 수 없습니다. Manga Translator를 다시 실행하세요.'}</div>{/if}
    {#if error||state?.error}<div class="banner danger" role="alert"><Icon name="warning"/><span>{error||state.error}</span><button aria-label="메시지 닫기" onclick={()=>{error='';if(state)state={...state,error:''};}}>×</button></div>{/if}
    {#if notice}<div class="banner success" role="status"><Icon name="check"/>{notice}<button aria-label="알림 닫기" onclick={()=>notice=''}>×</button></div>{/if}
    {#if state&&!state.supported}<div class="banner danger"><Icon name="warning"/>현재 배포판은 Windows x64, Linux ARM64와 x64를 지원합니다.</div>{/if}
+   <section class="card app-update" aria-label="앱 업데이트">
+    <div class="card-heading"><h3>앱 업데이트</h3><InfoPopover title="앱 업데이트"><p>시작할 때 최신 정식 버전을 확인합니다. 설치 버튼을 눌렀을 때만 다운로드하고 앱을 다시 시작합니다.</p><p>설정·모델·인증키·번역 결과는 보존합니다. API를 중지한 뒤 설치하세요. 기동에 실패하면 이전 버전을 복구합니다.</p><p>완료 후 브라우저 확장 관리 화면에서 기존 확장을 새로고침하세요. 확장을 삭제할 필요는 없습니다.</p></InfoPopover></div>
+    <div class="update-actions"><span role="status">{appUpdate?.status==='checking'?'새 버전 확인 중':appUpdate?.status==='available'?'새 버전 '+appUpdate.version:appUpdate?.status==='downloading'?'업데이트 다운로드·검증 중':appUpdate?.status==='restarting'?'업데이트 적용·재시작 중':appUpdate?.status==='latest'?'최신 버전입니다 · '+state?.version:appUpdate?.status==='error'?'업데이트 확인 또는 설치 실패':'현재 버전 '+(state?.version||'…')}</span>
+    <button class="button secondary" onclick={()=>act('update/check')} disabled={acting||quitting||['checking','downloading','restarting'].includes(appUpdate?.status)}>업데이트 확인</button>
+    {#if appUpdate?.status==='available'}<button class="button primary" onclick={async()=>{await act('update/install');}} disabled={acting||quitting||Boolean(appUpdate.disabledReason)}>업데이트 설치·재시작</button>{/if}</div>
+    {#if appUpdate?.error}<p role="alert">{appUpdate.error}</p>{/if}
+    {#if appUpdate?.status==='available'&&appUpdate.disabledReason}<p>{appUpdate.disabledReason}</p>{/if}
+    {#if appUpdate?.status==='available'&&appUpdate.notes}<details><summary>변경 내용</summary><pre class="update-notes">{appUpdate.notes}</pre></details>{/if}
+    {#if updateResult}<p role="status">{updateResult.message}</p>{/if}
+   </section>
    {#if view==='overview'}
     <section class="page-heading"><div><div class="eyebrow">OVERVIEW</div><h1>번역 준비 현황</h1><p>설치부터 API 실행, 크롬 확장 연결까지 한곳에서 관리하세요.</p></div><button class="button secondary" onclick={()=>view='setup'}><Icon name="download" size={17}/>설치 관리</button></section>
     <section class="hero" class:ready={running()}>
@@ -87,8 +111,11 @@
     <section class="card migration-card">
      <div class="card-heading"><h3>이전 버전 데이터 가져오기</h3><InfoPopover title="새 버전으로 데이터 이전"><p>이전 앱과 API를 종료한 뒤, 새 배포본을 별도 폴더에 풀어 실행하세요. 이전 폴더의 모델·런타임·설정·인증키·번역 결과·이어받기 파일을 복사하며 원본은 보존합니다.</p><p>새 실행 파일과 확장 코드는 유지합니다. 복사가 끝나면 선택한 조합 다운로드·복구로 새 버전에 필요한 구성만 준비하세요.</p><p>브라우저 안의 명칭 사전과 편집 기록은 같은 확장 프로필에 남습니다. 새 확장 폴더를 등록할 때 기존 확장을 삭제하면 브라우저 데이터가 지워질 수 있습니다.</p></InfoPopover></div>
      <label for="import-source">이전 앱 폴더의 전체 경로</label>
-     <input id="import-source" bind:value={importSource} disabled={locked()} placeholder="이전 실행 파일이 있는 폴더"/>
-     <button class="button secondary" onclick={()=>act('import',{source:importSource})} disabled={locked()||!importSource.trim()||chosen()||Boolean(state?.settings.model||state?.settings.layout||state?.settings.ocr)}>데이터 가져오기</button>
+     <input id="import-source" bind:value={importSource} oninput={()=>importPreview=null} disabled={locked()} placeholder="이전 실행 파일이 있는 폴더"/>
+     <label>이전 작업 결과 <select bind:value={importJobs} onchange={()=>importPreview=null} disabled={locked()}><option value="all">전체 작업 가져오기</option><option value="kept">보관한 작업만 가져오기</option><option value="none">작업 결과 제외</option></select></label>
+     <button class="button secondary" onclick={previewImport} disabled={locked()||!importSource.trim()}>가져올 용량 확인</button>
+     {#if importPreview}<p role="status">작업 {importPreview.jobs}개 · 전체 {importPreview.files}개 파일 · {bytes(importPreview.bytes)}</p>{/if}
+     <button class="button secondary" onclick={()=>act('import',{source:importSource,jobs:importJobs})} disabled={locked()||!importSource.trim()||chosen()||Boolean(state?.settings.model||state?.settings.layout||state?.settings.ocr)}>데이터 가져오기</button>
      {#if state?.phase==='importing'}<p role="status">복사·검증 중 · {state.progress.completed} / {state.progress.count} 파일 · {bytes(state.progress.bytes)} / {bytes(state.progress.total)}</p><p class="path-label">{state.progress.name}</p><button class="text-button" onclick={()=>act('pause')}>가져오기 취소</button>
      {:else if state?.phase==='imported'}<p role="status">가져오기가 완료됐습니다. 선택한 조합 다운로드·복구를 눌러 새 버전에 필요한 파일을 확인하세요.</p>
      {:else}<p>모델을 선택하거나 데이터를 저장하기 전의 새 폴더에서 사용하세요.</p>{/if}
@@ -125,6 +152,24 @@
 <button class="button secondary" onclick={()=>act('settings',{...state.settings,profile:'custom',restorationBackend:draftRestoration,llmExecution:draftLLM,layoutExecution:draftLayout,ocrExecution:draftOCR,gpu:draftGPU,autoStart:draftAuto,threads:Number(draftThreads),threadsAuto:Number(draftThreads)===0})} disabled={running()||state?.busy||acting}>설정 저장</button></div></section>
     <section class="sources"><h3>라이선스 및 출처</h3><p>모델과 외부 라이브러리에는 각각의 이용 조건이 적용됩니다.</p><div>{#each state?.licenses||[] as license}<a href={license.url} target="_blank" rel="noreferrer">{license.name}<span>{license.license}</span><Icon name="external" size={13}/></a>{/each}</div></section>
 
+   {:else if view==='jobs'}
+    <section class="page-heading"><div class="heading-title"><h1>작업 데이터</h1><InfoPopover title="작업 데이터 관리"><p>원본·번역 결과·복원 이미지를 작업별로 관리합니다. 기존 작업에는 작품 제목·주소가 없을 수 있습니다.</p><p>삭제·보관·자동 정리 설정 변경은 API를 중지한 뒤 가능합니다. 보관 작업은 자동 정리와 전체 미보관 정리에서 제외됩니다.</p><p>삭제한 작업은 되돌릴 수 없습니다. 명칭 사전과 모델·설정은 삭제하지 않습니다.</p></InfoPopover></div><button class="button secondary" onclick={()=>loadJobs()} disabled={jobLoading||acting}>목록 새로고침</button></section>
+    <section class="card jobs-summary"><strong>{jobList?.total||0}개 작업 · {bytes(jobList?.bytes||0)}</strong><span>보관 {jobList?.kept||0}개 · 미보관 {bytes(jobList?.unkeptBytes||0)}</span>
+     <label>미보관 작업 자동 정리 <select bind:value={jobDays} disabled={locked()}><option value={0}>자동 삭제 안 함</option><option value={1}>1일 지난 작업</option><option value={7}>7일 지난 작업</option><option value={30}>30일 지난 작업</option><option value={90}>90일 지난 작업</option></select></label><button class="button secondary" disabled={locked()||!jobList} onclick={async()=>{await act('jobs/policy',{retentionDays:Number(jobDays)});await loadJobs();}}>정리 설정 저장</button>
+     <small>기간이 지난 미보관 작업은 API 시작 시와 작업 처리 후 정리됩니다.</small>
+    </section>
+    <div class="jobs-toolbar"><input aria-label="작업 검색" placeholder="작품 제목·주소·작업 ID 검색" bind:value={jobQuery}/><select aria-label="작업 필터" bind:value={jobFilter}><option value="">전체</option><option value="kept">보관</option><option value="unkept">미보관</option><option value="error">실패</option></select><button class="button secondary" onclick={()=>loadJobs(0)} disabled={jobLoading}>검색</button></div>
+    <div class="jobs-toolbar"><label><input type="checkbox" aria-label="현재 목록 전체 선택" checked={Boolean(jobList?.items.length)&&jobList.items.every(j=>jobSelection.includes(j.id))} onchange={e=>jobSelection=e.currentTarget.checked?jobList.items.map(j=>j.id):[]}/> 현재 목록 선택 ({jobSelection.length})</label><button class="button secondary" onclick={()=>keepJobs(true)} disabled={locked()||!jobSelection.length}>선택 보관</button><button class="button secondary" onclick={()=>keepJobs(false)} disabled={locked()||!jobSelection.length}>보관 해제</button><button class="button secondary" onclick={()=>jobConfirm='selected'} disabled={locked()||!jobSelection.length}>선택 삭제</button><button class="button secondary" onclick={()=>jobConfirm='unkept'} disabled={locked()||!jobList||jobList.total===jobList.kept}>미보관 전체 정리</button></div>
+    {#if jobConfirm}<section class="card delete-confirm" role="alert"><p>{jobConfirm==='cache'?'브라우저의 결과·편집 캐시를 모두 삭제합니다. 서버의 보관 작업, 명칭 사전과 설정은 유지됩니다.':jobConfirm==='unkept'?'모든 미보관 작업을 영구 삭제합니다. 보관 작업은 유지됩니다.':'선택한 '+jobSelection.length+'개 작업을 영구 삭제합니다. 보관 작업은 먼저 보관을 해제해야 합니다.'}</p><button class="button secondary" onclick={removeJobs} disabled={locked()}>삭제 확인</button><button class="text-button" onclick={()=>jobConfirm=''} disabled={acting}>취소</button></section>{/if}
+    {#if jobLoading}<p role="status">작업 파일과 용량 확인 중…</p>{/if}
+    {#if jobList?.skipped}<p>형식이 다르거나 링크가 포함된 {jobList.skipped}개 항목은 안전을 위해 관리 대상에서 제외했습니다.</p>{/if}
+    <section class="job-rows" aria-label="저장된 작업 목록">{#each jobList?.items||[] as j (j.id)}<article class="card job-row"><input type="checkbox" aria-label={'작업 선택 '+j.id} checked={jobSelection.includes(j.id)} onchange={e=>jobSelection=e.currentTarget.checked?[...jobSelection,j.id]:jobSelection.filter(id=>id!==j.id)}/>
+     {#if j.hasImage}<a href={'/api/jobs/image/'+j.id} target="_blank" rel="noreferrer" aria-label="원본 이미지 보기"><img loading="lazy" src={'/api/jobs/image/'+j.id} alt="작업 원본"/></a>{/if}
+     <div class="job-description"><strong>{j.title||'이전 작업'}{j.page?' · '+j.page+'페이지':''} {j.kept?' · 보관':''}</strong>{#if jobURL(j.pageURL)}<a href={j.pageURL} target="_blank" rel="noreferrer">{j.pageURL}</a>{/if}<small>{j.id}</small><span>{jobStatus(j.status)} · {j.target||'언어 정보 없음'} · {bytes(j.bytes)} · {new Date(j.updated).toLocaleString()}</span>{#if j.error}<small>{j.error}</small>{/if}</div><button class="text-button" onclick={()=>act('jobs/open',{id:j.id})}>파일 폴더</button></article>{/each}
+     {#if jobList&&!jobList.matched&&!jobLoading}<p>조건에 맞는 작업이 없습니다.</p>{/if}
+    </section>
+    <div class="jobs-toolbar"><button class="button secondary" onclick={()=>loadJobs(Math.max(0,jobOffset-50))} disabled={jobLoading||jobOffset===0}>이전</button><span>{jobList?.matched||0}개 중 {jobList?.items.length?jobOffset+1:0}–{jobOffset+(jobList?.items.length||0)}</span><button class="button secondary" onclick={()=>loadJobs(jobOffset+50)} disabled={jobLoading||jobOffset+50>=(jobList?.matched||0)}>다음</button></div>
+    <section class="card jobs-summary"><h3>브라우저 결과 캐시</h3>{#if cacheStats}<span>만화 탭 {cacheStats.pages}개 · 편집 {cacheStats.edits}개 · {bytes(cacheStats.bytes)}</span><button class="button secondary" onclick={()=>jobConfirm='cache'} disabled={locked()||(!cacheStats.pages&&!cacheStats.edits)}>브라우저 캐시 정리</button>{:else}<p>확장을 등록·새로고침하면 용량 확인과 캐시 정리가 가능합니다.</p>{/if}<small>서버 작업과 별도입니다. 명칭 사전과 확장 설정은 유지됩니다.</small></section>
    {:else if view==='extension'}
     <section class="page-heading"><div><div class="eyebrow">CHROME EXTENSION</div><div class="heading-title"><h1>만화 페이지와 연결하기</h1><InfoPopover title="확장 연결"><p>확장을 한 번 설치하면 번역 API에 연결할 수 있습니다.</p><p>확장 설치 단계는 브라우저에서 직접 진행해야 합니다. 설치 후 툴바에서 Manga Translator를 고정할 수 있습니다.</p></InfoPopover></div></div><span class="connection-badge" class:connected={extension.connected}><span class="dot"></span>{extension.connected?'연결 완료':extension.installed?'확장 설치됨':'확장 설치 필요'}</span></section>
     {#if extension.connected}<section class="connected-card"><span class="connected-icon"><Icon name="check" size={27}/></span><div><h2>이제 만화 페이지에서 번역하세요.</h2><p>Manga Translator {extension.version} · 로컬 API에 연결됐습니다.</p></div><button class="button secondary" onclick={probe} disabled={probing}><Icon name="refresh" size={16}/>다시 확인</button></section>{/if}
@@ -144,4 +189,7 @@
 
  .model-card.incompatible{background:#f4f6f5;border-style:dashed}.model-card .incompatible-note{color:#735c2c;font-weight:600}.model-card.incompatible .card-heading h3{color:#65736e}
  .model-section{margin:28px 0}.model-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,310px),1fr));gap:16px}.model-card{padding:18px;min-width:0}.model-tools{display:flex;align-items:center;gap:8px;flex:none}.model-card .card-heading{margin-bottom:14px}.model-card.selected{border-color:#0b8274;box-shadow:0 0 0 1px #0b8274}.model-card p{line-height:1.6;color:#64746f;font-size:13px}.model-card .inline-actions{flex-wrap:wrap;gap:10px}.delete-confirm{margin-top:16px;border-top:1px solid #e4eae7;padding-top:12px}.model-card .card-heading{align-items:flex-start;gap:10px}.model-card h3{line-height:1.5}
+
+.app-update{margin-bottom:20px;padding:16px 20px}.update-actions{display:flex;align-items:center;gap:12px;flex-wrap:wrap}.update-actions>span{margin-right:auto}.update-notes{white-space:pre-wrap;font-family:inherit;max-height:240px;overflow:auto}.app-update p,.app-update details{margin-top:12px}
+.jobs-summary{padding:18px;margin-bottom:16px;display:flex;gap:14px;align-items:center;flex-wrap:wrap}.jobs-summary small{flex-basis:100%}.jobs-toolbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:14px 0}.jobs-toolbar input:not([type=checkbox]){flex:1;min-width:200px}.job-rows{display:grid;gap:8px}.job-row{display:flex;align-items:center;gap:14px;padding:12px}.job-row img{width:54px;height:72px;object-fit:contain}.job-description{display:grid;gap:4px;min-width:0;flex:1}.job-description a,.job-description small{overflow-wrap:anywhere}.job-description small{color:var(--muted,#667)}
 </style>

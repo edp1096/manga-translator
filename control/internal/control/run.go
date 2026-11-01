@@ -84,6 +84,9 @@ func Run(dataRoot string, bundle fs.FS, noSetup, noOpen bool) error {
 	server := NewServer(m.Handler())
 	errorsCh := make(chan error, 1)
 	go func() { errorsCh <- server.Serve(listener) }()
+	if updateProbeToken == "" {
+		_ = m.CheckUpdate()
+	}
 	logger.Printf("Manga Translator %s · http://127.0.0.1:%d", Version, ControlPort)
 	if !noOpen {
 		if e = OpenURL(fmt.Sprintf("http://127.0.0.1:%d", ControlPort)); e != nil {

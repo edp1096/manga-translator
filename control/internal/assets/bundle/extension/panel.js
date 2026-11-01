@@ -4,6 +4,7 @@ let tabId,known=new Set(),busy=false,pageURL='',noticeUntil=0,autoSelectNew=true
 const thumbs=new Map(),thumbTasks=new Map(),rows=new Map();
 let nameWork=null,namePageURL='';
 const helpTopics={
+ lightweight:['경량 표시',['표시용 추가 말풍선 분석·흰 배경·이미지 복원과 정밀 배치를 생략합니다. OCR·중복 제거·툴팁 겹침 방지와 개별 편집은 유지합니다.','선택해 둔 표시 방식은 보존됩니다. 끄면 재번역 없이 해당 방식을 다시 적용합니다. 이미 실행 중인 서버 요청은 완료될 때까지 시간이 필요할 수 있습니다.']],
  reader:['패널 사용',[
   '뒤쪽 이미지가 목록에 없으면 새로고침을 누르세요. 스크롤하거나 지원 뷰어의 페이지를 넘겨 본문을 불러옵니다.',
   '새로고침이나 번역이 끝나도 시작 위치로 돌아가지 않습니다. 토나리노 영점프처럼 화면을 읽는 뷰어는 만화 탭을 활성 상태로 유지하세요.',
@@ -82,7 +83,7 @@ function thumbnail(record,e){
 function selectionState(){
  $('run').disabled=running||saving||displayBusy;$('preload').disabled=running||saving||displayBusy;
  $('zip').disabled=running||saving||displayBusy||!selected.size;$('zip').textContent=`선택 저장 (${selected.size})`;
- $('display-mode').disabled=saving||changingDisplay;$('outside-text-mode').disabled=saving||changingDisplay;$('display-retry').disabled=saving||changingDisplay||running||displayBusy;
+ $('lightweight-display').disabled=saving||changingDisplay;$('display-mode').disabled=saving||changingDisplay||$('lightweight-display').checked;$('outside-text-mode').disabled=saving||changingDisplay||$('lightweight-display').checked;$('display-retry').disabled=saving||changingDisplay||running||displayBusy;
  if($('names-correct'))$('names-correct').disabled=running||saving||displayBusy||!nameWork?.entries?.some(entry=>entry.kind!=='honorific');
  if($('names-undo'))$('names-undo').disabled=running||saving||displayBusy;
  const all=$('all').querySelector('input');all.checked=known.size>0&&selected.size===known.size;all.indeterminate=selected.size>0&&selected.size<known.size;
@@ -90,7 +91,7 @@ function selectionState(){
 function display(s){
  running=!!s.running;
  displayBusy=!!s.displayBusy;
- if(!changingDisplay){$('display-mode').value=s.displayMode||'auto';$('outside-text-mode').value=s.outsideTextMode||'tooltip';}
+ if(!changingDisplay){$('lightweight-display').checked=!!s.lightweightDisplay;$('display-mode').value=s.displayMode||'auto';$('outside-text-mode').value=s.outsideTextMode||'tooltip';}
  $('display-status').textContent=s.displayMessage||'';$('display-status').hidden=!s.displayMessage||!s.displayBusy&&!s.displayPaused;$('display-retry').hidden=!s.displayPaused;
  if(s.pageURL){pageURL=s.pageURL;$('page').textContent=new URL(pageURL).hostname;}
  if($('name-status')){
@@ -199,3 +200,5 @@ $('zip').onclick=async()=>{
   const failures=manifest.filter(x=>x.error||x.warning).length;$('status').textContent=`${chosen.length}장 ZIP 저장${failures?` · ${failures}건은 manifest.json 확인`:''}`;noticeUntil=Date.now()+10000;
  }catch(error){$('status').textContent=error.message;noticeUntil=Date.now()+6000;}finally{try{await rpc({type:'control',tabId,action:'exportEnd'});}catch{}saving=false;selectionState();}
 };
+
+$('lightweight-display').onchange=async()=>{const enabled=$('lightweight-display').checked;changingDisplay=true;selectionState();try{await control('lightweightDisplay',{enabled});}finally{changingDisplay=false;await control('status');}};

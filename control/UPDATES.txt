@@ -1,0 +1,41 @@
+Application updates (0.4.2+)
+
+The controller checks GitHub's latest stable release at startup or on demand.
+Installation requires an explicit click and stopped APIs. Models, runtime files,
+settings, authentication keys and translation results are never extracted from
+an update archive. Only the platform executable, README.txt, DOWNLOADS.json and
+licenses are allowed. ZIP size, file paths, duplicate names, SHA256, catalogue
+version and executable --version are checked before shutdown.
+
+The controller copies itself to .app-update/helper[.exe]. After the old process
+releases its application lock, this helper backs up program/extension files to
+archive/update-.../, records a journal, replaces the program and starts it with
+an unpredictable startup token. The new app must answer with its version, root
+and token before the helper commits. Failure restores the previous files and
+restarts the old app. A nonterminal journal triggers helper recovery on the next
+launch; abandoned downloads can be retried. Logs: data/update.log. Last result:
+data/update-result.json. Backups are retained until the user removes them.
+
+Startup never downloads a release or installs models automatically. After a
+successful update the existing AutoStart preference is respected; missing new
+runtime files require the usual explicit download/repair step. Developer-mode
+browser extensions must be reloaded in the browser after their files change.
+0.4.1 and older need one manual upgrade to obtain this updater.
+
+Verification
+- CGO_ENABLED=0 go test ./... and go vet ./...
+- tests/update_portable.cjs performs real process replacement, startup handshake,
+  checksum rejection, failed-start rollback and persistent-data comparisons.
+- Set MANGA_UPDATE_FIXTURES to an isolated directory containing old/new/fail
+  binaries (add .exe on Windows). Build old from this source with Version=0.4.1
+  and new with Version=0.4.2. Both use compile-time -X values:
+  manga-translator/control/internal/control.updateAPIURL=http://127.0.0.1:19842/latest
+  manga-translator/control/internal/control.updateReleaseBase=http://127.0.0.1:19842/download/
+  A failure executable prints 0.4.2 for --version and exits nonzero otherwise.
+  The fixture server and ZIPs are created by the test; no external release is
+  published. Test builds never go into dist. No runtime update-source override
+  is exposed by production builds.
+- Set MANGA_PLAYWRIGHT for browser testing; MANGA_BROWSER_CHANNEL=msedge and
+  MANGA_HEADED=1 show the actual Windows UI. Without it the same test uses HTTP.
+- The test refuses to run if another controller occupies port 8794. Only its
+  root-corrupt/root-success/root-failure directories are recreated.

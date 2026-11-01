@@ -10,22 +10,24 @@ let pageCache=null,exportPosition=null;
 const overlayInstance=crypto.randomUUID();
 let tooltipClipSequence=0;
 let entries=[],running=false,stopped=false,showOriginal=false,message='이미지를 탐지하세요.',scannedURL=pageIdentity();
-let displayMode='auto',outsideTextMode='tooltip',displayRevision=0,displayBusy=false,displayMessage='',displayPaused=false,displayTask=null,displayTimer=0,exporting=false,pendingDisplayMode;
+let lightweightDisplay=false,displayMode='auto',outsideTextMode='tooltip',displayRevision=0,displayBusy=false,displayMessage='',displayPaused=false,displayTask=null,displayTimer=0,exporting=false,pendingDisplayMode;
 let nameMessage='',nameBusy=false;
 function presentation(entry){
+ const mode=lightweightDisplay?'auto':displayMode,outside=lightweightDisplay?'tooltip':outsideTextMode;
  const restoration=entry.restored?entry.restoration:undefined;
- if(entry.presentationBase!==entry.result||entry.presentationGeometry!==entry.bubbles||entry.presentationMode!==displayMode||entry.presentationOutsideMode!==outsideTextMode||entry.presentationRestoration!==restoration){
-  entry.presentation=MangaRender.presentation(entry.result,displayMode,entry.bubbles,outsideTextMode,restoration);entry.presentationRestoration=restoration;
-  entry.presentationBase=entry.result;entry.presentationGeometry=entry.bubbles;entry.presentationMode=displayMode;entry.presentationOutsideMode=outsideTextMode;
+ if(entry.presentationBase!==entry.result||entry.presentationGeometry!==entry.bubbles||entry.presentationMode!==mode||entry.presentationOutsideMode!==outside||entry.presentationRestoration!==restoration){
+  entry.presentation=MangaRender.presentation(entry.result,mode,entry.bubbles,outside,restoration);entry.presentationRestoration=restoration;
+  entry.presentationBase=entry.result;entry.presentationGeometry=entry.bubbles;entry.presentationMode=mode;entry.presentationOutsideMode=outside;
  }
  return entry.presentation;
 }
 function setDisplayMode(mode,retry=false){setDisplayModes(mode,outsideTextMode,retry);}
-function setDisplayModes(mode,outside,retry=false){
+function setDisplayModes(mode,outside,retry=false,light=lightweightDisplay){
+ light=light===true;
  mode=mode==='white'?'white':'auto';outside=['white','restore'].includes(outside)?outside:'tooltip';
- if(exporting){pendingDisplayMode={mode,outside};return;}
- if(mode===displayMode&&outside===outsideTextMode&&!retry)return;
- displayMode=mode;outsideTextMode=outside;displayRevision++;displayPaused=false;displayMessage='';clearTimeout(displayTimer);
+ if(exporting){pendingDisplayMode={mode,outside,light};return;}
+ if(mode===displayMode&&outside===outsideTextMode&&light===lightweightDisplay&&!retry)return;
+ displayMode=mode;outsideTextMode=outside;lightweightDisplay=light;displayRevision++;displayPaused=false;displayMessage='';clearTimeout(displayTimer);
  const paused=globalThis.__mangaPausedBatch;
  if(!running&&paused?.phase==='display'&&(retry||paused.reason==='display-error')){run(paused.keys).catch(error=>status(error.message));return;}
  if(!running&&paused?.phase==='display')displayPaused=true;
@@ -33,8 +35,8 @@ function setDisplayModes(mode,outside,retry=false){
  queueDisplay();
 }
 const needsDisplay=entry=>entry.result&&entry.original&&entry.cleaned&&!entry.restoring&&!entry.cachedRestore&&!entry.pendingJob&&(entry.displayRevision!==displayRevision||entry.displayResult!==entry.result);
-const needsGeometry=result=>displayMode==='white'&&result.regions.some(MangaRender.whiteCandidate)||outsideTextMode!=='tooltip'&&result.regions.some(MangaRender.outsideCandidate);
-const restorationReady=entry=>outsideTextMode!=='restore'||!entry.result.regions.some(MangaRender.outsideCandidate)||!!entry.restored&&entry.restoration?.version===1;
+const needsGeometry=result=>!lightweightDisplay&&(displayMode==='white'&&result.regions.some(MangaRender.whiteCandidate)||outsideTextMode!=='tooltip'&&result.regions.some(MangaRender.outsideCandidate));
+const restorationReady=entry=>lightweightDisplay||outsideTextMode!=='restore'||!entry.result.regions.some(MangaRender.outsideCandidate)||!!entry.restored&&entry.restoration?.version===1;
 const geometryReady=entry=>entry.bubbles&&(entry.bubbles.version>=3||entry.geometryChecked===entry.job);
 async function applyEntryDisplay(entry,active=()=>true,progress=()=>{}){
  const revision=displayRevision,job=entry.job,result=entry.result;
@@ -62,6 +64,7 @@ async function applyEntryDisplay(entry,active=()=>true,progress=()=>{}){
  }catch(error){if(!current())return false;throw error;}
 }
 function displaySummary(){
+ if(lightweightDisplay)return '경량 표시 · 추가 경계 분석·복원 생략 · 개별 편집과 툴팁 겹침 방지 유지';
  const count=entries.reduce((sum,entry)=>sum+(entry.presentation?.regions.filter(region=>outsideTextMode==='restore'?region.automaticRestoration:region.automaticOutside).length||0),0);
  return (displayMode==='white'?'말풍선 흰 배경':'말풍선 기본 표시')+' · '+(outsideTextMode==='white'?`바깥 글자 흰 배경 ${count}곳`:outsideTextMode==='restore'?`대사·독백 이미지 복원 ${count}곳 · 나머지 툴팁`:'바깥 글자 툴팁')+' · 개별 편집 유지';
 }
@@ -88,11 +91,11 @@ function queueDisplay(){
   if(!displayPaused&&!running&&!exporting&&entries.some(needsDisplay))queueDisplay();
  });
 }
-chrome.storage?.onChanged?.addListener((changes,area)=>{if(area!=='local')return;if(changes.displayMode||changes.outsideTextMode)setDisplayModes(changes.displayMode?changes.displayMode.newValue:(pendingDisplayMode?.mode||displayMode),changes.outsideTextMode?changes.outsideTextMode.newValue:(pendingDisplayMode?.outside||outsideTextMode));if(changes.nameWorks||changes.target)nameMessage='';});
+chrome.storage?.onChanged?.addListener((changes,area)=>{if(area!=='local')return;if(changes.displayMode||changes.outsideTextMode||changes.lightweightDisplay)setDisplayModes(changes.displayMode?changes.displayMode.newValue:(pendingDisplayMode?.mode||displayMode),changes.outsideTextMode?changes.outsideTextMode.newValue:(pendingDisplayMode?.outside||outsideTextMode),false,changes.lightweightDisplay?changes.lightweightDisplay.newValue:(pendingDisplayMode?.light??lightweightDisplay));if(changes.nameWorks||changes.target)nameMessage='';});
 const status=t=>message=t;
 const updateRow=()=>{};
 function urlOf(img){return img.currentSrc||img.getAttribute('data-src')||img.getAttribute('data-original')||img.src;}
-function snapshot(){return {message,running,nameMessage,nameBusy,displayMode,outsideTextMode,displayBusy:displayBusy||!!displayTask,displayMessage,displayPaused,pageURL:location.href,reader:reader?.name,items:entries.map(e=>({key:e.key,index:e.index,state:e.state,done:!!e.result,error:e.error,preview:e.readerPage?(e.readerPreview||MangaReaders.placeholder(e.index)):(e.sourceURL||urlOf(e.img)),title:e.title||e.img?.alt||`이미지 ${e.index+1}`,width:e.readerWidth||e.img?.naturalWidth||e.img?.width||0,height:e.readerHeight||e.img?.naturalHeight||e.img?.height||0}))};}
+function snapshot(){return {message,running,nameMessage,nameBusy,displayMode,outsideTextMode,lightweightDisplay,displayBusy:displayBusy||!!displayTask,displayMessage,displayPaused,pageURL:location.href,reader:reader?.name,items:entries.map(e=>({key:e.key,index:e.index,state:e.state,done:!!e.result,error:e.error,preview:e.readerPage?(e.readerPreview||MangaReaders.placeholder(e.index)):(e.sourceURL||urlOf(e.img)),title:e.title||e.img?.alt||`이미지 ${e.index+1}`,width:e.readerWidth||e.img?.naturalWidth||e.img?.width||0,height:e.readerHeight||e.img?.naturalHeight||e.img?.height||0}))};}
 function readerScan(options={}){
  const previous=new Map(entries.map(e=>[e.sourceURL,e]));
  const next=reader.pages().map(page=>{
@@ -110,7 +113,7 @@ async function scan(options={}){
  if(running&&!options.loading)return snapshot();
  const samePage=scannedURL===pageIdentity();scannedURL=pageIdentity();if(!samePage){pageCache=null;for(const e of entries){e.overlay?.remove();e.resizeObserver?.disconnect();}entries=[];reader=globalThis.MangaReaders?.create({fetchImage:url=>rpc({type:'fetchImage',url}),metadata:()=>rpc({type:'readerMetadata'}),capture:captureReader,onWait:text=>status(text),cancelled:()=>running&&stopped})||null;}
  const settings=options.settings||await rpc({type:'settings'});
- setDisplayModes(settings.displayMode,settings.outsideTextMode);
+ setDisplayModes(settings.displayMode,settings.outsideTextMode,false,settings.lightweightDisplay);
  if(pageCache===null){const saved=await rpc({type:'restore'}).catch(()=>[]);pageCache=Array.isArray(saved)?saved:[];}
  if(reader){const active=reader;await active.prepare?.();if(reader!==active||active.identity!==pageIdentity())return snapshot();return readerScan(options);}
  let imgs;
@@ -348,7 +351,7 @@ async function run(keys){
     if(!(e.pendingJob&&e.job===e.pendingJob&&e.result&&e.original&&e.cleaned)){
      e.state=e.result?'재번역 준비':'이미지 읽기';status(`${e.index+1}번 ${e.state}`);
      if(!e.pendingJob&&!e.result&&e.job)e.pendingJob=e.job;
-     if(!e.pendingJob){const data=await readImage(e);if(!active()){stopped=true;break;}e.pendingJob=(await rpc({type:'submit',data})).id;}
+     if(!e.pendingJob){const data=await readImage(e);if(!active()){stopped=true;break;}e.pendingJob=(await rpc({type:'submit',data,sourceURL:e.sourceURL||urlOf(e.img),page:e.index+1})).id;}
      const start=Date.now();
      for(;;){
       if(!active()){stopped=true;break;}
@@ -395,6 +398,12 @@ document.addEventListener('load',ev=>{if(ev.target instanceof HTMLImageElement){
 document.addEventListener('scroll',()=>{if(reader)entries.forEach(place);},{passive:true,capture:true});
 addEventListener('resize',()=>entries.forEach(place));addEventListener('scroll',()=>entries.forEach(place),{passive:true});
 chrome.runtime.onMessage.addListener((m,s,reply)=>{
+ if(m.type==='jobsRemoved'){
+  const ids=new Set(m.ids||[]);pageCache=(pageCache||[]).filter(x=>!m.all&&!ids.has(x.id));
+  for(const e of entries)if(m.all||ids.has(e.job)||ids.has(e.pendingJob)){stopped=true;displayPaused=true;e.overlay?.remove();e.overlay=null;e.result=null;e.job=null;e.pendingJob=null;e.cachedRestore=null;e.restoration=null;e.bubbles=null;e.original=null;e.cleaned=null;e.restored=null;e.baseResult=null;e.renderEpoch=(e.renderEpoch||0)+1;e.state='작업 데이터 삭제됨';}
+  reply({ok:true});return false;
+ }
+
  if(m.type==='control'){
   (async()=>{
    if(pageIdentity()!==scannedURL&&!running)await scan();
@@ -408,6 +417,10 @@ chrome.runtime.onMessage.addListener((m,s,reply)=>{
    if(m.action==='outsideTextMode'){
     if(exporting)throw Error('저장이 끝난 뒤 표시 방식을 바꾸세요.');
     const mode=await rpc({type:'outsideTextMode',mode:m.mode});setDisplayModes(displayMode,mode);queueDisplay();
+   }
+   if(m.action==='lightweightDisplay'){
+    if(exporting)throw Error('저장이 끝난 뒤 표시 방식을 바꾸세요.');
+    const light=await rpc({type:'lightweightDisplay',enabled:m.enabled});setDisplayModes(displayMode,outsideTextMode,false,light);queueDisplay();
    }
    if(m.action==='displayRetry')setDisplayMode(displayMode,true);
    if(['run','preload','edit','export','exportStart','namesCorrect','namesUndo'].includes(m.action)&&(displayBusy||displayTask))throw Error('표시 적용이 끝난 뒤 실행하세요.');
@@ -428,7 +441,7 @@ chrome.runtime.onMessage.addListener((m,s,reply)=>{
     status(`${e.index+1}번 이미지로 이동했습니다.`);
    }
    if(m.action==='exportStart'){if(running)throw Error('작업이 끝난 뒤 저장하세요.');exporting=true;exportPosition=reader?{reader,position:reader.position(),identity:pageIdentity()}:null;return snapshot();}
-   if(m.action==='exportEnd'){const saved=exportPosition;exportPosition=null;exporting=false;if(pendingDisplayMode!==undefined){const pending=pendingDisplayMode;pendingDisplayMode=undefined;setDisplayModes(pending.mode,pending.outside);}if(saved&&saved.identity===pageIdentity())await saved.reader.restore(saved.position);queueDisplay();return snapshot();}
+   if(m.action==='exportEnd'){const saved=exportPosition;exportPosition=null;exporting=false;if(pendingDisplayMode!==undefined){const pending=pendingDisplayMode;pendingDisplayMode=undefined;setDisplayModes(pending.mode,pending.outside,false,pending.light);}if(saved&&saved.identity===pageIdentity())await saved.reader.restore(saved.position);queueDisplay();return snapshot();}
    if(m.action==='export'){
     if(running)throw Error('작업이 끝난 뒤 저장하세요.');
     const e=entries.find(e=>e.key===m.key);if(!e)throw Error('목록의 이미지를 찾지 못했습니다.');
@@ -439,11 +452,11 @@ chrome.runtime.onMessage.addListener((m,s,reply)=>{
     }catch(error){warning='번역 이미지 렌더링 실패 · 원본 저장: '+error.message;}}
     return {data,kind,warning,state:e.state};
    }
-   if(m.action==='edit'){const e=entries.find(e=>e.key===m.key);if(e?.result)await rpc({type:'edit',id:e.job,key:e.key,result:presentation(e),baseResult:e.result,geometry:e.bubbles,restoration:e.restoration,displayMode,outsideTextMode});}
+   if(m.action==='edit'){const e=entries.find(e=>e.key===m.key);if(e?.result)await rpc({type:'edit',id:e.job,key:e.key,result:presentation(e),baseResult:e.result,geometry:e.bubbles,restoration:e.restoration,displayMode:lightweightDisplay?'auto':displayMode,outsideTextMode:lightweightDisplay?'tooltip':outsideTextMode});}
    return snapshot();
   })().then(reply,e=>reply({error:e.message}));return true;
  }
- if(m.type==='applyEdited'){const e=entries.find(e=>e.key===m.key);if(e){e.result=m.result;overlay(e).then(()=>{remember(e);queueDisplay();reply({result:presentation(e),baseResult:e.result,geometry:e.bubbles,restoration:e.restoration,displayMode,outsideTextMode});}).catch(err=>reply({error:err.message}));}else reply({error:'페이지를 다시 열어 원본 이미지 연결이 끊어졌습니다.'});return true;}
+ if(m.type==='applyEdited'){const e=entries.find(e=>e.key===m.key);if(e){e.result=m.result;overlay(e).then(()=>{remember(e);queueDisplay();reply({result:presentation(e),baseResult:e.result,geometry:e.bubbles,restoration:e.restoration,displayMode:lightweightDisplay?'auto':displayMode,outsideTextMode:lightweightDisplay?'tooltip':outsideTextMode});}).catch(err=>reply({error:err.message}));}else reply({error:'페이지를 다시 열어 원본 이미지 연결이 끊어졌습니다.'});return true;}
  if(m.type==='namesApplied'){const entry=entries.find(entry=>entry.job===m.id&&entry.sourceURL===m.sourceURL);if(entry&&!running&&JSON.stringify(entry.result)===JSON.stringify(m.before)){const before=entry.result;entry.result=m.result;overlay(entry).then(()=>{entry.state='명칭 통일 완료';queueDisplay();reply({ok:true});}).catch(error=>{entry.result=before;overlay(entry).catch(()=>{});reply({error:error.message});});return true;}reply({ok:false});}
 });
 })();

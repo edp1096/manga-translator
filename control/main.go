@@ -15,9 +15,19 @@ func main() {
 	printRoot := flag.Bool("print-root", false, "print the resolved data directory without creating files")
 	noSetup := flag.Bool("no-auto-setup", false, "do not start installed APIs automatically (downloads are always explicit)")
 	noOpen := flag.Bool("no-open", false, "do not open the browser")
+	applyUpdate := flag.String("apply-update", "", "internal update helper root")
+	updateProbe := flag.String("update-probe", "", "internal update startup token")
 	version := flag.Bool("version", false, "print version")
 	hardware := flag.Bool("hardware-info", false, "print hardware information from OS and driver APIs")
 	flag.Parse()
+	if *applyUpdate != "" {
+		if e := control.RunUpdateHelper(*applyUpdate); e != nil {
+			fmt.Fprintln(os.Stderr, e)
+			os.Exit(1)
+		}
+		return
+	}
+	control.SetUpdateProbeToken(*updateProbe)
 	if *hardware {
 		encoder := json.NewEncoder(os.Stdout)
 		encoder.SetIndent("", "  ")
@@ -35,6 +45,13 @@ func main() {
 	if e == nil && *printRoot {
 		fmt.Println(resolvedRoot)
 		return
+	}
+	if e == nil {
+		var resumed bool
+		resumed, e = control.ResumeInterruptedUpdate(resolvedRoot, *updateProbe)
+		if resumed && e == nil {
+			return
+		}
 	}
 	var bundle fs.FS
 	if e == nil {

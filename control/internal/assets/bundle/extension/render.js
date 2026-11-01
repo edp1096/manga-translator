@@ -725,7 +725,7 @@ function paintedWhiteMask(background){
  const mask=whiteMask(background);
   if(!mask.smooth){
    const canvas=document.createElement('canvas');canvas.width=mask.width*4;canvas.height=mask.height*4;
-   const surface=canvas.getContext('2d');surface.filter='blur(3px)';surface.drawImage(mask.canvas,0,0,canvas.width,canvas.height);surface.filter='none';
+   const surface=canvas.getContext('2d',{willReadFrequently:true});surface.filter='blur(3px)';surface.drawImage(mask.canvas,0,0,canvas.width,canvas.height);surface.filter='none';
    const pixels=surface.getImageData(0,0,canvas.width,canvas.height);
    for(let offset=0;offset<pixels.data.length;offset+=4){pixels.data[offset]=255;pixels.data[offset+1]=255;pixels.data[offset+2]=255;pixels.data[offset+3]=Math.max(0,Math.min(255,(pixels.data[offset+3]-128)*16));}
    surface.putImageData(pixels,0,0);

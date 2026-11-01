@@ -35,13 +35,13 @@ if(process.env.MANGA_TOOLTIP_FIXTURES){fixtures.splice(0,fixtures.length,...JSON
 (async()=>{
  const browser=await chromium.launch({channel:process.env.MANGA_BROWSER_CHANNEL||'chromium',headless:process.env.MANGA_HEADED!=='1'});
  try{
-  for(const fixture of fixtures)for(const reversed of [false,true])for(const readerMode of [false,true]){
+  for(const lightweight of [false,true])for(const fixture of fixtures)for(const reversed of [false,true])for(const readerMode of [false,true]){
    const page=await browser.newPage({viewport:{width:1000,height:850}});
    await page.route('https://reader.test/**',route=>route.fulfill({contentType:'text/html',body:'<!doctype html><style>body{margin:0;padding:24px}#anchor{width:720px}img{display:block;width:100%;height:auto}</style><div id="anchor"><img id="source" alt="Page 1" width="720" height="1020"></div>'}));
    await page.goto('https://reader.test/'+fixture.name);
    const regions=fixture.regions.map(region=>({mode:'tooltip',translation:'Translation '+region.id,text:'Source '+region.id,...region}));
    if(reversed)regions.reverse();
-   await page.evaluate(({regions,readerMode})=>{
+   await page.evaluate(({regions,readerMode,lightweight})=>{
     const image='data:image/svg+xml,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="720" height="1020"><rect width="720" height="1020" fill="white"/></svg>');
     document.getElementById('source').src=image;
     window.fixtureResult={width:720,height:1020,regions};
@@ -52,14 +52,14 @@ if(process.env.MANGA_TOOLTIP_FIXTURES){fixtures.splice(0,fixtures.length,...JSON
     if(readerMode)window.MangaReaders={pageIdentity:()=>location.href,create:()=>({identity:location.href,name:'Test reader',pages:()=>[{index:0,sourceURL,width:720,height:1020}],element:()=>document.getElementById('source')})};
     window.chrome={runtime:{onMessage:{addListener:listener=>listeners.push(listener)},sendMessage:async message=>{
      messages.push(message.type);
-     if(message.type==='settings')return {ok:true,value:{selector:''}};
+     if(message.type==='settings')return {ok:true,value:{selector:'',lightweightDisplay:lightweight}};
      if(message.type==='restore')return {ok:true,value:[{sourceURL,key:'cached-page',id:'cached-job',result:fixtureResult}]};
      if(message.type==='asset')return {ok:true,value:image};
      if(message.type==='remember')return {ok:true,value:true};
      throw Error('Unexpected request: '+message.type);
     }}};
     window.send=message=>new Promise(resolve=>listeners[0](message,null,resolve));
-   },{regions,readerMode});
+   },{regions,readerMode,lightweight});
    await page.addScriptTag({path:path.join(extensionRoot,'polygon.js')});
    await page.addScriptTag({path:path.join(extensionRoot,'render.js')});
    await page.addScriptTag({path:path.join(extensionRoot,'content.js')});
@@ -105,6 +105,6 @@ if(process.env.MANGA_TOOLTIP_FIXTURES){fixtures.splice(0,fixtures.length,...JSON
    assert.equal(await page.evaluate(()=>messages.includes('submit')),false,'restored result was submitted again');
    await page.close();
   }
-  console.log(JSON.stringify({ok:true,browser:browser.version(),cases:fixtures.length*4,actualPageGeometry:true,smallRegionsAccessible:true,largeRegionsAccessible:true,reversedInput:true,readerPointerEvents:true,resized:true,originalToggle:true,editedResults:true,cachedResultUnchanged:true,renderedPixelsUnchanged:true,noInference:true}));
+  console.log(JSON.stringify({ok:true,browser:browser.version(),lightweightAndPrecise:true,cases:fixtures.length*8,actualPageGeometry:true,smallRegionsAccessible:true,largeRegionsAccessible:true,reversedInput:true,readerPointerEvents:true,resized:true,originalToggle:true,editedResults:true,cachedResultUnchanged:true,renderedPixelsUnchanged:true,noInference:true}));
  }finally{await browser.close();}
 })().catch(error=>{console.error(error);process.exitCode=1;});

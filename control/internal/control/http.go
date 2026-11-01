@@ -10,12 +10,142 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"time"
 )
 
 func (m *Manager) Handler() http.Handler {
 	mux := http.NewServeMux()
+	mux.HandleFunc("GET /api/jobs/data", func(w http.ResponseWriter, r *http.Request) {
+		offset, _ := strconv.Atoi(r.URL.Query().Get("offset"))
+		limit, _ := strconv.Atoi(r.URL.Query().Get("limit"))
+		v, e := m.Jobs(r.URL.Query().Get("q"), r.URL.Query().Get("filter"), offset, limit)
+		if e != nil {
+			action(w, e)
+			return
+		}
+		respond(w, v, 200)
+	})
+	mux.HandleFunc("POST /api/jobs/keep", func(w http.ResponseWriter, r *http.Request) {
+		var b struct {
+			IDs  []string `json:"ids"`
+			Keep bool     `json:"keep"`
+		}
+		if !decode(w, r, &b) {
+			return
+		}
+		action(w, m.KeepJobs(b.IDs, b.Keep))
+	})
+	mux.HandleFunc("POST /api/jobs/delete", func(w http.ResponseWriter, r *http.Request) {
+		var b struct {
+			IDs       []string `json:"ids"`
+			AllUnkept bool     `json:"allUnkept"`
+		}
+		if !decode(w, r, &b) {
+			return
+		}
+		ids, e := m.DeleteJobs(b.IDs, b.AllUnkept)
+		result := map[string]any{"deleted": ids}
+		if e != nil {
+			result["error"] = e.Error()
+			respond(w, result, 409)
+			return
+		}
+		respond(w, result, 200)
+	})
+	mux.HandleFunc("POST /api/jobs/policy", func(w http.ResponseWriter, r *http.Request) {
+		var b JobPolicy
+		if !decode(w, r, &b) {
+			return
+		}
+		action(w, m.SaveJobPolicy(b.RetentionDays))
+	})
+	mux.HandleFunc("POST /api/jobs/open", func(w http.ResponseWriter, r *http.Request) {
+		var b struct {
+			ID string `json:"id"`
+		}
+		if !decode(w, r, &b) {
+			return
+		}
+		p, e := jobPath(m.root, b.ID)
+		if e == nil {
+			_, e = readJobInfo(m.root, b.ID)
+		}
+		if e == nil {
+			e = openFolder(p)
+		}
+		action(w, e)
+	})
+	mux.HandleFunc("GET /api/jobs/image/{id}", func(w http.ResponseWriter, r *http.Request) {
+		p, e := jobPath(m.root, r.PathValue("id"))
+		if e == nil {
+			p, e = safeDestination(p, "original.png")
+		}
+		if e != nil {
+			http.NotFound(w, r)
+			return
+		}
+		http.ServeFile(w, r, p)
+	})
+	mux.HandleFunc("POST /api/import/preview", func(w http.ResponseWriter, r *http.Request) {
+		var b struct {
+			Source string `json:"source"`
+			Jobs   string `json:"jobs"`
+		}
+		if !decode(w, r, &b) {
+			return
+		}
+		v, e := m.PreviewImport(b.Source, ImportOptions{Jobs: b.Jobs})
+		if e != nil {
+			action(w, e)
+			return
+		}
+		respond(w, v, 200)
+	})
+
+	mux.HandleFunc("GET /api/update/state", func(w http.ResponseWriter, r *http.Request) {
+		result := map[string]any{"update": m.updateState()}
+		if raw, e := os.ReadFile(filepath.Join(m.root, "data", "update-result.json")); e == nil {
+			var receipt map[string]string
+			if json.Unmarshal(raw, &receipt) == nil {
+				result["result"] = receipt
+			}
+		}
+		respond(w, result, 200)
+	})
+	mux.HandleFunc("POST /api/update/check", func(w http.ResponseWriter, r *http.Request) { action(w, m.CheckUpdate()) })
+	mux.HandleFunc("POST /api/update/install", func(w http.ResponseWriter, r *http.Request) { action(w, m.InstallUpdate()) })
+	mux.HandleFunc("GET /api/update/health", func(w http.ResponseWriter, r *http.Request) {
+		respond(w, map[string]string{"Version": Version, "Root": m.root, "Token": updateProbeToken}, 200)
+	})
+	mux.HandleFunc("POST /api/update/activate", func(w http.ResponseWriter, r *http.Request) {
+		if updateProbeToken == "" || r.Header.Get("X-Manga-Update") != updateProbeToken {
+			respond(w, map[string]string{"error": "잘못된 업데이트 토큰"}, 403)
+			return
+		}
+		j, e := readUpdateJournal(m.root)
+		if e != nil || j.Phase != "complete" {
+			respond(w, map[string]string{"error": "업데이트 검증이 완료되지 않았습니다"}, 409)
+			return
+		}
+		m.mu.Lock()
+		m.busy = false
+		m.mu.Unlock()
+		if e := m.StartInstalled(); e != nil {
+			m.mu.Lock()
+			m.updatePending = false
+			m.mu.Unlock()
+			m.setError(e)
+			action(w, e)
+			return
+		}
+		m.mu.Lock()
+		m.updatePending = false
+		m.mu.Unlock()
+		_ = m.CheckUpdate()
+		action(w, nil)
+	})
 	mux.HandleFunc("GET /api/state", func(w http.ResponseWriter, r *http.Request) { respond(w, m.Snapshot(), 200) })
 	for _, operation := range []string{"select", "delete", "download", "clear"} {
 		mux.HandleFunc("POST /api/models/"+operation, func(w http.ResponseWriter, r *http.Request) {
@@ -54,11 +184,12 @@ func (m *Manager) Handler() http.Handler {
 	mux.HandleFunc("POST /api/import", func(w http.ResponseWriter, r *http.Request) {
 		var body struct {
 			Source string `json:"source"`
+			Jobs   string `json:"jobs"`
 		}
 		if !decode(w, r, &body) {
 			return
 		}
-		action(w, m.ImportData(body.Source))
+		action(w, m.ImportDataOptions(body.Source, ImportOptions{Jobs: body.Jobs}))
 	})
 	mux.HandleFunc("POST /api/setup", func(w http.ResponseWriter, r *http.Request) { action(w, m.BeginSetup()) })
 	mux.HandleFunc("POST /api/pause", func(w http.ResponseWriter, r *http.Request) { m.Pause(); action(w, nil) })
@@ -205,6 +336,13 @@ func (m *Manager) Handler() http.Handler {
 				respond(w, map[string]string{"error": "관리 화면에서 요청하세요"}, 403)
 				return
 			}
+		}
+		m.mu.Lock()
+		updating := m.updatePending
+		m.mu.Unlock()
+		if updating && r.Method != "GET" && r.Method != "HEAD" && r.URL.Path != "/api/quit" && r.URL.Path != "/api/update/activate" {
+			respond(w, map[string]string{"error": "업데이트 설치가 진행 중입니다"}, 409)
+			return
 		}
 		mux.ServeHTTP(w, r)
 	})

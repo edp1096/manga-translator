@@ -2,11 +2,13 @@
 #include <functional>
 #include "image_ops.hpp"
 #include "bubble_geometry.hpp"
+#include "display_detection_cache.hpp"
 #include "hit_geometry.hpp"
 #include "layout_refinement.hpp"
 #include "panel_refinement.hpp"
 #include "name_dictionary.hpp"
 #include "llm_batch.hpp"
+#include "translation_retry.hpp"
 #include "reading_order.hpp"
 #include "translation_output.hpp"
 #include "ocr_dedup.hpp"
@@ -190,23 +192,22 @@ struct NativePipeline{
   auto stored=response;stored["cacheKey"]=key;temporary=saved;temporary+=".tmp";{std::ofstream out(temporary);out<<stored.dump();out.flush();require(bool(out),"Cannot save restoration state");}replace_file(temporary,saved);return response;
  }
  json bubbles(const fs::path& folder) {
-  const auto image=load_page(folder/"original.png");
-  OnnxLayout detector(root/config.at("layout_model").get<std::string>(),config.value("threads",4),ort_execution(config,"layout"));
-  auto input=layout_input(image,false,false,detector.input_side());
-  const auto raw=detector.run(input);auto regions=decode_regions(raw,image.width,image.height);
-  refine_small_bubbles(image,detector,raw,regions);
-  return bubble_geometry(image,regions);
+  const auto started=Clock::now();const auto image=load_page(folder/"original.png");const auto model=root/config.at("layout_model").get<std::string>();
+  const auto key=display_detection_cache::identity(folder/"original.png",model,config);std::vector<Region> regions;
+  const bool cached=display_detection_cache::load(folder,key,regions);
+  if(!cached){OnnxLayout detector(model,config.value("threads",4),ort_execution(config,"layout"));auto input=layout_input(image,false,false,detector.input_side());const auto raw=detector.run(input);regions=decode_regions(raw,image.width,image.height);refine_small_bubbles(image,detector,raw,regions);display_detection_cache::save(folder,key,regions);}
+  auto result=bubble_geometry(image,regions);result["detectionCached"]=cached;result["elapsedMs"]=ms(started);return result;
  }
  json llm_object(const std::string& system,const json& batch,bool sequential=false,bool classify_referent=false,const std::string& translation_target={}){
   auto key=strip(read_text(root/config.at("llm_key_file").get<std::string>()));
    const LlmBatch wire(batch,sequential);json properties=wire.properties;
    if(!translation_target.empty()&&!classify_referent)for(const auto& row:wire.rows){const auto pattern=translation_output::pattern(translation_target,row.value("requiredNames",json::array()));if(!pattern.empty())properties[row.at("id").get<std::string>()]["pattern"]=pattern;}
    if(classify_referent)for(auto& item:properties.items())item.value()={{"type","object"},{"properties",{{"analysis",{{"type","string"}}},{"label",{{"type","string"},{"enum",json::array({"NAME","WORD","UNCERTAIN"})}}}}},{"required",json::array({"analysis","label"})},{"additionalProperties",false}};
-   json payload={{"model",config.at("llm_model")},{"temperature",0},{"max_tokens",2048},{"stream",false},{"messages",json::array({{{"role","system"},{"content",system}},{{"role","user"},{"content",wire.rows.dump(-1,' ',false)}}})},{"response_format",{{"type","json_schema"},{"json_schema",{{"name","manga_translation"},{"strict",true},{"schema",{{"type","object"},{"properties",properties},{"required",wire.required},{"additionalProperties",false}}}}}}}};
+   json payload={{"model",config.at("llm_model")},{"temperature",0},{"max_tokens",translation_target.empty()?2048:translation_retry::budget(batch)},{"stream",false},{"messages",json::array({{{"role","system"},{"content",system}},{{"role","user"},{"content",wire.rows.dump(-1,' ',false)}}})},{"response_format",{{"type","json_schema"},{"json_schema",{{"name","manga_translation"},{"strict",true},{"schema",{{"type","object"},{"properties",properties},{"required",wire.required},{"additionalProperties",false}}}}}}}};
    httplib::Client client(config.at("llm_host").get<std::string>(),config.at("llm_port").get<int>());client.set_connection_timeout(5);client.set_read_timeout(300);client.set_write_timeout(30);
-   auto response=client.Post("/v1/chat/completions",{{"Authorization","Bearer "+key}},payload.dump(),"application/json");require(bool(response),"Local Gemma API connection failed");require(response->status==200,"Local Gemma API returned HTTP "+std::to_string(response->status));
-   auto reply=json::parse(response->body);auto choice=reply.at("choices").at(0);json translated=json::object();
-   if(choice.value("finish_reason","")=="stop"){auto text=choice.at("message").value("content",std::string{});auto parsed=json::parse(text,nullptr,false);if(parsed.is_object()){if(classify_referent){json labels=json::object();for(const auto& item:parsed.items())if(item.value().is_object()&&item.value().contains("label")&&item.value().at("label").is_string()){const std::string label=item.value().at("label");if(label=="NAME"||label=="WORD"||label=="UNCERTAIN")labels[item.key()]=label;}parsed=std::move(labels);}translated=wire.restore(parsed);}}
+   const auto requestStart=Clock::now();auto response=client.Post("/v1/chat/completions",{{"Authorization","Bearer "+key}},payload.dump(),"application/json");require(bool(response),"Local Gemma API connection failed");require(response->status==200,"Local Gemma API returned HTTP "+std::to_string(response->status));
+   auto reply=json::parse(response->body);auto choice=reply.at("choices").at(0);std::cerr<<"LLM request "<<json{{"rows",batch.size()},{"elapsed_ms",ms(requestStart)},{"max_tokens",payload.at("max_tokens")},{"finish_reason",choice.value("finish_reason",std::string{})},{"usage",reply.value("usage",json::object())}}.dump()<<std::endl;json translated=json::object();
+   if(choice.value("finish_reason","")=="stop"||choice.value("finish_reason","")=="length"){auto text=choice.at("message").value("content",std::string{});auto parsed=json::parse(text,nullptr,false);if(parsed.is_object()){if(classify_referent){json labels=json::object();for(const auto& item:parsed.items())if(item.value().is_object()&&item.value().contains("label")&&item.value().at("label").is_string()){const std::string label=item.value().at("label");if(label=="NAME"||label=="WORD"||label=="UNCERTAIN")labels[item.key()]=label;}parsed=std::move(labels);}translated=wire.restore(parsed);}}
    return translated;
  }
  json contextual_dictionary(const std::string& source,const json& dictionary){
@@ -228,8 +229,8 @@ struct NativePipeline{
    const bool readings=std::any_of(batch.begin(),batch.end(),[](const json& r){return r.contains("pronunciation");});auto translated=llm_object(system+(readings?" The pronunciation field is a small reading annotation of the main text, not additional dialogue. Use it to read the name correctly; translate the main text once without duplicating its phonetic annotation.":"")+dictionary_instructions(dictionary_for_rows(dictionary,batch)),batch,true,false,target);for(const auto& row:batch){const std::string id=row.at("id");if(translated.contains(id)&&translated.at(id).is_string())translated[id]=correct_name_particles(translated.at(id),row.at("text"),resolved.at(id));}
    json missing=json::array();for(auto&r:batch){std::string id=r.at("id");if(translated.contains(id)&&translated[id].is_string()&&nonblank(translated[id])&&consistent_names(r.at("text"),translated[id],resolved.at(id))&&translation_output::valid(translated[id],target,expected_names(r.at("text"),resolved.at(id))))translations[id]=translated[id];else missing.push_back(r);}return missing;
   };
-  for(const auto& rows:groups)for(size_t begin=0;begin<rows.size();){size_t end=begin,bytes=0;json batch=json::array();while(end<rows.size()&&end-begin<12){auto size=rows[end].at("text").get<std::string>().size();if(end>begin&&bytes+size>2400)break;bytes+=size;batch.push_back(rows[end++]);}
-   auto pending=request(batch);if(!pending.empty())pending=request(pending);for(auto&r:pending){auto missing=request(json::array({r}));require(missing.empty(),"Gemma translation/name verification failed after retries for region "+r.at("id").get<std::string>());}begin=end;
+  for(size_t group=0;group<groups.size();++group)for(size_t begin=0;begin<groups[group].size();){const auto& rows=groups[group];const size_t batchLimit=group==1?1:12;size_t end=begin,bytes=0;json batch=json::array();while(end<rows.size()&&end-begin<batchLimit){auto size=rows[end].at("text").get<std::string>().size();if(end>begin&&bytes+size>2400)break;bytes+=size;batch.push_back(rows[end++]);}
+   translation_retry::resolve(batch,request);begin=end;
   }return translations;
  }
  json correct_names(json result,const json& dictionary){
@@ -287,7 +288,7 @@ struct NativePipeline{
  }
  json process(const fs::path& folder,const std::string& target,const std::function<void(std::string)>& progress,const json& dictionary=json::object()){auto whole=Clock::now();json timings;progress("loading_models");auto im=load_page(folder/"original.png");int w=im.width,h=im.height;auto gray=grayscale(im);std::vector<Region> found;bool retried=false;int layout_side=0,mask_side=0;size_t refinement_passes=0;auto detection=Clock::now();
  {OnnxLayout detector(root/config.at("layout_model").get<std::string>(),config.value("threads",4),ort_execution(config,"layout"));layout_side=detector.input_side();mask_side=layout_side/4;progress("detecting");auto input=layout_input(im,false,false,layout_side);auto raw=detector.run(input);bool retry=false;for(int q=0;q<300;++q){int cls=0;for(int c=1;c<4;++c)if(raw.logits[q*5+c]>raw.logits[q*5+cls])cls=c;float score=1.f/(1.f+std::exp(-std::clamp(raw.logits[q*5+cls],-30.f,30.f)));if(cls!=0||score<.12f||score>=.25f)continue;auto box=raw_box(raw.boxes.data()+q*4,w,h);if(box[2]-box[0]>=4&&box[3]-box[1]>=4&&dark_surround(gray,w,h,box))retry=true;}
- found=decode_regions(raw,w,h);refinement_passes=refine_small_bubbles(im,detector,raw,found);raw=LayoutRaw{};timings["detail_passes"]=refinement_passes;for(auto&r:found)if(r.cls==0)r.box=tighten_dark_text(gray,w,h,r.box);
+ found=decode_regions(raw,w,h);refinement_passes=refine_small_bubbles(im,detector,raw,found);{const auto cacheStart=Clock::now();display_detection_cache::save(folder,display_detection_cache::identity(folder/"original.png",root/config.at("layout_model").get<std::string>(),config),found);timings["display_cache_ms"]=ms(cacheStart);}raw=LayoutRaw{};timings["detail_passes"]=refinement_passes;for(auto&r:found)if(r.cls==0)r.box=tighten_dark_text(gray,w,h,r.box);
  if(retry){retried=true;progress("detecting_dark_text");auto inverse=layout_input(im,false,true,layout_side);auto inverted=detector.run(inverse);auto additional=decode_regions(inverted,w,h);inverted=LayoutRaw{};for(auto&r:additional){if(r.cls!=0||!dark_surround(gray,w,h,r.box))continue;auto colors=flat_colors(im,r.box);if(paper_background(gray,w,h,r.box)==0||(colors.valid&&(int(colors.background[0])+colors.background[1]+colors.background[2])/3.<80)){r.box=tighten_dark_text(gray,w,h,r.box);merge_text(found,std::move(r));}}}
  timings["panelDetailPasses"]=refine_panel_text(im,detector,found,mask_side,[&](){progress("detecting");});
  }release_heap();size_t suppressed=deduplicate(found);timings["detection_ms"]=ms(detection);std::vector<size_t> texts,bubbles;for(size_t i=0;i<found.size();++i){if(found[i].cls<2)texts.push_back(i);else if(found[i].cls==2)bubbles.push_back(i);}require(texts.size()<=150,"More than 150 text regions; split the page");std::stable_sort(texts.begin(),texts.end(),[&](size_t a,size_t b){if(found[a].panel_candidate!=found[b].panel_candidate)return !found[a].panel_candidate;int ya=std::nearbyint(found[a].box[1]/std::max(50.,h/20.)),yb=std::nearbyint(found[b].box[1]/std::max(50.,h/20.));return ya==yb?found[a].box[0]>found[b].box[0]:ya<yb;});json regions=json::array();std::vector<uint8_t> removal(size_t(w)*h),paint=im.rgb;fs::create_directories(folder/"crops");auto post=Clock::now();

@@ -18,16 +18,17 @@ const extension=path.resolve(__dirname,'../extension');
     {id:3,type:'text',bbox:[10,400,100,470],box:[10,400,100,470],mode:'tooltip',fontSize:24,text:'Uncertain',translation:'Uncertain'}
    ]};
    const stored=JSON.parse(localStorage.getItem('fixture')||'null');
-   window.fixture={original,geometry,result,mode:stored?.mode||'auto',outside:stored?.outside||'tooltip',items:stored?.items||[1,2].map(index=>({id:'job'+index,key:'key'+index,sourceURL:original+'#'+index,result:structuredClone(result)})),restores:0,holdRestore:false,failRestore:false,requests:0,submits:0,concurrent:0,maximum:0,hold:false,fail:false,listeners:[],changes:[],edited:null};
-   const persist=()=>localStorage.setItem('fixture',JSON.stringify({mode:fixture.mode,outside:fixture.outside,items:fixture.items}));
+   window.fixture={original,geometry,result,mode:stored?.mode||'auto',outside:stored?.outside||'tooltip',light:stored?.light||false,items:stored?.items||[1,2].map(index=>({id:'job'+index,key:'key'+index,sourceURL:original+'#'+index,result:structuredClone(result)})),restores:0,holdRestore:false,failRestore:false,requests:0,submits:0,concurrent:0,maximum:0,hold:false,fail:false,listeners:[],changes:[],edited:null};
+   const persist=()=>localStorage.setItem('fixture',JSON.stringify({mode:fixture.mode,outside:fixture.outside,light:fixture.light,items:fixture.items}));
    window.call=message=>new Promise(resolve=>fixture.listeners[0]({type:'control',...message},null,resolve));
    window.chrome={storage:{onChanged:{addListener:listener=>fixture.changes.push(listener)}},runtime:{onMessage:{addListener:listener=>fixture.listeners.push(listener)},sendMessage:async message=>{
     let value;
-    if(message.type==='settings')value={selector:'#manga img',displayMode:fixture.mode,outsideTextMode:fixture.outside};
+    if(message.type==='settings')value={selector:'#manga img',displayMode:fixture.mode,outsideTextMode:fixture.outside,lightweightDisplay:fixture.light};
     else if(message.type==='restore')value=structuredClone(fixture.items);
     else if(message.type==='asset'||message.type==='thumbnail')value=original;
     else if(message.type==='remember'){fixture.items=fixture.items.filter(item=>item.sourceURL!==message.sourceURL);fixture.items.push(structuredClone(message));persist();value=true;}
     else if(message.type==='displayMode'){fixture.mode=message.mode;persist();fixture.changes.forEach(listener=>listener({displayMode:{newValue:message.mode}},'local'));value=message.mode;}
+    else if(message.type==='lightweightDisplay'){fixture.light=message.enabled;persist();fixture.changes.forEach(listener=>listener({lightweightDisplay:{newValue:fixture.light}},'local'));value=fixture.light;}
     else if(message.type==='outsideTextMode'){fixture.outside=message.mode;persist();fixture.changes.forEach(listener=>listener({outsideTextMode:{newValue:message.mode}},'local'));value=message.mode;}
     else if(message.type==='restoration'){
      fixture.restores++;while(fixture.holdRestore)await new Promise(resolve=>setTimeout(resolve,10));if(fixture.failRestore)return {ok:false,error:'서버 409: busy'};
@@ -143,7 +144,7 @@ const extension=path.resolve(__dirname,'../extension');
   await page.evaluate(()=>call({action:'edit',key:'key1'}));assert.equal(await page.evaluate(()=>fixture.edited.result.regions[2].mode),'restore');
   await page.selectOption('#outside-text-mode','tooltip');await settled();assert.equal(await canvas(),before);
   await page.selectOption('#outside-text-mode','restore');await settled();assert.equal(await canvas(),restored);assert.equal(await page.evaluate(()=>fixture.restores),2);
-  await load();await settled();if((await canvas())!==restored){console.log('RELOAD_DEBUG',JSON.stringify(await page.evaluate(async()=>({state:await call({action:'status'}),restores:fixture.restores,outside:fixture.outside,items:fixture.items.map(i=>({key:i.key,regions:i.result.regions}))}))));fs.mkdirSync(path.join(__dirname,'../research/manga-lama-auto-2026-10-28/results'),{recursive:true});fs.writeFileSync(path.join(__dirname,'../research/manga-lama-auto-2026-10-28/results/reload-actual.png'),Buffer.from((await canvas()).split(',')[1],'base64'));fs.writeFileSync(path.join(__dirname,'../research/manga-lama-auto-2026-10-28/results/reload-expected.png'),Buffer.from(restored.split(',')[1],'base64'));throw Error('Restoration reload pixels differ');}
+  await load();await settled();if((await canvas())!==restored){console.log('RELOAD_DEBUG',JSON.stringify(await page.evaluate(async()=>({state:await call({action:'status'}),restores:fixture.restores,outside:fixture.outside,light:fixture.light,items:fixture.items.map(i=>({key:i.key,regions:i.result.regions}))}))));fs.mkdirSync(path.join(__dirname,'../research/manga-lama-auto-2026-10-28/results'),{recursive:true});fs.writeFileSync(path.join(__dirname,'../research/manga-lama-auto-2026-10-28/results/reload-actual.png'),Buffer.from((await canvas()).split(',')[1],'base64'));fs.writeFileSync(path.join(__dirname,'../research/manga-lama-auto-2026-10-28/results/reload-expected.png'),Buffer.from(restored.split(',')[1],'base64'));throw Error('Restoration reload pixels differ');}
   await page.evaluate(()=>{localStorage.removeItem('fixture');});await load();await page.evaluate(()=>fixture.holdRestore=true);
   await page.selectOption('#outside-text-mode','restore');await page.waitForFunction(()=>fixture.restores===1);
   await page.selectOption('#outside-text-mode','tooltip');await page.evaluate(()=>fixture.holdRestore=false);await settled();assert.equal(await canvas(),before);
@@ -151,6 +152,27 @@ const extension=path.resolve(__dirname,'../extension');
   await page.evaluate(()=>fixture.failRestore=false);await page.locator('#display-retry').click();await settled();assert.equal(await canvas(),restored);
   await page.evaluate(async()=>{const state=await call({action:'status'});await call({action:'run',keys:[state.items[2].key]});});await page.waitForFunction(()=>fixture.submits===1);await settled();
   assert.equal(await canvas(),restored);
-  console.log(JSON.stringify({ok:true,browser:browser.version(),allPagesWithoutSelection:true,sequential:true,noRetranslation:true,basePreserved:true,exportParity:true,editorPreservesOverrides:true,reloadCached:true,reversible:true,newTranslationInherits:true,staleReplyIgnored:true,busyRetry:true,outsideSwitch:true,independentModes:true,outsideExportEditorParity:true,deferredSettings:true,outsideStaleReplyIgnored:true,restorationCached:true,restorationExportEditorParity:true,restorationStaleReplyIgnored:true,restorationBusyRetry:true,restorationNewTranslation:true}));
+  // Lightweight mode must skip server work, remember both preferences, and
+  // restore the precise display without resubmitting OCR/translation jobs.
+  await page.evaluate(()=>{localStorage.removeItem('fixture');});await load();
+  await page.locator('#lightweight-display').check();await settled();
+  await page.evaluate(async()=>{await call({action:'displayMode',mode:'white'});await call({action:'outsideTextMode',mode:'restore'});});await page.waitForFunction(()=>document.querySelector('#display-mode').value==='white'&&document.querySelector('#outside-text-mode').value==='restore');await settled();
+  assert.equal(await page.evaluate(()=>fixture.requests),0);assert.equal(await page.evaluate(()=>fixture.restores),0);
+  assert.equal(await canvas(),before);assert.equal(await page.locator('#display-mode').isDisabled(),true);
+  await load();await settled();assert.equal(await page.locator('#lightweight-display').isChecked(),true);
+  assert.equal(await page.locator('#display-mode').inputValue(),'white');assert.equal(await page.locator('#outside-text-mode').inputValue(),'restore');
+  assert.equal(await page.evaluate(()=>fixture.requests),0);
+  await page.locator('#lightweight-display').uncheck();await settled();
+  assert.equal(await page.evaluate(()=>fixture.requests),2);assert.equal(await page.evaluate(()=>fixture.restores),2);assert.equal(await page.evaluate(()=>fixture.submits),0);
+  const precise=await canvas();assert.notEqual(precise,before);
+  await page.locator('#lightweight-display').check();await settled();assert.equal(await canvas(),before);
+  await page.locator('#lightweight-display').uncheck();await settled();assert.equal(await canvas(),precise);assert.equal(await page.evaluate(()=>fixture.restores),2);
+  await page.evaluate(()=>{localStorage.removeItem('fixture');});await load();await page.evaluate(()=>fixture.holdRestore=true);
+  await page.selectOption('#outside-text-mode','restore');await page.waitForFunction(()=>fixture.restores===1);
+  await page.locator('#lightweight-display').check();await page.evaluate(()=>fixture.holdRestore=false);await settled();
+  assert.equal(await canvas(),before);assert.equal(await page.evaluate(()=>fixture.restores),1);
+  assert.equal(await page.evaluate(()=>fixture.submits),0);
+  await page.screenshot({path:process.env.MANGA_TEST_SCREENSHOT||'panel-lightweight.png'});
+  console.log(JSON.stringify({lightweightToggle:true,lightweightReload:true,lightweightNoRequests:true,lightweightReversible:true,ok:true,browser:browser.version(),allPagesWithoutSelection:true,sequential:true,noRetranslation:true,basePreserved:true,exportParity:true,editorPreservesOverrides:true,reloadCached:true,reversible:true,newTranslationInherits:true,staleReplyIgnored:true,busyRetry:true,outsideSwitch:true,independentModes:true,outsideExportEditorParity:true,deferredSettings:true,outsideStaleReplyIgnored:true,restorationCached:true,restorationExportEditorParity:true,restorationStaleReplyIgnored:true,restorationBusyRetry:true,restorationNewTranslation:true}));
  }finally{await browser.close();}
 })().catch(error=>{console.error(error);process.exitCode=1;});

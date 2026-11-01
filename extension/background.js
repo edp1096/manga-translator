@@ -1,5 +1,5 @@
-const defaults = {server:'http://127.0.0.1:8793',token:'',target:'Korean',selector:'',captureFallback:true,displayMode:'auto',outsideTextMode:'tooltip'};
-importScripts('panel_scope.js','readers.js','names.js');
+const defaults = {server:'http://127.0.0.1:8793',token:'',target:'Korean',selector:'',captureFallback:true,displayMode:'auto',outsideTextMode:'tooltip',lightweightDisplay:false};
+importScripts('panel_scope.js','readers.js','names.js','job_cache.js');
 async function settings(){return {...defaults,...await chrome.storage.local.get(Object.keys(defaults))};}
 async function api(path, options={}) {
   const s=await settings();
@@ -45,8 +45,10 @@ function rememberNameTarget(msg,sender){const task=cacheWrites.catch(()=>{}).the
 let nameWrites=Promise.resolve();
 function saveNames(work){const task=nameWrites.catch(()=>{}).then(async()=>{const validated=MangaNames.validate(work),saved=await nameContext('');const others=saved.works.filter(item=>item.id!==validated.id).map(item=>({...item,scopes:(item.scopes||[]).filter(scope=>(item.target||'Korean')!==validated.target||!validated.scopes.includes(scope))}));if(others.length>=100)throw Error('작품 사전은 100개까지 저장할 수 있습니다.');const works=[...others,validated];await chrome.storage.local.set({nameWorks:works});return{works,work:validated};});nameWrites=task;return task;}
 let cacheWrites=Promise.resolve();
+const discardedJobs=new Set();
 function rememberPage(msg,sender){
  const task=cacheWrites.catch(()=>{}).then(async()=>{
+  if(discardedJobs.has(msg.id))return false;
   if(!sender.tab?.url||typeof msg.sourceURL!=='string'||msg.sourceURL.length>8192||!msg.result||!Array.isArray(msg.result.regions)||msg.result.regions.length>150)return false;
   const key=pageCacheKey(sender.tab.url),server=(await settings()).server,all=await chrome.storage.local.get(null),now=Date.now();
   const prior=all[key]?.server===server?all[key].items||[]:[];
@@ -87,6 +89,7 @@ chrome.runtime.onMessage.addListener((msg,sender,respond)=>{
         const latest=await nameContext(sender.tab?.url||'');if(latest.target!==context.target||latest.work?.id!==dictionary.id||latest.work?.revision!==dictionary.revision)throw Error('작업 중 명칭 사전이 바뀌었습니다. 다시 실행하세요.');return response;
       }
       case 'nameReading':return (await api(`/api/jobs/${msg.id}/names/reading`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({region:msg.region,preview:!!msg.preview}),timeout:120000})).json();
+      case 'lightweightDisplay':{const enabled=msg.enabled===true;await chrome.storage.local.set({lightweightDisplay:enabled});return enabled;}
       case 'outsideTextMode':{const mode=['white','restore'].includes(msg.mode)?msg.mode:'tooltip';await chrome.storage.local.set({outsideTextMode:mode});return mode;}
       case 'displayMode':{
         if(!['auto','white'].includes(msg.mode))throw Error('표시 방식이 올바르지 않습니다.');
@@ -99,7 +102,7 @@ chrome.runtime.onMessage.addListener((msg,sender,respond)=>{
       }
       case 'control':{
         if(!Number.isInteger(msg.tabId)||msg.tabId<0)throw Error('만화 페이지를 선택한 뒤 새로고침을 눌러주세요.');
-        const command={type:'control',action:msg.action,keys:msg.keys,key:msg.key,sourceURL:msg.sourceURL,mode:msg.mode};
+        const command={type:'control',action:msg.action,keys:msg.keys,key:msg.key,sourceURL:msg.sourceURL,mode:msg.mode,enabled:msg.enabled};
         if(msg.action==='locate')await chrome.tabs.update(msg.tabId,{active:true});
         try{return await chrome.tabs.sendMessage(msg.tabId,command);}
         catch(error){
@@ -140,7 +143,7 @@ chrome.runtime.onMessage.addListener((msg,sender,respond)=>{
       case 'submit':{
         const blob=await (await fetch(msg.data)).blob(), form=new FormData();
         const target=(await settings()).target,context=await nameContext(sender.tab?.url||'',target),dictionary=MangaNames.dictionary(context.work);
-        form.append('image',blob,'page.png');form.append('target',target);
+        form.append('image',blob,'page.png');form.append('target',target);form.append('pageURL',(sender.tab?.url||'').slice(0,8192));form.append('title',(sender.tab?.title||'').slice(0,1024));if(typeof msg.sourceURL==='string'&&msg.sourceURL.length<=8192)form.append('sourceURL',msg.sourceURL);if(Number.isInteger(msg.page)&&msg.page>0)form.append('page',String(msg.page));
         if(dictionary?.entries.length)form.append('dictionary',JSON.stringify(dictionary));
         return (await api('/api/jobs',{method:'POST',body:form})).json();
       }
@@ -174,6 +177,12 @@ chrome.runtime.onMessageExternal.addListener((msg,sender,respond)=>{
  let origin;try{origin=new URL(sender.url).origin;}catch{return false;}
  if(!['http://127.0.0.1:8794','http://localhost:8794'].includes(origin))return false;
  (async()=>{
+  if(msg.type==='control-cache-stats')return MangaJobCache.stats();
+  if(msg.type==='control-cache-prune'){
+   const task=cacheWrites.catch(()=>{}).then(async()=>{if(msg.all){const stored=await chrome.storage.local.get(null);for(const [key,value]of Object.entries(stored)){if(key.startsWith('page:'))for(const item of value.items||[])discardedJobs.add(item.id);else if(key.startsWith('edit:'))discardedJobs.add(key.slice(5));}}else for(const id of msg.ids||[])discardedJobs.add(id);while(discardedJobs.size>10000)discardedJobs.delete(discardedJobs.values().next().value);return MangaJobCache.prune(msg.ids,!!msg.all);});cacheWrites=task;const result=await task;
+   for(const tab of await chrome.tabs.query({}))chrome.tabs.sendMessage(tab.id,{type:'jobsRemoved',ids:msg.ids||[],all:!!msg.all}).catch(()=>{});
+   return result;
+  }
   if(msg.type==='control-pair'){
    if(typeof msg.code!=='string'||!/^[a-f0-9]{64}$/.test(msg.code))throw Error('연결 코드가 올바르지 않습니다.');
    const response=await fetch('http://127.0.0.1:8794/api/extension/pair',{method:'POST',headers:{'Content-Type':'application/json','X-Manga-Extension':chrome.runtime.id},body:JSON.stringify({code:msg.code}),signal:AbortSignal.timeout(10000)});

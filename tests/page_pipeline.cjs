@@ -10,7 +10,7 @@ const assert=require('node:assert/strict'),path=require('node:path'),{chromium}=
    window.fixture={events:[],listeners:[],changes:[],submits:0,hold:false,concurrent:0,maximum:0,failOnce:false,busyOnce:false,failPaint:false,mode:'white',outside:'restore',...options};
    const f=fixture,wait=ms=>new Promise(r=>setTimeout(r,ms));window.call=m=>new Promise(r=>f.listeners[0]({type:'control',...m},null,r));
    window.chrome={storage:{onChanged:{addListener:fn=>f.changes.push(fn)}},runtime:{onMessage:{addListener:fn=>f.listeners.push(fn)},sendMessage:async m=>{
-    let value;if(m.type==='settings')value={selector:'#manga img',displayMode:f.mode,outsideTextMode:f.outside};
+    let value;if(m.type==='settings')value={selector:'#manga img',displayMode:f.mode,outsideTextMode:f.outside,lightweightDisplay:!!f.light};
     else if(m.type==='restore')value=[];
     else if(m.type==='remember'){f.events.push('save:'+m.id);value=true;}
     else if(m.type==='submit'){value={id:'job-'+(++f.submits)};f.events.push('submit:'+value.id);}
@@ -34,10 +34,10 @@ const assert=require('node:assert/strict'),path=require('node:path'),{chromium}=
  const idle=p=>wait(p,s=>!s.running&&!s.displayBusy);
  function order(events,count=3){for(let n=1;n<count;n++){const finish=events.indexOf('paint:job-'+n),next=events.indexOf('submit:job-'+(n+1));assert(finish>=0&&next>finish,'Next page submitted before previous display: '+events.join(', '));}}
  let checks=0;
- for(const options of [{},{outside:'white'},{outside:'tooltip',mode:'auto'}]){
+ for(const options of [{},{outside:'white'},{outside:'tooltip',mode:'auto'},{outside:'restore',mode:'white',light:true}]){
   const t=await setup({...options,hold:options.outside===undefined});await start(t);
   if(t.page&&options.outside===undefined){await t.page.waitForFunction(()=>fixture.events.includes('restoration:job-1'));const s=await t.page.evaluate(()=>call({action:'status'}));assert(s.running&&s.displayBusy);assert.equal(s.items[0].state,'이미지 복원');assert.match(s.message,/0\/3 완료/);assert.equal(await t.page.evaluate(()=>fixture.submits),1);await t.page.evaluate(()=>fixture.hold=false);}
-  const s=await idle(t.page);assert.match(s.message,/3장 완료 · 0장 실패/);assert(s.items.every(i=>i.state==='완료'));order(await t.page.evaluate(()=>fixture.events));assert.equal(await t.page.evaluate(()=>fixture.maximum),options.mode==='auto'?0:1);await t.page.close();checks++;
+  const s=await idle(t.page);assert.match(s.message,/3장 완료 · 0장 실패/);assert(s.items.every(i=>i.state==='완료'));order(await t.page.evaluate(()=>fixture.events));assert.equal(await t.page.evaluate(()=>fixture.maximum),options.mode==='auto'||options.light?0:1);await t.page.close();checks++;
  }
  // Stop while inpainting, then continue from the completed translation.
  {const t=await setup({hold:true});await start(t);await t.page.waitForFunction(()=>fixture.events.includes('restoration:job-1'));await t.page.evaluate(()=>call({action:'stop'}));await t.page.evaluate(()=>fixture.hold=false);const stopped=await idle(t.page);assert.match(stopped.message,/중지됨 · 0장 완료/);assert.equal(await t.page.evaluate(()=>fixture.submits),1);assert.equal(await t.page.evaluate(()=>fixture.events.includes('asset:job-1:restored-v1.png')),false);await start(t);assert.match((await idle(t.page)).message,/3장 완료/);assert.equal(await t.page.evaluate(()=>fixture.submits),3);order(await t.page.evaluate(()=>fixture.events));await t.page.close();checks++;}

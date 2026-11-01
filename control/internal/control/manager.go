@@ -96,6 +96,9 @@ type managedProcess struct {
 	resource processResource
 }
 type Manager struct {
+	update        UpdateState
+	updateRelease *updateRelease
+	updatePending bool
 	root          string
 	platform      string
 	bundle        fs.FS
@@ -207,6 +210,11 @@ func NewManager(root string, bundle fs.FS, logger *log.Logger) (*Manager, error)
 	if e = m.installExtension(); e != nil {
 		cancel()
 		return nil, e
+	}
+	if updateProbeToken != "" {
+		m.updatePending = true
+		m.busy = true
+		m.update = UpdateState{Status: "restarting", Version: Version}
 	}
 	go m.monitor()
 	return m, nil

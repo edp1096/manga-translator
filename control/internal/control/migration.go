@@ -196,7 +196,20 @@ func freshMigrationDestination(root string) error {
 	return nil
 }
 
+type ImportOptions struct {
+	Jobs string `json:"jobs"`
+}
+
+func (o ImportOptions) valid() bool {
+	return o.Jobs == "" || o.Jobs == "all" || o.Jobs == "kept" || o.Jobs == "none"
+}
 func scanMigration(source string) ([]migrationFile, []string, int64, error) {
+	return scanMigrationOptions(source, ImportOptions{Jobs: "all"})
+}
+func scanMigrationOptions(source string, options ImportOptions) ([]migrationFile, []string, int64, error) {
+	if !options.valid() {
+		return nil, nil, 0, fmt.Errorf("잘못된 작업 가져오기 옵션")
+	}
 	var files []migrationFile
 	var paths []string
 	var total int64
@@ -209,6 +222,17 @@ func scanMigration(source string) ([]migrationFile, []string, int64, error) {
 		e := filepath.WalkDir(base, func(path string, d fs.DirEntry, e error) error {
 			if e != nil {
 				return e
+			}
+			relative, _ := filepath.Rel(source, path)
+			relative = filepath.ToSlash(relative)
+			if options.Jobs == "none" && relative == "data/native_api/jobs" {
+				return filepath.SkipDir
+			}
+			if options.Jobs == "kept" && strings.HasPrefix(relative, "data/native_api/jobs/") && strings.Count(relative, "/") == 3 && d.IsDir() {
+				marker, err := os.Lstat(filepath.Join(path, "keep.json"))
+				if err != nil || !marker.Mode().IsRegular() {
+					return filepath.SkipDir
+				}
 			}
 			info, e := d.Info()
 			if e != nil {
@@ -309,7 +333,10 @@ func copyMigrationFile(ctx context.Context, source, dest string, f migrationFile
 	return os.Chtimes(dest, f.modified, f.modified)
 }
 
-func importData(ctx context.Context, root, source string, progress func(Progress)) (report MigrationReport, err error) {
+func importData(ctx context.Context, root, source string, progress func(Progress)) (MigrationReport, error) {
+	return importDataOptions(ctx, root, source, ImportOptions{Jobs: "all"}, progress)
+}
+func importDataOptions(ctx context.Context, root, source string, options ImportOptions, progress func(Progress)) (report MigrationReport, err error) {
 	source, err = migrationSource(root, source)
 	if err != nil {
 		return
@@ -325,7 +352,7 @@ func importData(ctx context.Context, root, source string, progress func(Progress
 		return
 	}
 	defer unlock()
-	files, paths, total, e := scanMigration(source)
+	files, paths, total, e := scanMigrationOptions(source, options)
 	if e != nil {
 		err = e
 		return
@@ -430,6 +457,12 @@ func importData(ctx context.Context, root, source string, progress func(Progress
 }
 
 func (m *Manager) ImportData(source string) error {
+	return m.ImportDataOptions(source, ImportOptions{Jobs: "all"})
+}
+func (m *Manager) ImportDataOptions(source string, options ImportOptions) error {
+	if !options.valid() {
+		return fmt.Errorf("잘못된 작업 가져오기 옵션")
+	}
 	m.mu.Lock()
 	if m.busy || len(m.processes) > 0 || m.settings.Model != "" || m.settings.Layout != "" || m.settings.OCR != "" {
 		m.mu.Unlock()
@@ -458,7 +491,7 @@ func (m *Manager) ImportData(source string) error {
 			}
 		}
 		if err == nil {
-			_, err = importData(ctx, m.root, strings.TrimSpace(source), func(p Progress) { m.mu.Lock(); m.progress = p; m.mu.Unlock() })
+			_, err = importDataOptions(ctx, m.root, strings.TrimSpace(source), options, func(p Progress) { m.mu.Lock(); m.progress = p; m.mu.Unlock() })
 		}
 		var settings Settings
 		receipts := map[string]Receipt{}
@@ -493,4 +526,28 @@ func (m *Manager) ImportData(source string) error {
 		m.mu.Unlock()
 	}()
 	return nil
+}
+
+func (m *Manager) PreviewImport(source string, options ImportOptions) (map[string]any, error) {
+	source, e := migrationSource(m.root, strings.TrimSpace(source))
+	if e != nil {
+		return nil, e
+	}
+	unlock, e := lockRoot(source)
+	if e != nil {
+		return nil, e
+	}
+	defer unlock()
+	files, _, bytes, e := scanMigrationOptions(source, options)
+	if e != nil {
+		return nil, e
+	}
+	jobs := map[string]bool{}
+	for _, f := range files {
+		p := strings.Split(filepath.ToSlash(f.relative), "/")
+		if len(p) > 3 && p[0] == "data" && p[1] == "native_api" && p[2] == "jobs" {
+			jobs[p[3]] = true
+		}
+	}
+	return map[string]any{"files": len(files), "bytes": bytes, "jobs": len(jobs)}, nil
 }
