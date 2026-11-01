@@ -80,18 +80,21 @@ func libraryWork(raw string) string {
 }
 
 type LibraryChapter struct {
-	URL     string    `json:"url"`
-	Work    string    `json:"work"`
-	Title   string    `json:"title"`
-	Target  string    `json:"target"`
-	IDs     []string  `json:"ids"`
-	Pages   int       `json:"pages"`
-	Ready   int       `json:"ready"`
-	Failed  int       `json:"failed"`
-	Kept    int       `json:"kept"`
-	Updated time.Time `json:"updated"`
+	GroupID    string    `json:"groupID,omitempty"`
+	GroupTitle string    `json:"groupTitle,omitempty"`
+	URL        string    `json:"url"`
+	Work       string    `json:"work"`
+	Title      string    `json:"title"`
+	Target     string    `json:"target"`
+	IDs        []string  `json:"ids"`
+	Pages      int       `json:"pages"`
+	Ready      int       `json:"ready"`
+	Failed     int       `json:"failed"`
+	Kept       int       `json:"kept"`
+	Updated    time.Time `json:"updated"`
 }
 type LibraryList struct {
+	Groups   []LibraryGroup   `json:"groups"`
 	Chapters []LibraryChapter `json:"chapters"`
 	Unlinked int              `json:"unlinked"`
 	Policy   JobPolicy        `json:"policy"`
@@ -106,6 +109,16 @@ func (m *Manager) Library(query string) (LibraryList, error) {
 	out.Policy, e = readJobPolicy(m.root)
 	if e != nil {
 		return out, e
+	}
+	out.Groups, e = readLibraryGroups(m.root)
+	if e != nil {
+		return out, e
+	}
+	linked := map[string]LibraryGroup{}
+	for _, g := range out.Groups {
+		for _, source := range g.Sources {
+			linked[source] = g
+		}
 	}
 	groups := map[string]*LibraryChapter{}
 	groupedJobs := map[string][]JobInfo{}
@@ -149,7 +162,11 @@ func (m *Manager) Library(query string) (LibraryList, error) {
 			return out, e
 		}
 		c.Ready = len(saved)
-		if query == "" || strings.Contains(strings.ToLower(c.Title+" "+c.URL+" "+c.Work+" "+c.Target), query) {
+		if g, ok := linked[c.Work]; ok {
+			c.GroupID = g.ID
+			c.GroupTitle = g.Title
+		}
+		if query == "" || strings.Contains(strings.ToLower(c.GroupTitle+" "+c.Title+" "+c.URL+" "+c.Work+" "+c.Target), query) {
 			out.Chapters = append(out.Chapters, *c)
 		}
 	}
@@ -242,6 +259,7 @@ func (m *Manager) savedJobs(jobs []JobInfo, page, target string, withResult bool
 	return out, nil
 }
 func (m *Manager) libraryRoutes(mux *http.ServeMux) {
+	m.libraryGroupRoutes(mux)
 	mux.HandleFunc("POST /api/library/presentation/{id}", func(w http.ResponseWriter, r *http.Request) {
 		token, e := os.ReadFile(filepath.Join(m.root, "data/native_api/access-token"))
 		expected := "Bearer " + strings.TrimSpace(string(token))

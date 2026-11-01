@@ -199,7 +199,7 @@ chrome.runtime.onMessageExternal.addListener((msg,sender,respond)=>{
 // Reapply stored results on completed navigation; no panel is opened automatically.
 chrome.tabs.onUpdated.addListener((tabId,change,tab)=>{
  if(change.status!=='complete'||!/^https?:/.test(tab.url||'')||/^http:\/\/(localhost|127\.0\.0\.1):8794/.test(tab.url||''))return;
- (async()=>{if(!await MangaLibrary.known(tab.url))return;const saved=await MangaLibrary.restore(tab.url,tabId);if(!saved.length)return;const current=await chrome.tabs.get(tabId);if(current.url!==tab.url)return;
+ (async()=>{if(!await MangaLibrary.known(tab.url,tabId))return;const saved=await MangaLibrary.restore(tab.url,tabId);if(!saved.length)return;const current=await chrome.tabs.get(tabId);if(current.url!==tab.url)return;
  await chrome.scripting.executeScript({target:{tabId,frameIds:[0]},files:['polygon.js','render.js','readers.js','names.js','content.js']});
  await chrome.tabs.sendMessage(tabId,{type:'control',action:'scan'});
  })().catch(error=>console.debug('저장 번역 불러오기:',error.message));

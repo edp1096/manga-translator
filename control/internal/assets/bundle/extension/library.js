@@ -8,7 +8,7 @@
  }
  async function remember(msg){catalog=null;await request('/presentation/'+encodeURIComponent(msg.id),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({result:msg.result,bubbles:msg.bubbles})});}
  let catalog=null,catalogAt=0,catalogServer='';
- async function known(url){const s=await settings();if(!catalog||Date.now()-catalogAt>30000||catalogServer!==s.server){catalog=(await(await request('')).json()).chapters;catalogAt=Date.now();catalogServer=s.server;}return catalog.some(c=>MangaReaders.pageIdentity(c.url)===MangaReaders.pageIdentity(url));}
+ async function known(url,tabId){if(Number.isInteger(tabId)){const selected=(await chrome.storage.session.get('libraryTarget:'+tabId))['libraryTarget:'+tabId];if(selected?.url===MangaReaders.pageIdentity(url))return true;}const s=await settings();if(!catalog||Date.now()-catalogAt>30000||catalogServer!==s.server){catalog=(await(await request('')).json()).chapters;catalogAt=Date.now();catalogServer=s.server;}return catalog.some(c=>MangaReaders.pageIdentity(c.url)===MangaReaders.pageIdentity(url));}
  chrome.storage.onChanged.addListener((changes,area)=>{if(area==='local'&&changes.target)chrome.storage.session.get(null).then(all=>chrome.storage.session.remove(Object.keys(all).filter(k=>k.startsWith('libraryTarget:'))));});
  globalThis.MangaLibrary={request,restore,remember,known};
 })();

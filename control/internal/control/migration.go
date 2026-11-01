@@ -17,7 +17,7 @@ import (
 
 // Only persistent user assets move between releases. Executables, extension
 // code, caches, process locks and logs always belong to the new installation.
-var migrationPaths = []string{"config", "models", "runtime", "data/api-key", "data/native_api", "data/install-state.json", "data/downloads"}
+var migrationPaths = []string{"data/library-groups.json", "config", "models", "runtime", "data/api-key", "data/native_api", "data/install-state.json", "data/downloads"}
 
 const migrationDir = ".data-import"
 
