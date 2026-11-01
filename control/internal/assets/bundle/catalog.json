@@ -179,6 +179,21 @@
       "name": "Gemma 4 12B QAT · UD-Q4_K_XL",
       "memoryGiB": 16,
       "note": "RTX 4070 SUPER 12GB 실측 · CUDA MTP4 가속 · GPU 메모리 여유가 작습니다. CPU·Vulkan은 일반 생성"
+    },
+    {
+      "id": "manga-lama",
+      "name": "Manga LaMa · 배경 이미지 복원",
+      "group": "restoration",
+      "artifacts": [
+        "manga-lama"
+      ],
+      "dependencies": [
+        "ort",
+        "vcredist"
+      ],
+      "path": "models/manga-lama/manga-lama-512.onnx",
+      "memoryGiB": 2,
+      "note": "선택 영역의 글자를 지우고 배경을 복원합니다. 설치하면 사용할 수 있으며 일반 번역에는 필요하지 않습니다. 영역 탐지의 CPU·CUDA·DirectML 설정을 따릅니다."
     }
   ],
   "runtimes": [
@@ -586,14 +601,14 @@
       "group": "application",
       "platform": "linux-arm64",
       "url": "embedded:engine/linux-arm64.gz",
-      "sha256": "a576a7cb0c68f239ad8b92001b353609fc632b02cba7a62de0c6777783c33ddb",
-      "size": 724093,
+      "sha256": "0ba4c58a25975b672ec7c89789fddf8c97a7f58e893298177d37e159ac1681f8",
+      "size": 1320015,
       "format": "gzip",
       "files": [
         {
           "path": "bin/manga-translator-server",
-          "sha256": "7df73a0cf07fe07ac6062d38032fd3bc21b94c7c2b4a4679ad8e545752df1923",
-          "size": 1614704,
+          "sha256": "54c2894a1350d265f05a98b0fd475487faaac4ac89e0faa40baf361366e251e6",
+          "size": 2985432,
           "executable": true
         }
       ]
@@ -2788,6 +2803,25 @@
           "size": 253708800
         }
       ]
+    },
+    {
+      "id": "manga-lama",
+      "name": "Manga LaMa 512",
+      "group": "restoration",
+      "platform": "all",
+      "url": "https://huggingface.co/mayocream/lama-manga-onnx/resolve/b55497aadbfcb9740e1ed16f008268d71b4f3f79/lama-manga.onnx",
+      "sha256": "4512adab295ee5a5e02ccd1bdf8d45dccbac88309d9cff1532ffd5de876f02a4",
+      "size": 207482644,
+      "format": "patch",
+      "patch": "manga-lama-512.patch",
+      "patchSha256": "f3b4a1c94af2304ee3807d75e87dbf398faefdb0b800f57e3284784d6a65e6a7",
+      "files": [
+        {
+          "path": "models/manga-lama/manga-lama-512.onnx",
+          "sha256": "e000ed643d84593d28432c63f04b1d1a91123f3450c8ba65b1e8b4f009ccaea4",
+          "size": 207482607
+        }
+      ]
     }
   ],
   "licenses": [
@@ -2850,6 +2884,16 @@
       "name": "Clipper2-ts",
       "url": "https://github.com/countertype/clipper2-ts",
       "license": "BSL-1.0 (Boost Software License 1.0)"
+    },
+    {
+      "name": "Manga LaMa · ONNX export",
+      "url": "https://huggingface.co/mayocream/lama-manga-onnx",
+      "license": "Apache-2.0 (model card)"
+    },
+    {
+      "name": "AnimeMangaInpainting · original model",
+      "url": "https://huggingface.co/dreMaz/AnimeMangaInpainting",
+      "license": "MIT (model card)"
     }
   ]
 }

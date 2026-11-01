@@ -170,7 +170,7 @@ func loadCatalog(bundle fs.FS, platform string) (Catalog, error) {
 		if model.Group == "ocr" && model.Backend != "litert" && model.Backend != "onnx-v2-kv" && model.Backend != "baberu-int4" && model.Backend != "baberu-fp16" {
 			return result, fmt.Errorf("unsupported OCR backend %q", model.Backend)
 		}
-		if model.Group != "layout" && model.Group != "ocr" && model.Group != "translation" {
+		if model.Group != "layout" && model.Group != "ocr" && model.Group != "translation" && model.Group != "restoration" {
 			return result, fmt.Errorf("invalid model group")
 		}
 		if _, err := safeRelative(model.Path); err != nil {
@@ -196,7 +196,7 @@ func loadCatalog(bundle fs.FS, platform string) (Catalog, error) {
 		}
 	}
 	for _, a := range result.Artifacts {
-		if (a.Group == "translation" || a.Group == "ocr" || a.Group == "layout") && len(result.Models) > 0 && !modelArtifacts[a.ID] {
+		if (a.Group == "translation" || a.Group == "ocr" || a.Group == "layout" || a.Group == "restoration") && len(result.Models) > 0 && !modelArtifacts[a.ID] {
 			return result, fmt.Errorf("missing model metadata %q", a.ID)
 		}
 	}

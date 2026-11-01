@@ -1,0 +1,61 @@
+Manga LaMa optional restoration installation (2026-11-01)
+
+The installer exposes restoration separately from layout, OCR and translation.
+Downloading it enables both automatic and manual image restoration. It is not a
+startup prerequisite for ordinary translation. Downloads are explicit; the model
+is never fetched when an editing request is made. Missing-model responses are
+translated into installation guidance by the extension.
+
+Upstream weights: https://huggingface.co/dreMaz/AnimeMangaInpainting
+ONNX export: https://huggingface.co/mayocream/lama-manga-onnx
+Pinned revision: b55497aadbfcb9740e1ed16f008268d71b4f3f79
+Source lama-manga.onnx: 207482644 bytes
+SHA256: 4512adab295ee5a5e02ccd1bdf8d45dccbac88309d9cff1532ffd5de876f02a4
+
+The upstream model has symbolic batch and output dimensions. The existing native
+engine expects a fixed 1x3x512x512 image and 1x1x512x512 mask. The reproducible
+conversion in tools/modelpatch/fix_manga_lama.py changes only public input/output
+shape metadata. All operation nodes and initializer weights were compared and
+are unchanged. Generate the small BSDIFF patch with tools/modelpatch; the native
+Go installer verifies the download, patch and converted output SHA256 values.
+No Python or ONNX editing dependency is needed in the portable application.
+
+Installed path: models/manga-lama/manga-lama-512.onnx
+Output size: 207482607 bytes
+Output SHA256: e000ed643d84593d28432c63f04b1d1a91123f3450c8ba65b1e8b4f009ccaea4
+Patch size: 361 bytes
+Patch SHA256: f3b4a1c94af2304ee3807d75e87dbf398faefdb0b800f57e3284784d6a65e6a7
+This is a newly verified derivation; identity with a previous Windows-local
+manga-lama-512.onnx has not been established.
+
+OP5P validation: isolated native server using the currently installed ARM64
+binary and ONNX Runtime 1.31.0, copied real page, identical manual restoration
+request before/after model installation: HTTP 500 -> HTTP 200, CPU, 167x104 PNG,
+14.77 seconds including model construction. Original jobs were untouched.
+Tests cover installer dependencies on Linux ARM64/x64 and Windows x64, optional
+model behavior, conversion installation using the real upstream artifact, and
+extension error guidance. Windows CPU/GPU inference requires separate hardware
+verification; a cross-build is not a Windows inference test.
+
+The source bundle's ARM64 engine was older than the installed 0.4.0 release.
+For this controller-only repair its embedded ARM64 engine is synchronized to the
+verified installed binary, SHA256:
+54c2894a1350d265f05a98b0fd475487faaac4ac89e0faa40baf361366e251e6
+No native engine source changes were required.
+
+CUDA verification (DGX Spark, ARM64 Linux, NVIDIA GB10):
+See docs/manga-lama-cuda/results.json and tests/restoration_compare/.
+Both benchmarks execute C++ binaries without Python; LibTorch 2.13.0+cu130 and
+ONNX Runtime 1.31.0 CUDA 13 used existing container CUDA libraries. Identical
+512x512 image/mask, FP32, TF32 disabled, device-resident inputs, synchronized
+measurements. One input, 10 runs, first two excluded from steady-state median.
+TorchScript: median 48.4387 ms; ONNX: median 126.8435 ms (2.62x ratio).
+Masked output mean absolute difference: 8.902e-6, maximum 0.001855.
+TorchScript initial runs took 2.39 and 3.40 seconds; loading took 0.97 seconds.
+The speedup requires keeping the loaded model alive, not reconstructing it per
+request. Other services remained running; this was not an exclusive GPU test.
+This verifies a possible future CUDA backend, not integration into the app.
+The installed app still uses ONNX Runtime and follows layout execution settings.
+Private source images, model binaries, and development environments are excluded
+from source control. run.sh expects /work and the documented container LibTorch
+layout; adjust those paths for another verification environment.

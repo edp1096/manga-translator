@@ -7,13 +7,13 @@
  let draftLLM=$state('cpu'),draftLayout=$state('cpu'),draftOCR=$state('cpu'),draftGPU=$state('');
  let importSource=$state('');
  let draftThreads=$state(0),draftAuto=$state(false),draftLoaded=false,deleteID=$state('');
- const modelGroups=[['layout','말풍선·글자 탐지'],['ocr','글자 인식 (OCR)'],['translation','대사 번역 (언어모델)']];
+ const modelGroups=[['layout','말풍선·글자 탐지'],['ocr','글자 인식 (OCR)'],['translation','대사 번역 (언어모델)'],['restoration','배경 이미지 복원']];
  const isBaberu=model=>model?.backend?.startsWith('baberu-');
  const incompatible=model=>model.group==='ocr'&&((model.backend==='litert'&&state?.settings.ocrExecution&&state.settings.ocrExecution!=='cpu')||(isBaberu(model)&&state?.settings.ocrExecution==='directml'));
  const engineLabel=model=>isBaberu(model)?`ONNX Runtime · ${model.backend==='baberu-int4'?'INT4':'FP16'} 인코더 / INT8 디코더`:model.backend==='onnx-v2-kv'?'ONNX Runtime · FP32 + KV 캐시':'LiteRT · KV 캐시';
  const chosen=()=>Boolean(state?.settings.layout&&state?.settings.ocr&&state?.settings.model);
  const locked=()=>acting||state?.busy||running()||quitting;
- const selectedName=group=>state?.models?.find(m=>m.group===group&&m.selected)?.name||'모델을 선택하세요';
+ const selectedName=group=>group==='restoration'?(state?.models?.some(m=>m.group===group&&m.installed)?'설치됨 · 복원 사용 가능':'선택 기능 · 복원하려면 다운로드하세요'):state?.models?.find(m=>m.group===group&&m.selected)?.name||'모델을 선택하세요';
  const menus=[['overview','grid','개요'],['setup','download','설치 관리'],['extension','chrome','크롬 확장'],['logs','activity','실행 기록']];
  const groupIcons={application:'server',runtime:'cpu',layout:'bubble',ocr:'text',translation:'translate'};
  const descriptions={application:'페이지 분석부터 번역 결과까지 처리합니다.',runtime:'이 기기에 맞는 네이티브 실행 환경입니다.',layout:'Koharu 768 · 말풍선과 글자 영역을 찾습니다.',ocr:'Hayai v2 INT8 · 원문을 읽습니다.',translation:'선택한 언어모델로 대사를 옮깁니다.'};
@@ -103,7 +103,7 @@
          {#if model.backend}<p>실행 엔진: {engineLabel(model)}</p>{/if}<p>{model.memoryGiB} GiB {group==='translation'?'시스템 RAM 권장':'여유 메모리 권장 (추정)'}</p><p>필요한 다운로드 {bytes(model.downloadSize)} · 런타임 포함, 이어받기 전 전체 파일 기준</p>
         </InfoPopover></div></div>
 
-        <div class="inline-actions"><button class="button secondary" disabled={locked()||incompatible(model)} onclick={()=>act(model.selected?'models/clear':'models/select',{id:model.id})}>{incompatible(model)?'선택 불가':model.selected?'선택 해제':'이 모델 선택'}</button><button class="button primary" disabled={locked()} onclick={()=>act('models/download',{id:model.id})}>{model.installed?'파일 확인·복구':'다운로드·이어받기'}</button>
+        <div class="inline-actions">{#if group!=='restoration'}<button class="button secondary" disabled={locked()||incompatible(model)} onclick={()=>act(model.selected?'models/clear':'models/select',{id:model.id})}>{incompatible(model)?'선택 불가':model.selected?'선택 해제':'이 모델 선택'}</button>{/if}<button class="button primary" disabled={locked()} onclick={()=>act('models/download',{id:model.id})}>{model.installed?'파일 확인·복구':'다운로드·이어받기'}</button>
         {#if model.present&&!model.selected}<button class="text-button" disabled={locked()} onclick={()=>deleteID=model.id}>삭제</button>{/if}</div>
         {#if deleteID===model.id}<div class="delete-confirm"><p>이 모델 파일과 미완료 다운로드를 삭제합니다. 다른 모델이 사용하는 공유 파일, 공용 런타임과 번역 결과는 보존됩니다.</p><button class="button secondary" disabled={locked()} onclick={async()=>{await act('models/delete',{id:model.id});deleteID='';}}>삭제 확인</button><button class="text-button" onclick={()=>deleteID=''}>취소</button></div>{/if}
        </article>

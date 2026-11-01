@@ -36,6 +36,8 @@ func selection(s Settings, group string) string {
 		return s.Layout
 	case "ocr":
 		return s.OCR
+	case "restoration":
+		return "" // Optional restoration is enabled by installation, not selection.
 	default:
 		return s.Model
 	}
@@ -173,6 +175,9 @@ func (m *Manager) SelectModel(id string) error {
 	model := m.modelByID(id)
 	if model == nil {
 		return fmt.Errorf("알 수 없는 모델입니다")
+	}
+	if model.Group == "restoration" {
+		return fmt.Errorf("복원 모델은 다운로드하면 사용할 수 있습니다")
 	}
 	m.mu.Lock()
 	defer m.mu.Unlock()

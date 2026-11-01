@@ -6,7 +6,12 @@ async function api(path, options={}) {
   if(!s.token) throw Error('관리 앱의 크롬 확장에서 ‘확장 연결하기’를 먼저 누르세요. 토큰은 자동으로 전달됩니다.');
   const timeout=options.timeout||25000;delete options.timeout;
   const response=await fetch(s.server.replace(/\/$/,'')+path,{...options,headers:{...options.headers,Authorization:`Bearer ${s.token}`},signal:AbortSignal.timeout(timeout)});
-  if(!response.ok) throw Error(`서버 ${response.status}: ${(await response.text()).slice(0,250)}`);
+  if(!response.ok) {
+    const message=(await response.text()).slice(0,1000);
+    if(path.includes('/restoration')&&(message.includes('Manga LaMa model is missing')||message.includes('이미지 복원 모델이 없습니다')))
+      throw Error('이미지 복원 모델이 설치되지 않았습니다. 관리 앱 → 설치 관리 → 배경 이미지 복원에서 Manga LaMa를 다운로드한 뒤 다시 시도하세요.');
+    throw Error(`서버 ${response.status}: ${message.slice(0,250)}`);
+  }
   return response;
 }
 // Service workers have no FileReader. Convert in bounded chunks instead.

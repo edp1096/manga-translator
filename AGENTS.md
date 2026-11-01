@@ -10,8 +10,10 @@ copy. Bring GPU verification results back to this project.
 
 Preserve existing model downloads, settings, credentials, translation results,
 and unrelated projects. Check for active application processes before updating
-the live release. Keep archived releases under `archive/` and the current
-portable application under `dist/manga-translator/`.
+the live release. Keep archived releases under `archive/`. The installed portable
+application is `/home/edp1096/tools/manga-translator/`; `dist/` contains generated
+build artifacts only and may be deleted. Never infer the live application's
+state from `dist/`.
 
 The controller must build with `CGO_ENABLED=0`. Hardware discovery must use Go
 and OS/driver APIs, without external hardware-information helper commands.
