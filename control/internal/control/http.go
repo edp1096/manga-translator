@@ -17,6 +17,7 @@ import (
 
 func (m *Manager) Handler() http.Handler {
 	mux := http.NewServeMux()
+	m.libraryRoutes(mux)
 	mux.HandleFunc("GET /api/jobs/data", func(w http.ResponseWriter, r *http.Request) {
 		offset, _ := strconv.Atoi(r.URL.Query().Get("offset"))
 		limit, _ := strconv.Atoi(r.URL.Query().Get("limit"))
@@ -331,7 +332,7 @@ func (m *Manager) Handler() http.Handler {
 		w.Header().Set("X-Content-Type-Options", "nosniff")
 		w.Header().Set("Referrer-Policy", "no-referrer")
 		w.Header().Set("Content-Security-Policy", "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; object-src 'none'; frame-ancestors 'none'; base-uri 'none'")
-		if r.URL.Path != "/api/extension/pair" && r.Method != "GET" && r.Method != "HEAD" {
+		if r.URL.Path != "/api/extension/pair" && !strings.HasPrefix(r.URL.Path, "/api/library/presentation/") && r.Method != "GET" && r.Method != "HEAD" {
 			if r.Header.Get("Origin") != "http://"+r.Host || r.Header.Get("X-Manga-Control") != "1" {
 				respond(w, map[string]string{"error": "관리 화면에서 요청하세요"}, 403)
 				return

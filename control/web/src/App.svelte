@@ -2,6 +2,7 @@
  import {onMount} from 'svelte';
  import Icon from './Icon.svelte';
  import InfoPopover from './InfoPopover.svelte';
+ import Library from './Library.svelte';
  let state=$state(null),view=$state('overview'),error=$state(''),notice=$state(''),offline=$state(false),quitting=$state(false);
  let extension=$state({installed:false,connected:false}),probing=$state(false),acting=$state(false),logTab=$state('control'),logText=$state('기록을 불러오는 중…');
  let draftRestoration=$state('onnx'),draftLLM=$state('cpu'),draftLayout=$state('cpu'),draftOCR=$state('cpu'),draftGPU=$state('');
@@ -16,7 +17,7 @@
  const chosen=()=>Boolean(state?.settings.layout&&state?.settings.ocr&&state?.settings.model);
  const locked=()=>acting||state?.busy||running()||quitting;
  const selectedName=group=>group==='restoration'?(state?.settings?.restorationBackend==='libtorch'?'LibTorch CUDA · API 시작 시 상주 로딩':state?.models?.some(m=>m.id==='manga-lama'&&m.installed)?'설치됨 · 복원 사용 가능':'선택 기능 · 복원하려면 다운로드하세요'):state?.models?.find(m=>m.group===group&&m.selected)?.name||'모델을 선택하세요';
- const menus=[['overview','grid','개요'],['setup','download','설치 관리'],['jobs','folder','작업 데이터'],['extension','chrome','크롬 확장'],['logs','activity','실행 기록']];
+ const menus=[['overview','grid','개요'],['setup','download','설치 관리'],['library','folder','번역 서재'],['jobs','folder','작업 데이터'],['extension','chrome','크롬 확장'],['logs','activity','실행 기록']];
  const groupIcons={application:'server',runtime:'cpu',layout:'bubble',ocr:'text',translation:'translate'};
  const descriptions={application:'페이지 분석부터 번역 결과까지 처리합니다.',runtime:'이 기기에 맞는 네이티브 실행 환경입니다.',layout:'Koharu 768 · 말풍선과 글자 영역을 찾습니다.',ocr:'Hayai v2 INT8 · 원문을 읽습니다.',translation:'선택한 언어모델로 대사를 옮깁니다.'};
  const stages={verifying:'파일 확인 중',downloading:'다운로드 중',installing:'설치 중',prerequisites:'실행 환경 확인',done:'준비 완료',paused:'일시 정지',error:'준비 실패'};
@@ -152,6 +153,8 @@
 <button class="button secondary" onclick={()=>act('settings',{...state.settings,profile:'custom',restorationBackend:draftRestoration,llmExecution:draftLLM,layoutExecution:draftLayout,ocrExecution:draftOCR,gpu:draftGPU,autoStart:draftAuto,threads:Number(draftThreads),threadsAuto:Number(draftThreads)===0})} disabled={running()||state?.busy||acting}>설정 저장</button></div></section>
     <section class="sources"><h3>라이선스 및 출처</h3><p>모델과 외부 라이브러리에는 각각의 이용 조건이 적용됩니다.</p><div>{#each state?.licenses||[] as license}<a href={license.url} target="_blank" rel="noreferrer">{license.name}<span>{license.license}</span><Icon name="external" size={13}/></a>{/each}</div></section>
 
+   {:else if view==='library'}
+    <Library {request} {extensionMessage} {locked}/>
    {:else if view==='jobs'}
     <section class="page-heading"><div class="heading-title"><h1>작업 데이터</h1><InfoPopover title="작업 데이터 관리"><p>원본·번역 결과·복원 이미지를 작업별로 관리합니다. 기존 작업에는 작품 제목·주소가 없을 수 있습니다.</p><p>삭제·보관·자동 정리 설정 변경은 API를 중지한 뒤 가능합니다. 보관 작업은 자동 정리와 전체 미보관 정리에서 제외됩니다.</p><p>삭제한 작업은 되돌릴 수 없습니다. 명칭 사전과 모델·설정은 삭제하지 않습니다.</p></InfoPopover></div><button class="button secondary" onclick={()=>loadJobs()} disabled={jobLoading||acting}>목록 새로고침</button></section>
     <section class="card jobs-summary"><strong>{jobList?.total||0}개 작업 · {bytes(jobList?.bytes||0)}</strong><span>보관 {jobList?.kept||0}개 · 미보관 {bytes(jobList?.unkeptBytes||0)}</span>
