@@ -24,7 +24,7 @@ async function dependency(work, name, url, sha) {
   run('curl', ['--fail', '--location', '--retry', '5', '--connect-timeout', '30', '--max-time', '600', '--output', archive, url]);
   assert(hash(archive) === sha, `${name}: SHA256 mismatch`);
   if (name.endsWith('.zip') || name.endsWith('.whl')) {
-    if (process.platform === 'win32') run('tar', ['-xf', archive, '-C', work]);
+    if (process.platform === 'win32') run(path.join(process.env.SystemRoot || 'C:/Windows', 'System32', 'tar.exe'), ['-xf', archive, '-C', work]);
     else run('unzip', ['-q', archive, '-d', work]);
   }
   else run('tar', ['-xzf', archive, '-C', work]);
