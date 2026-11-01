@@ -25,6 +25,9 @@ type RuntimeState struct {
 
 func (m *Manager) requiredRuntimeIDs(settings Settings) map[string]bool {
 	result := map[string]bool{}
+	if settings.RestorationBackend == "libtorch" {
+		result["torch-cuda"] = true
+	}
 	for _, id := range []string{settings.Layout, settings.OCR, settings.Model} {
 		if model := m.modelByID(id); model != nil {
 			for _, family := range model.Dependencies {
@@ -64,7 +67,11 @@ func (m *Manager) runtimeFilesExist(r Runtime) bool {
 
 func (m *Manager) protectedRuntimeFiles(id string, settings Settings) map[string]bool {
 	protected := map[string]bool{}
-	for _, a := range m.artifactsForSettings([]string{settings.Layout, settings.OCR, settings.Model}, true, settings) {
+	ids := []string{settings.Layout, settings.OCR, settings.Model}
+	if settings.RestorationBackend == "libtorch" {
+		ids = append(ids, "manga-lama-torch")
+	}
+	for _, a := range m.artifactsForSettings(ids, true, settings) {
 		for _, f := range a.Files {
 			protected[f.Path] = true
 		}
@@ -132,6 +139,11 @@ func (m *Manager) legacyRuntimeStates(receipts map[string]Receipt) []RuntimeStat
 func (m *Manager) runtimeStates() []RuntimeState {
 	m.mu.Lock()
 	settings := m.settings
+	m.mu.Unlock()
+	return m.runtimeStatesForSettings(settings)
+}
+func (m *Manager) runtimeStatesForSettings(settings Settings) []RuntimeState {
+	m.mu.Lock()
 	receipts := make(map[string]Receipt, len(m.receipts))
 	for k, v := range m.receipts {
 		receipts[k] = v

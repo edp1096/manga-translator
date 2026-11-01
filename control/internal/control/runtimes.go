@@ -186,6 +186,9 @@ func (m *Manager) runtimeLibraryDirs(service string) ([]string, error) {
 	m.mu.Lock()
 	settings := m.settings
 	m.mu.Unlock()
+	if service == "vision" && settings.RestorationBackend == "libtorch" {
+		ids = append(ids, "torch-cuda")
+	}
 	dirs := []string{}
 	seen := map[string]bool{}
 	for _, id := range ids {

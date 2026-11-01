@@ -25,6 +25,12 @@ type ExecutionProfile struct {
 }
 
 func (m *Manager) validateExecution(s Settings) error {
+	if s.RestorationBackend != "" && s.RestorationBackend != "onnx" && s.RestorationBackend != "libtorch" {
+		return fmt.Errorf("지원하지 않는 복원 실행 방식")
+	}
+	if s.RestorationBackend == "libtorch" && (m.runtimeByID("torch-cuda") == nil || m.modelForGroup("manga-lama-torch", "restoration") == nil) {
+		return fmt.Errorf("이 플랫폼에는 LibTorch CUDA 복원 런타임이 없습니다")
+	}
 	if execution(s.LLMExecution) != "cpu" && s.LLMExecution != "vulkan" && s.LLMExecution != "cuda" {
 		return fmt.Errorf("지원하지 않는 번역 실행 방식")
 	}
@@ -169,7 +175,7 @@ func profileMemoryFits(g GPUInfo, gib uint64, availableRAM int64) bool {
 }
 
 func usesGPU(s Settings) bool {
-	return execution(s.LLMExecution) != "cpu" || execution(s.LayoutExecution) != "cpu" || execution(s.OCRExecution) != "cpu"
+	return s.RestorationBackend == "libtorch" || execution(s.LLMExecution) != "cpu" || execution(s.LayoutExecution) != "cpu" || execution(s.OCRExecution) != "cpu"
 }
 
 func selectedGPU(s Settings, gpus []GPUInfo) (GPUInfo, error) {
@@ -177,7 +183,7 @@ func selectedGPU(s Settings, gpus []GPUInfo) (GPUInfo, error) {
 		return GPUInfo{}, nil
 	}
 	compatible := func(g GPUInfo) bool {
-		if s.LLMExecution == "cuda" && !llmCUDASupported(g) {
+		if (s.LLMExecution == "cuda" || s.RestorationBackend == "libtorch") && !llmCUDASupported(g) {
 			return false
 		}
 		if s.LLMExecution == "vulkan" && g.VulkanIndex == nil {

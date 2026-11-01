@@ -25,11 +25,12 @@ import (
 )
 
 type Settings struct {
-	GPU             string `json:"gpu,omitempty"`
-	Profile         string `json:"profile,omitempty"`
-	LLMExecution    string `json:"llmExecution,omitempty"`
-	LayoutExecution string `json:"layoutExecution,omitempty"`
-	OCRExecution    string `json:"ocrExecution,omitempty"`
+	RestorationBackend string `json:"restorationBackend,omitempty"`
+	GPU                string `json:"gpu,omitempty"`
+	Profile            string `json:"profile,omitempty"`
+	LLMExecution       string `json:"llmExecution,omitempty"`
+	LayoutExecution    string `json:"layoutExecution,omitempty"`
+	OCRExecution       string `json:"ocrExecution,omitempty"`
 
 	Layout      string `json:"layout"`
 	OCR         string `json:"ocr"`
@@ -602,6 +603,18 @@ func (m *Manager) writeNativeConfig() error {
 	}
 	cfg["gpu_index"] = onnxGPUIndex(settings, gpu)
 	cfg["gpu_name"] = gpu.Name
+	if settings.RestorationBackend == "libtorch" {
+		model := m.modelForGroup("manga-lama-torch", "restoration")
+		runtime := m.runtimeByID("torch-cuda")
+		if model == nil || runtime == nil || gpu.CUDAIndex == nil {
+			return fmt.Errorf("Manga LaMa LibTorch CUDA 구성을 사용할 수 없습니다")
+		}
+		cfg["inpaint_model"] = model.Path
+		cfg["inpaint_backend"] = "libtorch"
+		cfg["inpaint_execution"] = "cuda"
+		cfg["inpaint_gpu_index"] = *gpu.CUDAIndex
+		cfg["inpaint_library"] = runtime.Library
+	}
 	if r := m.runtimeForSettings("litert", settings); m.selectedOCRBackend() == "litert" && r != nil {
 		cfg["litert_library"] = r.Library
 	}
@@ -754,7 +767,13 @@ func (m *Manager) start(ctx context.Context) error {
 	if e := m.launch("vision", filepath.Join(m.root, "bin", "manga-translator-server"+ext), []string{"--root", m.root}); e != nil {
 		return e
 	}
-	return m.waitHealthy(ctx, "vision", VisionPort, 45*time.Second)
+	timeout := 45 * time.Second
+	m.mu.Lock()
+	if m.settings.RestorationBackend == "libtorch" {
+		timeout = 180 * time.Second
+	}
+	m.mu.Unlock()
+	return m.waitHealthy(ctx, "vision", VisionPort, timeout)
 }
 func (m *Manager) launch(name, binary string, args []string) error {
 	for _, dir := range []string{"data/cache/llama", "data/cache/litert", "data/cache/cuda", "data/cache/shaders", "data/tmp"} {
@@ -970,11 +989,14 @@ func (m *Manager) monitor() {
 	}
 }
 func (m *Manager) Snapshot() Snapshot {
+	m.mu.Lock()
+	snapshotSettings := m.settings
+	m.mu.Unlock()
 	groups := map[string]*Component{}
 	order := []string{"application", "runtime", "layout", "ocr", "translation"}
 	names := map[string]string{"application": "이미지 API", "runtime": "실행 환경", "layout": "말풍선·글자 탐지", "ocr": "글자 인식", "translation": "대사 번역"}
-	ready := supportedPlatform(m.platform) && m.hasSelection()
-	for _, a := range m.selectedArtifacts() {
+	ready := supportedPlatform(m.platform) && m.hasSelectionForSettings(snapshotSettings)
+	for _, a := range m.selectedArtifactsForSettings(snapshotSettings) {
 		g := groups[a.Group]
 		if g == nil {
 			g = &Component{ID: a.Group, Name: names[a.Group], Ready: true}
@@ -993,8 +1015,8 @@ func (m *Manager) Snapshot() Snapshot {
 			components = append(components, *g)
 		}
 	}
-	models := m.modelStates()
-	runtimes := m.runtimeStates()
+	models := m.modelStatesForSettings(snapshotSettings)
+	runtimes := m.runtimeStatesForSettings(snapshotSettings)
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	services := []ServiceState{}
@@ -1005,7 +1027,7 @@ func (m *Manager) Snapshot() Snapshot {
 		}
 		services = append(services, s)
 	}
-	return Snapshot{Profiles: m.executionProfiles(), Runtimes: runtimes, Models: models, Version: Version, Platform: m.platform, Supported: supportedPlatform(m.platform), Root: m.root, Ready: ready, Busy: m.busy, Phase: m.phase, Error: m.lastError, Progress: m.progress, Components: components, Services: services, Settings: m.settings, ExtensionID: m.extensionID, ExtensionPath: filepath.Join(m.root, "extension"), Licenses: m.catalog.Licenses, System: systemInfo(m.root), Hardware: hardwareSnapshot()}
+	return Snapshot{Profiles: m.executionProfiles(), Runtimes: runtimes, Models: models, Version: Version, Platform: m.platform, Supported: supportedPlatform(m.platform), Root: m.root, Ready: ready, Busy: m.busy, Phase: m.phase, Error: m.lastError, Progress: m.progress, Components: components, Services: services, Settings: snapshotSettings, ExtensionID: m.extensionID, ExtensionPath: filepath.Join(m.root, "extension"), Licenses: m.catalog.Licenses, System: systemInfo(m.root), Hardware: hardwareSnapshot()}
 }
 func (m *Manager) ReadLog(name string) (string, error) {
 	if name != "control" && name != "llm" && name != "vision" {

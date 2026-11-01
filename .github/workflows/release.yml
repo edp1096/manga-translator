@@ -23,6 +23,7 @@ jobs:
     outputs:
       tag: ${{ steps.release.outputs.tag }}
       commit: ${{ steps.release.outputs.commit }}
+      torch: ${{ steps.release.outputs.torch }}
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
@@ -52,6 +53,7 @@ jobs:
           node automation/.github/scripts/release.mjs version source "$TAG"
           echo "tag=$TAG" >> "$GITHUB_OUTPUT"
           echo "commit=$(git -C source rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+          if [[ -f source/native/torch_restoration/CMakeLists.txt ]]; then echo "torch=true" >> "$GITHUB_OUTPUT"; else echo "torch=false" >> "$GITHUB_OUTPUT"; fi
 
   native:
     needs: prepare
@@ -101,8 +103,48 @@ jobs:
           if-no-files-found: error
           retention-days: 7
 
+  torch:
+    needs: prepare
+    if: needs.prepare.outputs.torch == 'true'
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: windows-amd64
+            runner: windows-2025
+          - platform: linux-arm64
+            runner: ubuntu-24.04-arm
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          ref: ${{ github.workflow_sha }}
+          path: automation
+          persist-credentials: false
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          ref: ${{ needs.prepare.outputs.commit }}
+          path: source
+          persist-credentials: false
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: '24'
+      - name: Compile LibTorch CUDA bridge without Python
+        shell: bash
+        env:
+          PLATFORM: ${{ matrix.platform }}
+        run: node automation/.github/scripts/release.mjs torch source "$PLATFORM" torch-build
+      - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
+        with:
+          name: torch-${{ matrix.platform }}
+          path: torch-build/out/*
+          if-no-files-found: error
+          retention-days: 7
+
   package:
-    needs: [prepare, native]
+    needs: [prepare, native, torch]
+    if: ${{ !cancelled() && needs.prepare.result == 'success' && needs.native.result == 'success' && (needs.torch.result == 'success' || needs.torch.result == 'skipped') }}
     runs-on: ubuntu-22.04
     timeout-minutes: 45
     env:
@@ -132,9 +174,18 @@ jobs:
         with:
           pattern: native-*
           path: engines
+      - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
+        if: needs.prepare.outputs.torch == 'true'
+        with:
+          pattern: torch-*
+          path: bridges
       - name: Test and package all platforms
         run: |
-          bash source/build.sh \
+          torch_args=()
+          if [[ -d bridges ]]; then
+            torch_args+=(--windows-torch "$PWD/bridges/torch-windows-amd64/manga_lama_torch.dll" --linux-arm64-torch "$PWD/bridges/torch-linux-arm64/libmanga_lama_torch.so")
+          fi
+          bash source/build.sh "${torch_args[@]}" \
             --linux-native "$PWD/engines/native-linux-arm64/manga-translator-server" \
             --linux-x64-native "$PWD/engines/native-linux-amd64/manga-translator-server" \
             --windows-native "$PWD/engines/native-windows-amd64/manga-translator-server.exe" \

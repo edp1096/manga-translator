@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Manga Translator",
-  "version": "0.4.0",
+  "version": "0.4.1",
   "description": "이 컴퓨터에서 만화 이미지를 번역하고 편집합니다.",
   "permissions": [
     "activeTab",

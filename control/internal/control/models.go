@@ -55,16 +55,26 @@ func (m *Manager) hasSelection() bool {
 	m.mu.Lock()
 	s := m.settings
 	m.mu.Unlock()
+	return m.hasSelectionForSettings(s)
+}
+func (m *Manager) hasSelectionForSettings(s Settings) bool {
 	return len(m.catalog.Models) == 0 || (m.modelForGroup(s.Model, "translation") != nil && m.modelForGroup(s.Layout, "layout") != nil && m.modelForGroup(s.OCR, "ocr") != nil)
 }
 func (m *Manager) selectedArtifacts() []Artifact {
 	m.mu.Lock()
 	s := m.settings
 	m.mu.Unlock()
+	return m.selectedArtifactsForSettings(s)
+}
+func (m *Manager) selectedArtifactsForSettings(s Settings) []Artifact {
 	if len(m.catalog.Models) == 0 {
 		return m.catalog.Artifacts
 	}
-	return m.artifactsForSettings([]string{s.Layout, s.OCR, s.Model}, true, s)
+	ids := []string{s.Layout, s.OCR, s.Model}
+	if s.RestorationBackend == "libtorch" {
+		ids = append(ids, "manga-lama-torch")
+	}
+	return m.artifactsForSettings(ids, true, s)
 }
 func (m *Manager) artifactsFor(ids []string, application bool) []Artifact {
 	m.mu.Lock()
@@ -104,10 +114,13 @@ func (m *Manager) modelStates() []ModelState {
 	m.mu.Lock()
 	settings := m.settings
 	m.mu.Unlock()
+	return m.modelStatesForSettings(settings)
+}
+func (m *Manager) modelStatesForSettings(settings Settings) []ModelState {
 	result := []ModelState{}
 	for _, model := range m.catalog.Models {
-		state := ModelState{Model: model, Installed: true, Selected: selection(settings, model.Group) == model.ID}
-		for _, a := range m.artifactsFor([]string{model.ID}, false) {
+		state := ModelState{Model: model, Installed: true, Selected: selection(settings, model.Group) == model.ID || (model.ID == "manga-lama-torch" && settings.RestorationBackend == "libtorch")}
+		for _, a := range m.artifactsForSettings([]string{model.ID}, false, settings) {
 			if !m.artifactReady(a) && !isEmbedded(a) {
 				state.DownloadSize += a.Size
 			}
@@ -217,7 +230,7 @@ func (m *Manager) DeleteModel(id string) error {
 	if m.busy || len(m.processes) > 0 {
 		return fmt.Errorf("API와 다운로드를 중지한 뒤 모델을 삭제하세요")
 	}
-	if id == selection(m.settings, model.Group) {
+	if id == selection(m.settings, model.Group) || (id == "manga-lama-torch" && m.settings.RestorationBackend == "libtorch") {
 		return fmt.Errorf("모델 선택을 해제하거나 다른 모델을 선택한 뒤 삭제하세요")
 	}
 	keep := m.sharedModelArtifacts(model)
@@ -310,6 +323,10 @@ func (m *Manager) visionRequirements() (int64, int64) {
 	if model := m.modelForGroup(settings.OCR, "ocr"); model != nil && model.Backend == "onnx-v2-kv" && m.modelForGroup("baberu-int4", "ocr") != nil {
 		limit = max(limit, 3*1024*1024*1024)
 		available = max(available, 4*1024*1024*1024)
+	}
+	if settings.RestorationBackend == "libtorch" {
+		limit += 1536 * 1024 * 1024
+		available += 2 * 1024 * 1024 * 1024
 	}
 	return limit, available
 }

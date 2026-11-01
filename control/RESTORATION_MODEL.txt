@@ -37,11 +37,12 @@ model behavior, conversion installation using the real upstream artifact, and
 extension error guidance. Windows CPU/GPU inference requires separate hardware
 verification; a cross-build is not a Windows inference test.
 
-The source bundle's ARM64 engine was older than the installed 0.4.0 release.
+Previous ONNX-only repair: the source bundle's ARM64 engine was older than the installed 0.4.0 release.
 For this controller-only repair its embedded ARM64 engine is synchronized to the
 verified installed binary, SHA256:
 54c2894a1350d265f05a98b0fd475487faaac4ac89e0faa40baf361366e251e6
-No native engine source changes were required.
+That earlier repair required no native source changes. The CUDA integration
+below rebuilds the Windows and ARM64 engines from the updated native source.
 
 CUDA verification (DGX Spark, ARM64 Linux, NVIDIA GB10):
 See docs/manga-lama-cuda/results.json and tests/restoration_compare/.
@@ -54,8 +55,34 @@ Masked output mean absolute difference: 8.902e-6, maximum 0.001855.
 TorchScript initial runs took 2.39 and 3.40 seconds; loading took 0.97 seconds.
 The speedup requires keeping the loaded model alive, not reconstructing it per
 request. Other services remained running; this was not an exclusive GPU test.
-This verifies a possible future CUDA backend, not integration into the app.
-The installed app still uses ONNX Runtime and follows layout execution settings.
+Checkpoint CUDA integration (2026-11-01)
+Windows x64 and Linux ARM64 now expose a separate LibTorch CUDA choice.
+The default remains ONNX. Explicit CUDA restoration never falls back to CPU.
+Install the optional model before selecting this backend. API startup loads
+and warms the model three times, then retains it for automatic/manual requests.
+The controller builds with CGO_ENABLED=0. Inference uses a C++ plugin and C ABI.
+No Python interpreter or Python package installation is needed at runtime.
+
+The deployed TorchScript .pt is converted from lama_large_512px.ckpt, not ONNX.
+Original checkpoint SHA256:
+11d30fbb3000fb2eceae318b75d9ced9229d99ae990a7f8b3ac35c8d31f2c935
+TorchScript: TareHimself/AnimeMangaInpainting-torchscript
+Pinned revision: b592884b2b6589e57df6916db6bcac7a6307fc58
+TorchScript SHA256:
+95d4bf7eb2f13729351ac0a0693c9b9b469b264fc1542ca3fa551b59b464a160
+Windows: official LibTorch 2.9.1+cu130. ARM64: C++ libraries from Torch
+2.13.0+cu130 and verified NVIDIA archives. Python modules are not installed.
+Archive and extracted-file hashes are checked. CMake uses TORCH_ROOT for SDK
+headers/libraries; no nvcc is required. Release CI builds both plugins.
+
+Windows RTX 4070 Super and DGX Spark GB10 validation covered resident inference,
+real manual restoration HTTP requests, invalid-input recovery, concurrency,
+exact mask clipping, unchanged originals and shutdown. Nine mask cases per
+platform also passed ONNX CPU regression. Cross-backend mean pixel difference
+was below 0.12/255. Edge model installation and backend setting were tested.
+Full dialogue outputs were viewed: textured backgrounds can retain artifacts.
+Isolated restoration tests do not prove full OCR/LLM VRAM coexistence. OP5P was
+offline. Private evidence: research/manga-lama-cuda-2026-11-01/.
 Private source images, model binaries, and development environments are excluded
 from source control. run.sh expects /work and the documented container LibTorch
 layout; adjust those paths for another verification environment.

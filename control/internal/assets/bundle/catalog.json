@@ -181,8 +181,6 @@
       "note": "RTX 4070 SUPER 12GB 실측 · CUDA MTP4 가속 · GPU 메모리 여유가 작습니다. CPU·Vulkan은 일반 생성"
     },
     {
-      "id": "manga-lama",
-      "name": "Manga LaMa · 배경 이미지 복원",
       "group": "restoration",
       "artifacts": [
         "manga-lama"
@@ -192,8 +190,30 @@
         "vcredist"
       ],
       "path": "models/manga-lama/manga-lama-512.onnx",
+      "id": "manga-lama",
+      "name": "Manga LaMa · 배경 이미지 복원",
       "memoryGiB": 2,
       "note": "선택 영역의 글자를 지우고 배경을 복원합니다. 설치하면 사용할 수 있으며 일반 번역에는 필요하지 않습니다. 영역 탐지의 CPU·CUDA·DirectML 설정을 따릅니다."
+    },
+    {
+      "platforms": [
+        "windows-amd64",
+        "linux-arm64"
+      ],
+      "backend": "libtorch",
+      "group": "restoration",
+      "artifacts": [
+        "manga-lama-torch"
+      ],
+      "dependencies": [
+        "torch-cuda",
+        "vcredist"
+      ],
+      "path": "models/manga-lama/anime_manga_lama.pt",
+      "id": "manga-lama-torch",
+      "name": "Manga LaMa · LibTorch CUDA",
+      "memoryGiB": 4,
+      "note": "원본 체크포인트에서 변환된 TorchScript 모델입니다. 실행 설정에서 LibTorch CUDA를 선택하면 API 시작 시 미리 로드하고 계속 재사용합니다. Python 없이 실행하며 NVIDIA CUDA 13 지원 GPU가 필요합니다."
     }
   ],
   "runtimes": [
@@ -435,9 +455,54 @@
       "additionalArtifacts": [
         "llama-cudart-windows-amd64"
       ]
+    },
+    {
+      "id": "torch-cuda",
+      "version": "2.9.1",
+      "platform": "windows-amd64",
+      "artifact": "libtorch-windows-amd64",
+      "releaseUrl": "https://github.com/pytorch/pytorch/releases/tag/v2.9.1",
+      "library": "runtime/torch-cuda/2.9.1/manga_lama_torch.dll",
+      "libraryDirs": [
+        "runtime/torch-cuda/2.9.1"
+      ],
+      "family": "torch",
+      "backend": "cuda",
+      "additionalArtifacts": [
+        "manga-lama-torch-native-windows-amd64"
+      ]
+    },
+    {
+      "id": "torch-cuda",
+      "version": "2.13.0",
+      "platform": "linux-arm64",
+      "artifact": "libtorch-torch-linux-arm64",
+      "releaseUrl": "https://github.com/pytorch/pytorch/releases/tag/v2.13.0",
+      "library": "runtime/torch-cuda/2.13.0/libmanga_lama_torch.so",
+      "libraryDirs": [
+        "runtime/torch-cuda/2.13.0"
+      ],
+      "family": "torch",
+      "backend": "cuda",
+      "additionalArtifacts": [
+        "nvidia-cuda-runtime-torch-linux-arm64",
+        "nvidia-cuda-cupti-torch-linux-arm64",
+        "nvidia-cuda-nvrtc-torch-linux-arm64",
+        "nvidia-cublas-torch-linux-arm64",
+        "nvidia-cufft-torch-linux-arm64",
+        "nvidia-cufile-torch-linux-arm64",
+        "nvidia-curand-torch-linux-arm64",
+        "nvidia-cusparse-torch-linux-arm64",
+        "nvidia-cusparselt-cu13-torch-linux-arm64",
+        "nvidia-nccl-cu13-torch-linux-arm64",
+        "nvidia-nvjitlink-torch-linux-arm64",
+        "nvidia-nvshmem-cu13-torch-linux-arm64",
+        "nvidia-cudnn-cu13-torch-linux-arm64",
+        "manga-lama-torch-native-linux-arm64"
+      ]
     }
   ],
-  "version": "0.4.0",
+  "version": "0.4.1",
   "artifacts": [
     {
       "id": "ort-linux-arm64",
@@ -601,14 +666,14 @@
       "group": "application",
       "platform": "linux-arm64",
       "url": "embedded:engine/linux-arm64.gz",
-      "sha256": "0ba4c58a25975b672ec7c89789fddf8c97a7f58e893298177d37e159ac1681f8",
-      "size": 1320015,
+      "sha256": "740a039f0f17c6085dce2ad06191a130aa16c2b320ad306be2c7b7f1e0b89cd2",
+      "size": 1389861,
       "format": "gzip",
       "files": [
         {
           "path": "bin/manga-translator-server",
-          "sha256": "54c2894a1350d265f05a98b0fd475487faaac4ac89e0faa40baf361366e251e6",
-          "size": 2985432,
+          "sha256": "b9851f8c1e4031f6f341775b70996414bcf3a1be9f238f023881e9bc86a7d011",
+          "size": 3001000,
           "executable": true
         }
       ]
@@ -938,14 +1003,14 @@
       "group": "application",
       "platform": "windows-amd64",
       "url": "embedded:engine/windows-amd64.gz",
-      "sha256": "2e85a09c831c67da3a05b0e9a406dd9641c357a4f8017328e7268a9a938e4d4e",
-      "size": 2301317,
+      "sha256": "2d448e8b8748dbad36cebb5f01679919a2ca80c836b7e2970933aea50d35cae1",
+      "size": 2266694,
       "format": "gzip",
       "files": [
         {
           "path": "bin/manga-translator-server.exe",
-          "sha256": "99e3ded29fd4d9ef7d106f77bebb4c649d168a8768f28ec8712c453efe9ddf0b",
-          "size": 7179092,
+          "sha256": "0d40e7eb59ae1a5309cd5796b8c89dc08d6dcd6e7c92b167d2f9c537088c0c27",
+          "size": 7199438,
           "executable": true
         }
       ]
@@ -2813,13 +2878,1491 @@
       "sha256": "4512adab295ee5a5e02ccd1bdf8d45dccbac88309d9cff1532ffd5de876f02a4",
       "size": 207482644,
       "format": "patch",
-      "patch": "manga-lama-512.patch",
-      "patchSha256": "f3b4a1c94af2304ee3807d75e87dbf398faefdb0b800f57e3284784d6a65e6a7",
       "files": [
         {
           "path": "models/manga-lama/manga-lama-512.onnx",
           "sha256": "e000ed643d84593d28432c63f04b1d1a91123f3450c8ba65b1e8b4f009ccaea4",
           "size": 207482607
+        }
+      ],
+      "patch": "manga-lama-512.patch",
+      "patchSha256": "f3b4a1c94af2304ee3807d75e87dbf398faefdb0b800f57e3284784d6a65e6a7"
+    },
+    {
+      "id": "libtorch-windows-amd64",
+      "name": "LibTorch CUDA 13 · 2.9.1",
+      "group": "runtime",
+      "platform": "windows-amd64",
+      "url": "https://download.pytorch.org/libtorch/cu130/libtorch-win-shared-with-deps-2.9.1%2Bcu130.zip",
+      "sha256": "0b9559b066f11eca9512f9b8ea2255022ccd336e619926954e8936af5f56e88c",
+      "size": 1943518277,
+      "format": "zip",
+      "files": [
+        {
+          "entry": "libtorch/lib/c10.dll",
+          "path": "runtime/torch-cuda/2.9.1/c10.dll",
+          "sha256": "cc18934410b67966e7b969e6708f7f8a70ec33d66939d363ee6906b00c1358c3",
+          "size": 1085952
+        },
+        {
+          "entry": "libtorch/lib/c10_cuda.dll",
+          "path": "runtime/torch-cuda/2.9.1/c10_cuda.dll",
+          "sha256": "7c3a6b72959768462d2eca6e361402029f9b91eb406d20e4ed5325925208c6c0",
+          "size": 450560
+        },
+        {
+          "entry": "libtorch/lib/caffe2_nvrtc.dll",
+          "path": "runtime/torch-cuda/2.9.1/caffe2_nvrtc.dll",
+          "sha256": "f43b61aeeda0c8ea971c0b8050171bf3259c28a368ecfc0c37b041fdc7fdc78d",
+          "size": 54272
+        },
+        {
+          "entry": "libtorch/lib/cublas64_13.dll",
+          "path": "runtime/torch-cuda/2.9.1/cublas64_13.dll",
+          "sha256": "5d083083cdd613577496791dd96d00fe3a78c955684b53ca46a8ffa3e0b1e170",
+          "size": 50288240
+        },
+        {
+          "entry": "libtorch/lib/cublasLt64_13.dll",
+          "path": "runtime/torch-cuda/2.9.1/cublasLt64_13.dll",
+          "sha256": "e1c26671801ecd435baf97c6e9cfe28196cf55005c2039356b48030b09ce5dd5",
+          "size": 477896816
+        },
+        {
+          "entry": "libtorch/lib/cudart64_13.dll",
+          "path": "runtime/torch-cuda/2.9.1/cudart64_13.dll",
+          "sha256": "58c509047f9dd1879cf82c6d5375a95c02c7bd295ae6c8362c745c936e2afc31",
+          "size": 470640
+        },
+        {
+          "entry": "libtorch/lib/cudnn64_9.dll",
+          "path": "runtime/torch-cuda/2.9.1/cudnn64_9.dll",
+          "sha256": "99a529a5c252fbc1efcb2f51860498aed053be878090f2094ac86638d4765021",
+          "size": 266352
+        },
+        {
+          "entry": "libtorch/lib/cudnn_adv64_9.dll",
+          "path": "runtime/torch-cuda/2.9.1/cudnn_adv64_9.dll",
+          "sha256": "8c99fc46ce20a206309e936d029a10c68f3b40b027e6eb41b2b08dca34e2c1a7",
+          "size": 88123936
+        },
+        {
+          "entry": "libtorch/lib/cudnn_cnn64_9.dll",
+          "path": "runtime/torch-cuda/2.9.1/cudnn_cnn64_9.dll",
+          "sha256": "c3c2aacf2b61563c72b14d2466da403c99c13d17dddddf62af2f5a1a299aa3a6",
+          "size": 1428080
+        },
+        {
+          "entry": "libtorch/lib/cudnn_engines_precompiled64_9.dll",
+          "path": "runtime/torch-cuda/2.9.1/cudnn_engines_precompiled64_9.dll",
+          "sha256": "c329d58cb49e3a1574d2bbdde12c6a53f787c12f813efa9db7efa8d16c4207fb",
+          "size": 188558368
+        },
+        {
+          "entry": "libtorch/lib/cudnn_engines_runtime_compiled64_9.dll",
+          "path": "runtime/torch-cuda/2.9.1/cudnn_engines_runtime_compiled64_9.dll",
+          "sha256": "9d0cafc368b1998811f49509b031a4d69c5972a91a3210d89ae183ba7a918719",
+          "size": 19942944
+        },
+        {
+          "entry": "libtorch/lib/cudnn_graph64_9.dll",
+          "path": "runtime/torch-cuda/2.9.1/cudnn_graph64_9.dll",
+          "sha256": "bd641fd259e877928ae9469efae7a40666d0b4db71ea1df18a40479378b75dfe",
+          "size": 2285600
+        },
+        {
+          "entry": "libtorch/lib/cudnn_heuristic64_9.dll",
+          "path": "runtime/torch-cuda/2.9.1/cudnn_heuristic64_9.dll",
+          "sha256": "c81c3cd1d76fade865512ceb5318f793b1871097aa92afefcddf5e4dd6cbd924",
+          "size": 53315104
+        },
+        {
+          "entry": "libtorch/lib/cudnn_ops64_9.dll",
+          "path": "runtime/torch-cuda/2.9.1/cudnn_ops64_9.dll",
+          "sha256": "92c09220f486c3eb3a456106e069667253f153792b2e8e91cba49db110a74f5e",
+          "size": 29970976
+        },
+        {
+          "entry": "libtorch/lib/cufft64_12.dll",
+          "path": "runtime/torch-cuda/2.9.1/cufft64_12.dll",
+          "sha256": "611ba7e40dfab64b9b5bd35f4ad3593e00a8e93785fbf53160d9398aacd5ac14",
+          "size": 284331040
+        },
+        {
+          "entry": "libtorch/lib/cufftw64_12.dll",
+          "path": "runtime/torch-cuda/2.9.1/cufftw64_12.dll",
+          "sha256": "59e3b4cfb3e82481ebd773f3a58bf4f64966d1657ccc6b8f72b33c42fcda6079",
+          "size": 201264
+        },
+        {
+          "entry": "libtorch/lib/cupti64_2025.3.0.dll",
+          "path": "runtime/torch-cuda/2.9.1/cupti64_2025.3.0.dll",
+          "sha256": "2015295ce64f2b6f36ee8a0b9c91cb365ded4bd7173c63da36f75caad1d464ee",
+          "size": 2067488
+        },
+        {
+          "entry": "libtorch/lib/curand64_10.dll",
+          "path": "runtime/torch-cuda/2.9.1/curand64_10.dll",
+          "sha256": "da51792dc1b4768ea8207a21f5a2e05226263ae399b310cfd9bc7efb481b5530",
+          "size": 58863672
+        },
+        {
+          "entry": "libtorch/lib/cusolver64_12.dll",
+          "path": "runtime/torch-cuda/2.9.1/cusolver64_12.dll",
+          "sha256": "bf27332ad47b6e86e3c3c8b24d7a3005d823ffd1ee1cadbe6642f6c1ea48fd8f",
+          "size": 126421024
+        },
+        {
+          "entry": "libtorch/lib/cusolverMg64_12.dll",
+          "path": "runtime/torch-cuda/2.9.1/cusolverMg64_12.dll",
+          "sha256": "a92dc614fdb5cf48272e26819092a5d012bb4b3d477f9e78bbaaf4290e343b14",
+          "size": 95365152
+        },
+        {
+          "entry": "libtorch/lib/cusparse64_12.dll",
+          "path": "runtime/torch-cuda/2.9.1/cusparse64_12.dll",
+          "sha256": "a155d5bfd5bff68305557be21486470b9949cf6a45a3acda80b27e1670e671e2",
+          "size": 150326304
+        },
+        {
+          "entry": "libtorch/lib/libiomp5md.dll",
+          "path": "runtime/torch-cuda/2.9.1/libiomp5md.dll",
+          "sha256": "d41a71c38f627a95748596820ab380135dcccc4ceecd6fe7d4e247d015bf55a4",
+          "size": 1614192
+        },
+        {
+          "entry": "libtorch/lib/libiompstubs5md.dll",
+          "path": "runtime/torch-cuda/2.9.1/libiompstubs5md.dll",
+          "sha256": "137dd44f652a926eb540861994c58ea24ebfbf6b45886ac964a68c5742549c47",
+          "size": 43888
+        },
+        {
+          "entry": "libtorch/lib/nvJitLink_130_0.dll",
+          "path": "runtime/torch-cuda/2.9.1/nvJitLink_130_0.dll",
+          "sha256": "b6c247de22ee23ef60d0148bd3a3343164891cd9f2e9946bf23fc459d12c5222",
+          "size": 88218656
+        },
+        {
+          "entry": "libtorch/lib/nvperf_host.dll",
+          "path": "runtime/torch-cuda/2.9.1/nvperf_host.dll",
+          "sha256": "8530cc52b673a0cee8e84ded28c041b16622ae566d4b9d15ffbc275bc8695afc",
+          "size": 27764256
+        },
+        {
+          "entry": "libtorch/lib/nvrtc-builtins64_130.dll",
+          "path": "runtime/torch-cuda/2.9.1/nvrtc-builtins64_130.dll",
+          "sha256": "65813a86fbe8fe9ab6adff04275c7e9be9d4ca67fccdb868bb18a4f497155a6b",
+          "size": 4471328
+        },
+        {
+          "entry": "libtorch/lib/nvrtc64_130_0.alt.dll",
+          "path": "runtime/torch-cuda/2.9.1/nvrtc64_130_0.alt.dll",
+          "sha256": "f0e9688b032feac4f05fbf327493252dda0ad77a527ecb543af91e2b1b337d31",
+          "size": 91028512
+        },
+        {
+          "entry": "libtorch/lib/nvrtc64_130_0.dll",
+          "path": "runtime/torch-cuda/2.9.1/nvrtc64_130_0.dll",
+          "sha256": "37d2195bcdc5db37a838a8eb4f286f502ea94d82319bb7de68751ad672f4ad6d",
+          "size": 90961440
+        },
+        {
+          "entry": "libtorch/lib/nvToolsExt64_1.dll",
+          "path": "runtime/torch-cuda/2.9.1/nvToolsExt64_1.dll",
+          "sha256": "0fe54f1b80ad3e44da2a3d9f0956e7c3903029d6319689ce1c4068f7a20932f3",
+          "size": 48128
+        },
+        {
+          "entry": "libtorch/lib/torch.dll",
+          "path": "runtime/torch-cuda/2.9.1/torch.dll",
+          "sha256": "84d1ad0c95e8fac4d2e8a6bec5e7b3182857f3e05f617c390293151004386448",
+          "size": 9728
+        },
+        {
+          "entry": "libtorch/lib/torch_cpu.dll",
+          "path": "runtime/torch-cuda/2.9.1/torch_cpu.dll",
+          "sha256": "5699590044609cb56358cee6b94cdadb120172f554045975f3b049b62ffc8cb6",
+          "size": 262831616
+        },
+        {
+          "entry": "libtorch/lib/torch_cuda.dll",
+          "path": "runtime/torch-cuda/2.9.1/torch_cuda.dll",
+          "sha256": "7eedfd6452340963ef665b0613e7ce0f6def44e8a876f4b35f4c92e6251e3771",
+          "size": 405950464
+        },
+        {
+          "entry": "libtorch/lib/torch_global_deps.dll",
+          "path": "runtime/torch-cuda/2.9.1/torch_global_deps.dll",
+          "sha256": "22d94ac2fc08e9a7342d464064a03fe8734ccb879cacf1753ecb5750fa9c945e",
+          "size": 9728
+        },
+        {
+          "entry": "libtorch/lib/uv.dll",
+          "path": "runtime/torch-cuda/2.9.1/uv.dll",
+          "sha256": "fa569e682fc5fb7a8eb94c6829af9f30a569748dbbc6bce39735d48bc960bcf8",
+          "size": 195072
+        },
+        {
+          "entry": "libtorch/lib/zlibwapi.dll",
+          "path": "runtime/torch-cuda/2.9.1/zlibwapi.dll",
+          "sha256": "1f047faec08d9a35c304fb4a7cf13853589359a8f7cbfdd48c5d5807712dcf05",
+          "size": 89088
+        },
+        {
+          "entry": "libtorch/share/doc/dnnl/LICENSE",
+          "path": "runtime/torch-cuda/2.9.1/licenses/libtorch_share_doc_dnnl_LICENSE",
+          "sha256": "4a2e283f7b1c01b79e289c47cb74f126110e0c966e2bc704cb950b06cd34f96d",
+          "size": 11814
+        }
+      ]
+    },
+    {
+      "id": "manga-lama-torch-native-windows-amd64",
+      "name": "Manga LaMa LibTorch CUDA backend",
+      "group": "runtime",
+      "platform": "windows-amd64",
+      "url": "embedded:engine/manga-lama-torch-windows-amd64.gz",
+      "sha256": "4afba6715b770020b2bd794e992ab7828db7b716020477a690b58a8b7d87e574",
+      "size": 51473,
+      "format": "gzip",
+      "files": [
+        {
+          "path": "runtime/torch-cuda/2.9.1/manga_lama_torch.dll",
+          "sha256": "a4b2d9f082b8c3362cdc80d5223d440368ee5212793a0ed6b8b05b0ff3082901",
+          "size": 122368
+        }
+      ]
+    },
+    {
+      "id": "manga-lama-torch",
+      "name": "Manga LaMa checkpoint · TorchScript",
+      "group": "restoration",
+      "platform": "windows-amd64",
+      "url": "https://huggingface.co/TareHimself/AnimeMangaInpainting-torchscript/resolve/b592884b2b6589e57df6916db6bcac7a6307fc58/anime_manga_lama.pt",
+      "sha256": "95d4bf7eb2f13729351ac0a0693c9b9b469b264fc1542ca3fa551b59b464a160",
+      "size": 204190262,
+      "format": "raw",
+      "files": [
+        {
+          "path": "models/manga-lama/anime_manga_lama.pt",
+          "sha256": "95d4bf7eb2f13729351ac0a0693c9b9b469b264fc1542ca3fa551b59b464a160",
+          "size": 204190262
+        }
+      ]
+    },
+    {
+      "id": "libtorch-torch-linux-arm64",
+      "name": "libtorch",
+      "group": "runtime",
+      "platform": "linux-arm64",
+      "url": "https://download-r2.pytorch.org/whl/cu130/torch-2.13.0%2Bcu130-cp312-cp312-manylinux_2_28_aarch64.whl",
+      "sha256": "5ebd552c887e707c8e64927aceb8377ca2e81588c4e7494bcd23cb8ac0aca14d",
+      "size": 427082459,
+      "format": "zip",
+      "files": [
+        {
+          "entry": "torch/lib/libarm_compute.so",
+          "path": "runtime/torch-cuda/2.13.0/libarm_compute.so",
+          "sha256": "8a2b4e76bc23c5fc5cc0a56bb2840df5cfa0a631995863326f8b88cd7b4c0098",
+          "size": 17850537
+        },
+        {
+          "entry": "torch/lib/libarm_compute_graph.so",
+          "path": "runtime/torch-cuda/2.13.0/libarm_compute_graph.so",
+          "sha256": "98b45299d32d2027c46f07bf413aa55832b88f6ffa40cb7f50345417cf990aab",
+          "size": 1310433
+        },
+        {
+          "entry": "torch/lib/libc10.so",
+          "path": "runtime/torch-cuda/2.13.0/libc10.so",
+          "sha256": "a3af71199fbaedb8ee7ffcf3339f65ea15ed85176bc74238e8494895731a923b",
+          "size": 1930761
+        },
+        {
+          "entry": "torch/lib/libc10_cuda.so",
+          "path": "runtime/torch-cuda/2.13.0/libc10_cuda.so",
+          "sha256": "0bf57e79c9094924e8184f6fc265f3e4850e1eb6a50a4f1427255e8a9a30d2b2",
+          "size": 736705
+        },
+        {
+          "entry": "torch/lib/libcaffe2_nvrtc.so",
+          "path": "runtime/torch-cuda/2.13.0/libcaffe2_nvrtc.so",
+          "sha256": "da9c46c6944d0b7929ae3d4a1cf0551fc566772a0c9d547c93aaa8acfa1f260c",
+          "size": 264737
+        },
+        {
+          "entry": "torch/lib/libgfortran.so.5",
+          "path": "runtime/torch-cuda/2.13.0/libgfortran.so.5",
+          "sha256": "85b16e871782bcf3a83a49f8be57b4ff631b31e76af696ce4ad2bb049a78fd8f",
+          "size": 1485185
+        },
+        {
+          "entry": "torch/lib/libgomp.so.1",
+          "path": "runtime/torch-cuda/2.13.0/libgomp.so.1",
+          "sha256": "dfee810d70d5df631d5cbf4170273938cf0ab5756caa65c7cd264746cdf886ad",
+          "size": 344073
+        },
+        {
+          "entry": "torch/lib/libnvpl_blas_core.so.0",
+          "path": "runtime/torch-cuda/2.13.0/libnvpl_blas_core.so.0",
+          "sha256": "5d74d2a7d48ace2b563405d42695053f8dd058a92db19a5e54ecdeab21a3f6d5",
+          "size": 2562097
+        },
+        {
+          "entry": "torch/lib/libnvpl_blas_lp64_gomp.so.0",
+          "path": "runtime/torch-cuda/2.13.0/libnvpl_blas_lp64_gomp.so.0",
+          "sha256": "4ba3cde968a086163fcfc923c0fabcfb43be2cfbea7662399889b3cf086f4077",
+          "size": 469313
+        },
+        {
+          "entry": "torch/lib/libnvpl_lapack_core.so.0",
+          "path": "runtime/torch-cuda/2.13.0/libnvpl_lapack_core.so.0",
+          "sha256": "10ef87919b461fe818a9bfabf149526150cf463d938ad1aa0863311ea4a10c15",
+          "size": 1710681
+        },
+        {
+          "entry": "torch/lib/libnvpl_lapack_lp64_gomp.so.0",
+          "path": "runtime/torch-cuda/2.13.0/libnvpl_lapack_lp64_gomp.so.0",
+          "sha256": "0e02dc39b705e466bb887d6967140ff4c02595f0e10b1865adb012fc232352de",
+          "size": 5936761
+        },
+        {
+          "entry": "torch/lib/libshm.so",
+          "path": "runtime/torch-cuda/2.13.0/libshm.so",
+          "sha256": "684e3903a59e48cba59e49667f22151b5a1a9e2fe5c5a9aa7fadbcf1f92c4646",
+          "size": 266009
+        },
+        {
+          "entry": "torch/lib/libtorch.so",
+          "path": "runtime/torch-cuda/2.13.0/libtorch.so",
+          "sha256": "bbbb6e1a709677f5435b2f7fbbe263f27a2cc6ddf6009ea1285449bab9861dd8",
+          "size": 273561
+        },
+        {
+          "entry": "torch/lib/libtorch_cpu.so",
+          "path": "runtime/torch-cuda/2.13.0/libtorch_cpu.so",
+          "sha256": "c5d3223ce4222decdc23ed7c8491c62b546cd34487e7adf2daacebacdd086799",
+          "size": 267181049
+        },
+        {
+          "entry": "torch/lib/libtorch_cuda.so",
+          "path": "runtime/torch-cuda/2.13.0/libtorch_cuda.so",
+          "sha256": "3db19ad428ce41d67d5267cae04872e101a4cf72449eee27cfc4c424f6eb50b7",
+          "size": 430140497
+        },
+        {
+          "entry": "torch/lib/libtorch_cuda_linalg.so",
+          "path": "runtime/torch-cuda/2.13.0/libtorch_cuda_linalg.so",
+          "sha256": "c2f2509155ffb85059f7dc9457a9680ba4469d16bc3126844c98db65ffba903e",
+          "size": 757313
+        },
+        {
+          "entry": "torch/lib/libtorch_global_deps.so",
+          "path": "runtime/torch-cuda/2.13.0/libtorch_global_deps.so",
+          "sha256": "03301852e6bf75fa1c57009e0822526fada43202a8f2d81976d407e8671f4f49",
+          "size": 262993
+        },
+        {
+          "entry": "torch/lib/libtorch_nvshmem.so",
+          "path": "runtime/torch-cuda/2.13.0/libtorch_nvshmem.so",
+          "sha256": "697f0b9bbd258e843d76e8488a2b16a839a530aeb7c63223b731fc2bd2720d08",
+          "size": 3974945
+        },
+        {
+          "entry": "torch-2.13.0+cu130.dist-info/licenses/LICENSE",
+          "path": "runtime/torch-cuda/2.13.0/licenses/libtorch/torch-2.13.0+cu130.dist-info_licenses_LICENSE",
+          "sha256": "bd018feef8825e88181c84eb7e3aa4eafb8f08a20d9fd6ef948569610c4a3e43",
+          "size": 3464
+        },
+        {
+          "entry": "torch-2.13.0+cu130.dist-info/licenses/third_party/FP16/LICENSE",
+          "path": "runtime/torch-cuda/2.13.0/licenses/libtorch/torch-2.13.0+cu130.dist-info_licenses_third_party_FP16_LICENSE",
+          "sha256": "17e4f539024be2749ee729d1e2f01d24cef12ece8c9bf18e91a4349be29c80bf",
+          "size": 1157
+        },
+        {
+          "entry": "torch-2.13.0+cu130.dist-info/licenses/third_party/FXdiv/LICENSE",
+          "path": "runtime/torch-cuda/2.13.0/licenses/libtorch/torch-2.13.0+cu130.dist-info_licenses_third_party_FXdiv_LICENSE",
+          "sha256": "7cac00006125b1486a27e4801ed66357236e984c540bd323945ab7b66b078ec3",
+          "size": 1117
+        },
+        {
+          "entry": "torch-2.13.0+cu130.dist-info/licenses/third_party/NNPACK/LICENSE",
+          "path": "runtime/torch-cuda/2.13.0/licenses/libtorch/torch-2.13.0+cu130.dist-info_licenses_third_party_NNPACK_LICENSE",
+          "sha256": "ab09e33621f513ebdd1ef685b324f39c1f6bee9221d15600bafd958322df1231",
+          "size": 1352
+        },
+        {
+          "entry": "torch-2.13.0+cu130.dist-info/licenses/third_party/NVTX/LICENSE.txt",
+          "path": "runtime/torch-cuda/2.13.0/licenses/libtorch/torch-2.13.0+cu130.dist-info_licenses_third_party_NVTX_LICENSE.txt",
+          "sha256": "abdfd8a6738b27cd1504e091f77b682dbae928339f040b8a6f59a548245991a0",
+          "size": 12483
+        },
+        {
+          "entry": "torch-2.13.0+cu130.dist-info/licenses/third_party/NVTX/docs/LICENSE.txt",
+          "path": "runtime/torch-cuda/2.13.0/licenses/libtorch/torch-2.13.0+cu130.dist-info_licenses_third_party_NVTX_docs_LICENSE.txt",
+          "sha256": "abdfd8a6738b27cd1504e091f77b682dbae928339f040b8a6f59a548245991a0",
+          "size": 12483
+        },
+        {
+          "entry": "torch-2.13.0+cu130.dist-info/licenses/third_party/NVTX/python/LICENSE.txt",
+          "path": "runtime/torch-cuda/2.13.0/licenses/libtorch/torch-2.13.0+cu130.dist-info_licenses_third_party_NVTX_python_LICENSE.txt",
+          "sha256": "abdfd8a6738b27cd1504e091f77b682dbae928339f040b8a6f59a548245991a0",
+          "size": 12483
+        },
+        {
+          "entry": "torch-2.13.0+cu130.dist-info/licenses/third_party/VulkanMemoryAllocator/LICENSE.txt",
+          "path": "runtime/torch-cuda/2.13.0/licenses/libtorch/torch-2.13.0+cu130.dist-info_licenses_third_party_VulkanMemoryAllocator_LICENSE.txt",
+          "sha256": "8d70e4cf2a9941f6454da71cd60e38484dd3e34810c824760d550e982af6d97a",
+          "size": 1099
+        },
+        {
+          "entry": "torch-2.13.0+cu130.dist-info/licenses/third_party/XNNPACK/LICENSE",
+          "path": "runtime/torch-cuda/2.13.0/licenses/libtorch/torch-2.13.0+cu130.dist-info_licenses_third_party_XNNPACK_LICENSE",
+          "sha256": "63f519e15726f4c4f830bd958f694c84fecb4e0a4cacc527d2696bb71ef95ada",
+          "size": 1560
+        },
+        {
+          "entry": "torch-2.13.0+cu130.dist-info/licenses/third_party/aiter/LICENSE",
+          "path": "runtime/torch-cuda/2.13.0/licenses/libtorch/torch-2.13.0+cu130.dist-info_licenses_third_party_aiter_LICENSE",
+          "sha256": "0baca809927cad448401b252ce3bae12687c2987597ad7088cf3423f872d5bcd",
+          "size": 1100
+        },
+        {
+          "entry": "torch-2.13.0+cu130.dist-info/licenses/third_party/aiter/3rdparty/composable_kernel/LICENSE",
+          "path": "runtime/torch-cuda/2.13.0/licenses/libtorch/torch-2.13.0+cu130.dist-info_licenses_third_party_aiter_3rdparty_composable_kernel_LICENSE",
+          "sha256": "20f3b83dfda01bd18d285e0edbb9d044be6dde04cdf76a1ec18d9fc7127936bf",
+          "size": 1726
+        },
+        {
+          "entry": "torch-2.13.0+cu130.dist-info/licenses/third_party/benchmark/LICENSE",
+          "path": "runtime/torch-cuda/2.13.0/licenses/libtorch/torch-2.13.0+cu130.dist-info_licenses_third_party_benchmark_LICENSE",
+          "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+          "size": 11358
+        },
+        {
+          "entry": "torch-2.13.0+cu130.dist-info/licenses/third_party/composable_kernel/LICENSE",
+          "path": "runtime/torch-cuda/2.13.0/licenses/libtorch/torch-2.13.0+cu130.dist-info_licenses_third_party_composable_kernel_LICENSE",
+          "sha256": "20f3b83dfda01bd18d285e0edbb9d044be6dde04cdf76a1ec18d9fc7127936bf",
+          "size": 1726
+        },
+        {
+          "entry": "torch-2.13.0+cu130.dist-info/licenses/third_party/cpp-httplib/LICENSE",
+          "path": "runtime/torch-cuda/2.13.0/licenses/libtorch/torch-2.13.0+cu130.dist-info_licenses_third_party_cpp-httplib_LICENSE",
+          "sha256": "4b45cbe16d7b71b89ae6127e26e0d90a029198ca5e958ad8e3d0b8bbed364d8b",
+          "size": 1075
+        },
+        {
+          "entry": "torch-2.13.0+cu130.dist-info/licenses/third_party/cpuinfo/LICENSE",
+          "path": "runtime/torch-cuda/2.13.0/licenses/libtorch/torch-2.13.0+cu130.dist-info_licenses_third_party_cpuinfo_LICENSE",
+          "sha256": "8e7e60636c3aa0cb03571a1a841ce5697f9551ff92b3c426c2561613d15ade70",
+          "size": 1424
+        },
+        {
+          "entry": "torch-2.13.0+cu130.dist-info/licenses/third_party/cpuinfo/deps/clog/LICENSE",
+          "path": "runtime/torch-cuda/2.13.0/licenses/libtorch/torch-2.13.0+cu130.dist-info_licenses_third_party_cpuinfo_deps_clog_LICENSE",
+          "sha256": "68a14c3e79add023eecd83d611e73f05b8bf1d16852efeb7eb4033a96736da9e",
+          "size": 1384
+        },
+        {
+          "entry": "torch-2.13.0+cu130.dist-info/licenses/third_party/cudnn_frontend/LICENSE.txt",
+          "path": "runtime/torch-cuda/2.13.0/licenses/libtorch/torch-2.13.0+cu130.dist-info_licenses_third_party_cudnn_frontend_LICENSE.txt",
+          "sha256": "3fc4b473a2c08768a8066bf7e4a58a1185060f3ad674f2ca9e2011bca4adf2ce",
+          "size": 1148
+        },
+        {
+          "entry": "torch-2.13.0+cu130.dist-info/licenses/third_party/cutlass/LICENSE.txt",
+          "path": "runtime/torch-cuda/2.13.0/licenses/libtorch/torch-2.13.0+cu130.dist-info_licenses_third_party_cutlass_LICENSE.txt",
+          "sha256": "7bc733829f16663593865344541c6dcc433beb6b6b555c8f86a43e9b399993cf",
+          "size": 1854
+        },
+        {
+          "entry": "torch-2.13.0+cu130.dist-info/licenses/third_party/cutlass/python/LICENSE.txt",
+          "path": "runtime/torch-cuda/2.13.0/licenses/libtorch/torch-2.13.0+cu130.dist-info_licenses_third_party_cutlass_python_LICENSE.txt",
+          "sha256": "00bf1806f664ac1afe4221f5f04b384fb6f1ca6eb33efcb6dccf599eb06d08b9",
+          "size": 1547
+        },
+        {
+          "entry": "torch-2.13.0+cu130.dist-info/licenses/third_party/fbgemm/LICENSE",
+          "path": "runtime/torch-cuda/2.13.0/licenses/libtorch/torch-2.13.0+cu130.dist-info_licenses_third_party_fbgemm_LICENSE",
+          "sha256": "12c2370ec32e78115dcd71ba22cdcb1297320fdc4ade81f798136d42357c58b8",
+          "size": 1535
+        },
+        {
+          "entry": "torch-2.13.0+cu130.dist-info/licenses/third_party/fbgemm/external/composable_kernel/LICENSE",
+          "path": "runtime/torch-cuda/2.13.0/licenses/libtorch/torch-2.13.0+cu130.dist-info_licenses_third_party_fbgemm_external_composable_kernel_LICENSE",
+          "sha256": "20f3b83dfda01bd18d285e0edbb9d044be6dde04cdf76a1ec18d9fc7127936bf",
+          "size": 1726
+        },
+        {
+          "entry": "torch-2.13.0+cu130.dist-info/licenses/third_party/fbgemm/external/cpuinfo/LICENSE",
+          "path": "runtime/torch-cuda/2.13.0/licenses/libtorch/torch-2.13.0+cu130.dist-info_licenses_third_party_fbgemm_external_cpuinfo_LICENSE",
+          "sha256": "8e7e60636c3aa0cb03571a1a841ce5697f9551ff92b3c426c2561613d15ade70",
+          "size": 1424
+        },
+        {
+          "entry": "torch-2.13.0+cu130.dist-info/licenses/third_party/fbgemm/external/cpuinfo/deps/clog/LICENSE",
+          "path": "runtime/torch-cuda/2.13.0/licenses/libtorch/torch-2.13.0+cu130.dist-info_licenses_third_party_fbgemm_external_cpuinfo_deps_clog_LICENSE",
+          "sha256": "68a14c3e79add023eecd83d611e73f05b8bf1d16852efeb7eb4033a96736da9e",
+          "size": 1384
+        },
+        {
+          "entry": "torch-2.13.0+cu130.dist-info/licenses/third_party/fbgemm/external/cutlass/LICENSE.txt",
+          "path": "runtime/torch-cuda/2.13.0/licenses/libtorch/torch-2.13.0+cu130.dist-info_licenses_third_party_fbgemm_external_cutlass_LICENSE.txt",
+          "sha256": "80a7a18b73d41f64dd9ca881af35938f8de88b18c728703251f4c94d1299884d",
+          "size": 1854
+        },
+        {
+          "entry": "torch-2.13.0+cu130.dist-info/licenses/third_party/fbgemm/external/cutlass/python/LICENSE.txt",
+          "path": "runtime/torch-cuda/2.13.0/licenses/libtorch/torch-2.13.0+cu130.dist-info_licenses_third_party_fbgemm_external_cutlass_python_LICENSE.txt",
+          "sha256": "42fec630f410aa308f70a51a89fadcd19586fa620f9831a32bee528a9a10000e",
+          "size": 1547
+        },
+        {
+          "entry": "torch-2.13.0+cu130.dist-info/licenses/third_party/fbgemm/external/googletest/LICENSE",
+          "path": "runtime/torch-cuda/2.13.0/licenses/libtorch/torch-2.13.0+cu130.dist-info_licenses_third_party_fbgemm_external_googletest_LICENSE",
+          "sha256": "9702de7e4117a8e2b20dafab11ffda58c198aede066406496bef670d40a22138",
+          "size": 1475
+        },
+        {
+          "entry": "torch-2.13.0+cu130.dist-info/licenses/third_party/fbgemm/external/hipify_torch/LICENSE.txt",
+          "path": "runtime/torch-cuda/2.13.0/licenses/libtorch/torch-2.13.0+cu130.dist-info_licenses_third_party_fbgemm_external_hipify_torch_LICENSE.txt",
+          "sha256": "ecf819d55b17c2f091b3ba0934d044368aa0680d8a81374860306aa2b91aa1eb",
+          "size": 1112
+        },
+        {
+          "entry": "torch-2.13.0+cu130.dist-info/licenses/third_party/fbgemm/fbgemm_gpu/experimental/hstu/LICENSE",
+          "path": "runtime/torch-cuda/2.13.0/licenses/libtorch/torch-2.13.0+cu130.dist-info_licenses_third_party_fbgemm_fbgemm_gpu_experimental_hstu_LICENSE",
+          "sha256": "e364577f7a53353281c4462d5810e284e14d5e801414a9117a108ff2da987bcd",
+          "size": 2124
+        },
+        {
+          "entry": "torch-2.13.0+cu130.dist-info/licenses/third_party/fbgemm/fbgemm_gpu/src/quantize_ops/mx/LICENSE",
+          "path": "runtime/torch-cuda/2.13.0/licenses/libtorch/torch-2.13.0+cu130.dist-info_licenses_third_party_fbgemm_fbgemm_gpu_src_quantize_ops_mx_LICENSE",
+          "sha256": "c2cfccb812fe482101a8f04597dfc5a9991a6b2748266c47ac91b6a5aae15383",
+          "size": 1141
+        },
+        {
+          "entry": "torch-2.13.0+cu130.dist-info/licenses/third_party/fbgemm/fbgemm_gpu/test/quantize/mx/LICENSE",
+          "path": "runtime/torch-cuda/2.13.0/licenses/libtorch/torch-2.13.0+cu130.dist-info_licenses_third_party_fbgemm_fbgemm_gpu_test_quantize_mx_LICENSE",
+          "sha256": "c2cfccb812fe482101a8f04597dfc5a9991a6b2748266c47ac91b6a5aae15383",
+          "size": 1141
+        },
+        {
+          "entry": "torch-2.13.0+cu130.dist-info/licenses/third_party/flash-attention/LICENSE",
+          "path": "runtime/torch-cuda/2.13.0/licenses/libtorch/torch-2.13.0+cu130.dist-info_licenses_third_party_flash-attention_LICENSE",
+          "sha256": "8c9ccb96c065e706135b6cbad279b721da6156e51f3a5f27c6b3329af9416d73",
+          "size": 1558
+        },
+        {
+          "entry": "torch-2.13.0+cu130.dist-info/licenses/third_party/flash-attention/csrc/composable_kernel/LICENSE",
+          "path": "runtime/torch-cuda/2.13.0/licenses/libtorch/torch-2.13.0+cu130.dist-info_licenses_third_party_flash-attention_csrc_composable_kernel_LICENSE",
+          "sha256": "20f3b83dfda01bd18d285e0edbb9d044be6dde04cdf76a1ec18d9fc7127936bf",
+          "size": 1726
+        },
+        {
+          "entry": "torch-2.13.0+cu130.dist-info/licenses/third_party/flash-attention/csrc/cutlass/LICENSE.txt",
+          "path": "runtime/torch-cuda/2.13.0/licenses/libtorch/torch-2.13.0+cu130.dist-info_licenses_third_party_flash-attention_csrc_cutlass_LICENSE.txt",
+          "sha256": "80a7a18b73d41f64dd9ca881af35938f8de88b18c728703251f4c94d1299884d",
+          "size": 1854
+        },
+        {
+          "entry": "torch-2.13.0+cu130.dist-info/licenses/third_party/flash-attention/csrc/cutlass/python/LICENSE.txt",
+          "path": "runtime/torch-cuda/2.13.0/licenses/libtorch/torch-2.13.0+cu130.dist-info_licenses_third_party_flash-attention_csrc_cutlass_python_LICENSE.txt",
+          "sha256": "42fec630f410aa308f70a51a89fadcd19586fa620f9831a32bee528a9a10000e",
+          "size": 1547
+        },
+        {
+          "entry": "torch-2.13.0+cu130.dist-info/licenses/third_party/flash-attention/flash_attn/cute/LICENSE",
+          "path": "runtime/torch-cuda/2.13.0/licenses/libtorch/torch-2.13.0+cu130.dist-info_licenses_third_party_flash-attention_flash_attn_cute_LICENSE",
+          "sha256": "8c9ccb96c065e706135b6cbad279b721da6156e51f3a5f27c6b3329af9416d73",
+          "size": 1558
+        },
+        {
+          "entry": "torch-2.13.0+cu130.dist-info/licenses/third_party/flash-attention/third_party/aiter/LICENSE",
+          "path": "runtime/torch-cuda/2.13.0/licenses/libtorch/torch-2.13.0+cu130.dist-info_licenses_third_party_flash-attention_third_party_aiter_LICENSE",
+          "sha256": "0baca809927cad448401b252ce3bae12687c2987597ad7088cf3423f872d5bcd",
+          "size": 1100
+        },
+        {
+          "entry": "torch-2.13.0+cu130.dist-info/licenses/third_party/flash-attention/third_party/aiter/3rdparty/composable_kernel/LICENSE",
+          "path": "runtime/torch-cuda/2.13.0/licenses/libtorch/torch-2.13.0+cu130.dist-info_licenses_third_party_flash-attention_third_party_aiter_3rdparty_composable_kernel_LICENSE",
+          "sha256": "20f3b83dfda01bd18d285e0edbb9d044be6dde04cdf76a1ec18d9fc7127936bf",
+          "size": 1726
+        },
+        {
+          "entry": "torch-2.13.0+cu130.dist-info/licenses/third_party/flatbuffers/LICENSE",
+          "path": "runtime/torch-cuda/2.13.0/licenses/libtorch/torch-2.13.0+cu130.dist-info_licenses_third_party_flatbuffers_LICENSE",
+          "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+          "size": 11358
+        },
+        {
+          "entry": "torch-2.13.0+cu130.dist-info/licenses/third_party/flatbuffers/dart/LICENSE",
+          "path": "runtime/torch-cuda/2.13.0/licenses/libtorch/torch-2.13.0+cu130.dist-info_licenses_third_party_flatbuffers_dart_LICENSE",
+          "sha256": "edd9b3459bee4c79b549a5ef66d06d12bd144ddb8d08e0b448fb421267f43dd5",
+          "size": 11341
+        },
+        {
+          "entry": "torch-2.13.0+cu130.dist-info/licenses/third_party/flatbuffers/swift/LICENSE",
+          "path": "runtime/torch-cuda/2.13.0/licenses/libtorch/torch-2.13.0+cu130.dist-info_licenses_third_party_flatbuffers_swift_LICENSE",
+          "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+          "size": 11358
+        },
+        {
+          "entry": "torch-2.13.0+cu130.dist-info/licenses/third_party/fmt/LICENSE",
+          "path": "runtime/torch-cuda/2.13.0/licenses/libtorch/torch-2.13.0+cu130.dist-info_licenses_third_party_fmt_LICENSE",
+          "sha256": "07580f2a3b35709ce703d523f447b242f6dfec7582a8c0df102c7fa2849375f8",
+          "size": 1431
+        },
+        {
+          "entry": "torch-2.13.0+cu130.dist-info/licenses/third_party/gemmlowp/gemmlowp/LICENSE",
+          "path": "runtime/torch-cuda/2.13.0/licenses/libtorch/torch-2.13.0+cu130.dist-info_licenses_third_party_gemmlowp_gemmlowp_LICENSE",
+          "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+          "size": 11358
+        },
+        {
+          "entry": "torch-2.13.0+cu130.dist-info/licenses/third_party/gloo/LICENSE",
+          "path": "runtime/torch-cuda/2.13.0/licenses/libtorch/torch-2.13.0+cu130.dist-info_licenses_third_party_gloo_LICENSE",
+          "sha256": "2afbc572cf7f60888159bc2ca48ba58f8adec06682ae5de820d61449d1eeea81",
+          "size": 1525
+        },
+        {
+          "entry": "torch-2.13.0+cu130.dist-info/licenses/third_party/googletest/LICENSE",
+          "path": "runtime/torch-cuda/2.13.0/licenses/libtorch/torch-2.13.0+cu130.dist-info_licenses_third_party_googletest_LICENSE",
+          "sha256": "9702de7e4117a8e2b20dafab11ffda58c198aede066406496bef670d40a22138",
+          "size": 1475
+        },
+        {
+          "entry": "torch-2.13.0+cu130.dist-info/licenses/third_party/ideep/LICENSE",
+          "path": "runtime/torch-cuda/2.13.0/licenses/libtorch/torch-2.13.0+cu130.dist-info_licenses_third_party_ideep_LICENSE",
+          "sha256": "a26add03107a53a605a89711b9b7dbd4f5dd668ae193a912e01a879366a23b0e",
+          "size": 1062
+        },
+        {
+          "entry": "torch-2.13.0+cu130.dist-info/licenses/third_party/ideep/mkl-dnn/LICENSE",
+          "path": "runtime/torch-cuda/2.13.0/licenses/libtorch/torch-2.13.0+cu130.dist-info_licenses_third_party_ideep_mkl-dnn_LICENSE",
+          "sha256": "e9fc874fc09801b9acf3411ba72394098473704d832d713404b6c4861a086318",
+          "size": 11607
+        },
+        {
+          "entry": "torch-2.13.0+cu130.dist-info/licenses/third_party/ideep/mkl-dnn/third_party/gtest/LICENSE",
+          "path": "runtime/torch-cuda/2.13.0/licenses/libtorch/torch-2.13.0+cu130.dist-info_licenses_third_party_ideep_mkl-dnn_third_party_gtest_LICENSE",
+          "sha256": "9702de7e4117a8e2b20dafab11ffda58c198aede066406496bef670d40a22138",
+          "size": 1475
+        },
+        {
+          "entry": "torch-2.13.0+cu130.dist-info/licenses/third_party/ideep/mkl-dnn/third_party/opencl/LICENSE",
+          "path": "runtime/torch-cuda/2.13.0/licenses/libtorch/torch-2.13.0+cu130.dist-info_licenses_third_party_ideep_mkl-dnn_third_party_opencl_LICENSE",
+          "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+          "size": 11358
+        },
+        {
+          "entry": "torch-2.13.0+cu130.dist-info/licenses/third_party/kineto/LICENSE",
+          "path": "runtime/torch-cuda/2.13.0/licenses/libtorch/torch-2.13.0+cu130.dist-info_licenses_third_party_kineto_LICENSE",
+          "sha256": "6f3d59b9103e72e5c977eecf61b261c2e1546a9be2995847e3ee2d31021fd39b",
+          "size": 1609
+        },
+        {
+          "entry": "torch-2.13.0+cu130.dist-info/licenses/third_party/kineto/libkineto/third_party/dynolog/LICENSE",
+          "path": "runtime/torch-cuda/2.13.0/licenses/libtorch/torch-2.13.0+cu130.dist-info_licenses_third_party_kineto_libkineto_third_party_dynolog_LICENSE",
+          "sha256": "52412d7bc7ce4157ea628bbaacb8829e0a9cb3c58f57f99176126bc8cf2bfc85",
+          "size": 1086
+        },
+        {
+          "entry": "torch-2.13.0+cu130.dist-info/licenses/third_party/kineto/libkineto/third_party/dynolog/third_party/DCGM/LICENSE",
+          "path": "runtime/torch-cuda/2.13.0/licenses/libtorch/torch-2.13.0+cu130.dist-info_licenses_third_party_kineto_libkineto_third_party_dynolog_third_party_DCGM_LICENSE",
+          "sha256": "6617037401b04db6d1e89a9bec00e25a063edab9354dba63f84bf4e7e1345470",
+          "size": 587
+        },
+        {
+          "entry": "torch-2.13.0+cu130.dist-info/licenses/third_party/kineto/libkineto/third_party/dynolog/third_party/DCGM/testing/python3/libs_3rdparty/colorama/LICENSE.txt",
+          "path": "runtime/torch-cuda/2.13.0/licenses/libtorch/torch-2.13.0+cu130.dist-info_licenses_third_party_kineto_libkineto_third_party_dynolog_third_party_DCGM_testing_python3_libs_3rdparty_colorama_LICENSE.txt",
+          "sha256": "90ba34a1de1a8f02b8a9896aa2c83b9a960376b85bc7d0d20f39b84c9174c7c1",
+          "size": 1721
+        },
+        {
+          "entry": "torch-2.13.0+cu130.dist-info/licenses/third_party/kineto/libkineto/third_party/dynolog/third_party/cpr/LICENSE",
+          "path": "runtime/torch-cuda/2.13.0/licenses/libtorch/torch-2.13.0+cu130.dist-info_licenses_third_party_kineto_libkineto_third_party_dynolog_third_party_cpr_LICENSE",
+          "sha256": "df77cacba01d8f241a2e7af01b9a636c0037cf810d80bbcfdbcc405c99a2d563",
+          "size": 1229
+        },
+        {
+          "entry": "torch-2.13.0+cu130.dist-info/licenses/third_party/kineto/libkineto/third_party/dynolog/third_party/cpr/test/LICENSE",
+          "path": "runtime/torch-cuda/2.13.0/licenses/libtorch/torch-2.13.0+cu130.dist-info_licenses_third_party_kineto_libkineto_third_party_dynolog_third_party_cpr_test_LICENSE",
+          "sha256": "7d412b7a16a0ca54f6a026b7e24394f9ac3621fba8301976db4044711135842b",
+          "size": 35231
+        },
+        {
+          "entry": "torch-2.13.0+cu130.dist-info/licenses/third_party/kineto/libkineto/third_party/dynolog/third_party/fmt/LICENSE.rst",
+          "path": "runtime/torch-cuda/2.13.0/licenses/libtorch/torch-2.13.0+cu130.dist-info_licenses_third_party_kineto_libkineto_third_party_dynolog_third_party_fmt_LICENSE.rst",
+          "sha256": "825c9324e70f8c839c8ba910543dd4a7daee243b86ef960594c11381a19980b8",
+          "size": 1408
+        },
+        {
+          "entry": "torch-2.13.0+cu130.dist-info/licenses/third_party/kineto/libkineto/third_party/dynolog/third_party/googletest/LICENSE",
+          "path": "runtime/torch-cuda/2.13.0/licenses/libtorch/torch-2.13.0+cu130.dist-info_licenses_third_party_kineto_libkineto_third_party_dynolog_third_party_googletest_LICENSE",
+          "sha256": "9702de7e4117a8e2b20dafab11ffda58c198aede066406496bef670d40a22138",
+          "size": 1475
+        },
+        {
+          "entry": "torch-2.13.0+cu130.dist-info/licenses/third_party/kineto/libkineto/third_party/dynolog/third_party/json/test/thirdparty/doctest/LICENSE.txt",
+          "path": "runtime/torch-cuda/2.13.0/licenses/libtorch/torch-2.13.0+cu130.dist-info_licenses_third_party_kineto_libkineto_third_party_dynolog_third_party_json_test_thirdparty_doctest_LICENSE.txt",
+          "sha256": "21d5cc7eacfbe785d8a7642457ecf630a611220683aa7d7d8cd9febfdb0d06fc",
+          "size": 1086
+        },
+        {
+          "entry": "torch-2.13.0+cu130.dist-info/licenses/third_party/kineto/libkineto/third_party/dynolog/third_party/json/third_party/cpplint/LICENSE",
+          "path": "runtime/torch-cuda/2.13.0/licenses/libtorch/torch-2.13.0+cu130.dist-info_licenses_third_party_kineto_libkineto_third_party_dynolog_third_party_json_third_party_cpplint_LICENSE",
+          "sha256": "02fd655b9adb79e771fd60267a722f0862d43381f95bb38bd6ada5e2080272c4",
+          "size": 1502
+        },
+        {
+          "entry": "torch-2.13.0+cu130.dist-info/licenses/third_party/kineto/libkineto/third_party/dynolog/third_party/pfs/LICENSE",
+          "path": "runtime/torch-cuda/2.13.0/licenses/libtorch/torch-2.13.0+cu130.dist-info_licenses_third_party_kineto_libkineto_third_party_dynolog_third_party_pfs_LICENSE",
+          "sha256": "d86de50046bd9fd5e47f305236f2a1b342865e367e6da1fbd4185791be5f741a",
+          "size": 10767
+        },
+        {
+          "entry": "torch-2.13.0+cu130.dist-info/licenses/third_party/kineto/libkineto/third_party/dynolog/third_party/prometheus-cpp/LICENSE",
+          "path": "runtime/torch-cuda/2.13.0/licenses/libtorch/torch-2.13.0+cu130.dist-info_licenses_third_party_kineto_libkineto_third_party_dynolog_third_party_prometheus-cpp_LICENSE",
+          "sha256": "631da2561d776749086945e1f5adf2e5f4fcde920ddaacda018d505787de1882",
+          "size": 1200
+        },
+        {
+          "entry": "torch-2.13.0+cu130.dist-info/licenses/third_party/kineto/libkineto/third_party/dynolog/third_party/prometheus-cpp/3rdparty/civetweb/examples/rest/cJSON/LICENSE",
+          "path": "runtime/torch-cuda/2.13.0/licenses/libtorch/torch-2.13.0+cu130.dist-info_licenses_third_party_kineto_libkineto_third_party_dynolog_third_party_prometheus-cpp_3rdparty_civetweb_examples_rest_cJSON_LICENSE",
+          "sha256": "a36dda207c36db5818729c54e7ad4e8b0c6fba847491ba64f372c1a2037b6d5c",
+          "size": 1084
+        },
+        {
+          "entry": "torch-2.13.0+cu130.dist-info/licenses/third_party/kineto/libkineto/third_party/dynolog/third_party/prometheus-cpp/3rdparty/civetweb/src/third_party/duktape-1.5.2/LICENSE.txt",
+          "path": "runtime/torch-cuda/2.13.0/licenses/libtorch/torch-2.13.0+cu130.dist-info_licenses_third_party_kineto_libkineto_third_party_dynolog_third_party_prometheus-cpp_3rdparty_civetweb_src_third_party_duktape-1.5.2_LICENSE.txt",
+          "sha256": "f95a124945067d1143f1c6de9a990f2db2426456408ee0f0bfe6de2f568a899f",
+          "size": 1172
+        },
+        {
+          "entry": "torch-2.13.0+cu130.dist-info/licenses/third_party/kineto/libkineto/third_party/dynolog/third_party/prometheus-cpp/3rdparty/civetweb/src/third_party/duktape-1.8.0/LICENSE.txt",
+          "path": "runtime/torch-cuda/2.13.0/licenses/libtorch/torch-2.13.0+cu130.dist-info_licenses_third_party_kineto_libkineto_third_party_dynolog_third_party_prometheus-cpp_3rdparty_civetweb_src_third_party_duktape-1.8.0_LICENSE.txt",
+          "sha256": "5358498534dac625c89a69c10becf3dcc40f9af58e6b69ee358ebdf6934f49c6",
+          "size": 1172
+        },
+        {
+          "entry": "torch-2.13.0+cu130.dist-info/licenses/third_party/kineto/libkineto/third_party/dynolog/third_party/prometheus-cpp/3rdparty/googletest/LICENSE",
+          "path": "runtime/torch-cuda/2.13.0/licenses/libtorch/torch-2.13.0+cu130.dist-info_licenses_third_party_kineto_libkineto_third_party_dynolog_third_party_prometheus-cpp_3rdparty_googletest_LICENSE",
+          "sha256": "9702de7e4117a8e2b20dafab11ffda58c198aede066406496bef670d40a22138",
+          "size": 1475
+        },
+        {
+          "entry": "torch-2.13.0+cu130.dist-info/licenses/third_party/kineto/libkineto/third_party/dynolog/third_party/prometheus-cpp/3rdparty/googletest/googlemock/scripts/generator/LICENSE",
+          "path": "runtime/torch-cuda/2.13.0/licenses/libtorch/torch-2.13.0+cu130.dist-info_licenses_third_party_kineto_libkineto_third_party_dynolog_third_party_prometheus-cpp_3rdparty_googletest_googlemock_scripts_generator_LICENSE",
+          "sha256": "5e0df8c845c742e76f2f64d2d9ce1b7e74a2422fddbc577ae6a56319083de0bf",
+          "size": 11386
+        },
+        {
+          "entry": "torch-2.13.0+cu130.dist-info/licenses/third_party/kineto/libkineto/third_party/fmt/LICENSE",
+          "path": "runtime/torch-cuda/2.13.0/licenses/libtorch/torch-2.13.0+cu130.dist-info_licenses_third_party_kineto_libkineto_third_party_fmt_LICENSE",
+          "sha256": "07580f2a3b35709ce703d523f447b242f6dfec7582a8c0df102c7fa2849375f8",
+          "size": 1431
+        },
+        {
+          "entry": "torch-2.13.0+cu130.dist-info/licenses/third_party/kineto/libkineto/third_party/googletest/LICENSE",
+          "path": "runtime/torch-cuda/2.13.0/licenses/libtorch/torch-2.13.0+cu130.dist-info_licenses_third_party_kineto_libkineto_third_party_googletest_LICENSE",
+          "sha256": "9702de7e4117a8e2b20dafab11ffda58c198aede066406496bef670d40a22138",
+          "size": 1475
+        },
+        {
+          "entry": "torch-2.13.0+cu130.dist-info/licenses/third_party/llvm-openmp/LICENSE.txt",
+          "path": "runtime/torch-cuda/2.13.0/licenses/libtorch/torch-2.13.0+cu130.dist-info_licenses_third_party_llvm-openmp_LICENSE.txt",
+          "sha256": "68395143f21a9aa29b8232168c71892af5ec4f1ae2529571cd250a71c9e37a03",
+          "size": 17003
+        },
+        {
+          "entry": "torch-2.13.0+cu130.dist-info/licenses/third_party/mimalloc/LICENSE",
+          "path": "runtime/torch-cuda/2.13.0/licenses/libtorch/torch-2.13.0+cu130.dist-info_licenses_third_party_mimalloc_LICENSE",
+          "sha256": "82ade5d7d9b029044b5fbbc326207fc47c2d44ee4dd71e8a559c36d728217de9",
+          "size": 1096
+        },
+        {
+          "entry": "torch-2.13.0+cu130.dist-info/licenses/third_party/miniz-3.0.2/LICENSE",
+          "path": "runtime/torch-cuda/2.13.0/licenses/libtorch/torch-2.13.0+cu130.dist-info_licenses_third_party_miniz-3.0.2_LICENSE",
+          "sha256": "0115478d567121238cf6cc1c0c361926cf07a49d9e4c9e66da97fac6a01646b3",
+          "size": 1184
+        },
+        {
+          "entry": "torch-2.13.0+cu130.dist-info/licenses/third_party/mslk/LICENSE",
+          "path": "runtime/torch-cuda/2.13.0/licenses/libtorch/torch-2.13.0+cu130.dist-info_licenses_third_party_mslk_LICENSE",
+          "sha256": "44519cbe722d7bf092cd7e0fa26558b9e3905b88fca4c0c278e2733a9f6b4cf9",
+          "size": 1533
+        },
+        {
+          "entry": "torch-2.13.0+cu130.dist-info/licenses/third_party/mslk/external/composable_kernel/LICENSE",
+          "path": "runtime/torch-cuda/2.13.0/licenses/libtorch/torch-2.13.0+cu130.dist-info_licenses_third_party_mslk_external_composable_kernel_LICENSE",
+          "sha256": "20f3b83dfda01bd18d285e0edbb9d044be6dde04cdf76a1ec18d9fc7127936bf",
+          "size": 1726
+        },
+        {
+          "entry": "torch-2.13.0+cu130.dist-info/licenses/third_party/mslk/external/cutlass/LICENSE.txt",
+          "path": "runtime/torch-cuda/2.13.0/licenses/libtorch/torch-2.13.0+cu130.dist-info_licenses_third_party_mslk_external_cutlass_LICENSE.txt",
+          "sha256": "80a7a18b73d41f64dd9ca881af35938f8de88b18c728703251f4c94d1299884d",
+          "size": 1854
+        },
+        {
+          "entry": "torch-2.13.0+cu130.dist-info/licenses/third_party/mslk/external/cutlass/python/LICENSE.txt",
+          "path": "runtime/torch-cuda/2.13.0/licenses/libtorch/torch-2.13.0+cu130.dist-info_licenses_third_party_mslk_external_cutlass_python_LICENSE.txt",
+          "sha256": "42fec630f410aa308f70a51a89fadcd19586fa620f9831a32bee528a9a10000e",
+          "size": 1547
+        },
+        {
+          "entry": "torch-2.13.0+cu130.dist-info/licenses/third_party/mslk/external/googletest/LICENSE",
+          "path": "runtime/torch-cuda/2.13.0/licenses/libtorch/torch-2.13.0+cu130.dist-info_licenses_third_party_mslk_external_googletest_LICENSE",
+          "sha256": "9702de7e4117a8e2b20dafab11ffda58c198aede066406496bef670d40a22138",
+          "size": 1475
+        },
+        {
+          "entry": "torch-2.13.0+cu130.dist-info/licenses/third_party/mslk/external/hipify_torch/LICENSE.txt",
+          "path": "runtime/torch-cuda/2.13.0/licenses/libtorch/torch-2.13.0+cu130.dist-info_licenses_third_party_mslk_external_hipify_torch_LICENSE.txt",
+          "sha256": "ecf819d55b17c2f091b3ba0934d044368aa0680d8a81374860306aa2b91aa1eb",
+          "size": 1112
+        },
+        {
+          "entry": "torch-2.13.0+cu130.dist-info/licenses/third_party/mslk/mslk/attention/flash_attn/LICENSE",
+          "path": "runtime/torch-cuda/2.13.0/licenses/libtorch/torch-2.13.0+cu130.dist-info_licenses_third_party_mslk_mslk_attention_flash_attn_LICENSE",
+          "sha256": "8c9ccb96c065e706135b6cbad279b721da6156e51f3a5f27c6b3329af9416d73",
+          "size": 1558
+        },
+        {
+          "entry": "torch-2.13.0+cu130.dist-info/licenses/third_party/onnx/LICENSE",
+          "path": "runtime/torch-cuda/2.13.0/licenses/libtorch/torch-2.13.0+cu130.dist-info_licenses_third_party_onnx_LICENSE",
+          "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+          "size": 11358
+        },
+        {
+          "entry": "torch-2.13.0+cu130.dist-info/licenses/third_party/onnx/third_party/pybind11/LICENSE",
+          "path": "runtime/torch-cuda/2.13.0/licenses/libtorch/torch-2.13.0+cu130.dist-info_licenses_third_party_onnx_third_party_pybind11_LICENSE",
+          "sha256": "83965b843b98f670d3a85bd041ed4b372c8ec50d7b4a5995a83ac697ba675dcb",
+          "size": 1684
+        },
+        {
+          "entry": "torch-2.13.0+cu130.dist-info/licenses/third_party/protobuf/LICENSE",
+          "path": "runtime/torch-cuda/2.13.0/licenses/libtorch/torch-2.13.0+cu130.dist-info_licenses_third_party_protobuf_LICENSE",
+          "sha256": "6e5e117324afd944dcf67f36cf329843bc1a92229a8cd9bb573d7a83130fea7d",
+          "size": 1732
+        },
+        {
+          "entry": "torch-2.13.0+cu130.dist-info/licenses/third_party/protobuf/third_party/benchmark/LICENSE",
+          "path": "runtime/torch-cuda/2.13.0/licenses/libtorch/torch-2.13.0+cu130.dist-info_licenses_third_party_protobuf_third_party_benchmark_LICENSE",
+          "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+          "size": 11358
+        },
+        {
+          "entry": "torch-2.13.0+cu130.dist-info/licenses/third_party/protobuf/third_party/googletest/LICENSE",
+          "path": "runtime/torch-cuda/2.13.0/licenses/libtorch/torch-2.13.0+cu130.dist-info_licenses_third_party_protobuf_third_party_googletest_LICENSE",
+          "sha256": "9702de7e4117a8e2b20dafab11ffda58c198aede066406496bef670d40a22138",
+          "size": 1475
+        },
+        {
+          "entry": "torch-2.13.0+cu130.dist-info/licenses/third_party/protobuf/third_party/googletest/googlemock/LICENSE",
+          "path": "runtime/torch-cuda/2.13.0/licenses/libtorch/torch-2.13.0+cu130.dist-info_licenses_third_party_protobuf_third_party_googletest_googlemock_LICENSE",
+          "sha256": "9702de7e4117a8e2b20dafab11ffda58c198aede066406496bef670d40a22138",
+          "size": 1475
+        },
+        {
+          "entry": "torch-2.13.0+cu130.dist-info/licenses/third_party/protobuf/third_party/googletest/googlemock/scripts/generator/LICENSE",
+          "path": "runtime/torch-cuda/2.13.0/licenses/libtorch/torch-2.13.0+cu130.dist-info_licenses_third_party_protobuf_third_party_googletest_googlemock_scripts_generator_LICENSE",
+          "sha256": "5e0df8c845c742e76f2f64d2d9ce1b7e74a2422fddbc577ae6a56319083de0bf",
+          "size": 11386
+        },
+        {
+          "entry": "torch-2.13.0+cu130.dist-info/licenses/third_party/protobuf/third_party/googletest/googletest/LICENSE",
+          "path": "runtime/torch-cuda/2.13.0/licenses/libtorch/torch-2.13.0+cu130.dist-info_licenses_third_party_protobuf_third_party_googletest_googletest_LICENSE",
+          "sha256": "9702de7e4117a8e2b20dafab11ffda58c198aede066406496bef670d40a22138",
+          "size": 1475
+        },
+        {
+          "entry": "torch-2.13.0+cu130.dist-info/licenses/third_party/psimd/LICENSE",
+          "path": "runtime/torch-cuda/2.13.0/licenses/libtorch/torch-2.13.0+cu130.dist-info_licenses_third_party_psimd_LICENSE",
+          "sha256": "984ce1e0b8ee89d234e28b960381f240e03a07a8031f35012f9c3256f56964e2",
+          "size": 1162
+        },
+        {
+          "entry": "torch-2.13.0+cu130.dist-info/licenses/third_party/pthreadpool/LICENSE",
+          "path": "runtime/torch-cuda/2.13.0/licenses/libtorch/torch-2.13.0+cu130.dist-info_licenses_third_party_pthreadpool_LICENSE",
+          "sha256": "57814a606b4d0fb087d9a534919084b6c11b58a4174cb5a4aef200187780dc3a",
+          "size": 1378
+        },
+        {
+          "entry": "torch-2.13.0+cu130.dist-info/licenses/third_party/pybind11/LICENSE",
+          "path": "runtime/torch-cuda/2.13.0/licenses/libtorch/torch-2.13.0+cu130.dist-info_licenses_third_party_pybind11_LICENSE",
+          "sha256": "83965b843b98f670d3a85bd041ed4b372c8ec50d7b4a5995a83ac697ba675dcb",
+          "size": 1684
+        },
+        {
+          "entry": "torch-2.13.0+cu130.dist-info/licenses/third_party/python-peachpy/LICENSE.rst",
+          "path": "runtime/torch-cuda/2.13.0/licenses/libtorch/torch-2.13.0+cu130.dist-info_licenses_third_party_python-peachpy_LICENSE.rst",
+          "sha256": "e6d6fdbfc09c9cc1bfc55946ca9690dd9276deeaed2b72ac7fc5c79bde80ff32",
+          "size": 1443
+        },
+        {
+          "entry": "torch-2.13.0+cu130.dist-info/licenses/third_party/sleef/LICENSE.txt",
+          "path": "runtime/torch-cuda/2.13.0/licenses/libtorch/torch-2.13.0+cu130.dist-info_licenses_third_party_sleef_LICENSE.txt",
+          "sha256": "c9bff75738922193e67fa726fa225535870d2aa1059f91452c411736284ad566",
+          "size": 1338
+        },
+        {
+          "entry": "torch-2.13.0+cu130.dist-info/licenses/third_party/tensorpipe/LICENSE.txt",
+          "path": "runtime/torch-cuda/2.13.0/licenses/libtorch/torch-2.13.0+cu130.dist-info_licenses_third_party_tensorpipe_LICENSE.txt",
+          "sha256": "f4dcef0d1f0520b414d5bfaeed8df02f188e4ec05c0a17bf1c18f25f6cc66245",
+          "size": 1535
+        },
+        {
+          "entry": "torch-2.13.0+cu130.dist-info/licenses/third_party/tensorpipe/third_party/googletest/LICENSE",
+          "path": "runtime/torch-cuda/2.13.0/licenses/libtorch/torch-2.13.0+cu130.dist-info_licenses_third_party_tensorpipe_third_party_googletest_LICENSE",
+          "sha256": "9702de7e4117a8e2b20dafab11ffda58c198aede066406496bef670d40a22138",
+          "size": 1475
+        },
+        {
+          "entry": "torch-2.13.0+cu130.dist-info/licenses/third_party/tensorpipe/third_party/googletest/googlemock/LICENSE",
+          "path": "runtime/torch-cuda/2.13.0/licenses/libtorch/torch-2.13.0+cu130.dist-info_licenses_third_party_tensorpipe_third_party_googletest_googlemock_LICENSE",
+          "sha256": "9702de7e4117a8e2b20dafab11ffda58c198aede066406496bef670d40a22138",
+          "size": 1475
+        },
+        {
+          "entry": "torch-2.13.0+cu130.dist-info/licenses/third_party/tensorpipe/third_party/googletest/googlemock/scripts/generator/LICENSE",
+          "path": "runtime/torch-cuda/2.13.0/licenses/libtorch/torch-2.13.0+cu130.dist-info_licenses_third_party_tensorpipe_third_party_googletest_googlemock_scripts_generator_LICENSE",
+          "sha256": "5e0df8c845c742e76f2f64d2d9ce1b7e74a2422fddbc577ae6a56319083de0bf",
+          "size": 11386
+        },
+        {
+          "entry": "torch-2.13.0+cu130.dist-info/licenses/third_party/tensorpipe/third_party/googletest/googletest/LICENSE",
+          "path": "runtime/torch-cuda/2.13.0/licenses/libtorch/torch-2.13.0+cu130.dist-info_licenses_third_party_tensorpipe_third_party_googletest_googletest_LICENSE",
+          "sha256": "9702de7e4117a8e2b20dafab11ffda58c198aede066406496bef670d40a22138",
+          "size": 1475
+        },
+        {
+          "entry": "torch-2.13.0+cu130.dist-info/licenses/third_party/tensorpipe/third_party/libnop/LICENSE",
+          "path": "runtime/torch-cuda/2.13.0/licenses/libtorch/torch-2.13.0+cu130.dist-info_licenses_third_party_tensorpipe_third_party_libnop_LICENSE",
+          "sha256": "876e8f7432440974ee5543a2aa1344370ef1f2f7949ad98a1f3899cf722d5631",
+          "size": 577
+        },
+        {
+          "entry": "torch-2.13.0+cu130.dist-info/licenses/third_party/tensorpipe/third_party/libuv/LICENSE",
+          "path": "runtime/torch-cuda/2.13.0/licenses/libtorch/torch-2.13.0+cu130.dist-info_licenses_third_party_tensorpipe_third_party_libuv_LICENSE",
+          "sha256": "16de0c32b265cb7d46a6d3bd614f259dd4d693a5e26b3407b04aae8d73041f0c",
+          "size": 1079
+        },
+        {
+          "entry": "torch-2.13.0+cu130.dist-info/licenses/third_party/tensorpipe/third_party/pybind11/LICENSE",
+          "path": "runtime/torch-cuda/2.13.0/licenses/libtorch/torch-2.13.0+cu130.dist-info_licenses_third_party_tensorpipe_third_party_pybind11_LICENSE",
+          "sha256": "9a37ea54aa3cf12c7f3292799f20822ffd4b9b7142b36a7a9997b28c39264dc9",
+          "size": 1676
+        }
+      ]
+    },
+    {
+      "id": "nvidia-cuda-runtime-torch-linux-arm64",
+      "name": "nvidia-cuda-runtime",
+      "group": "runtime",
+      "platform": "linux-arm64",
+      "url": "https://files.pythonhosted.org/packages/87/4f/17d7b9b8e285199c58ce28e31b5c5bbaa4d8271af06a89b6405258245de2/nvidia_cuda_runtime-13.0.96-py3-none-manylinux2014_aarch64.manylinux_2_17_aarch64.whl",
+      "sha256": "ef9bcbe90493a2b9d810e43d249adb3d02e98dd30200d86607d8d02687c43f55",
+      "size": 2261060,
+      "format": "zip",
+      "files": [
+        {
+          "entry": "nvidia/cu13/lib/libcudart.so.13",
+          "path": "runtime/torch-cuda/2.13.0/libcudart.so.13",
+          "sha256": "7bdba2b5b08cbdc85203c41cc94598adedb1bcfea7cb574ca693ac73599e4e63",
+          "size": 707752
+        },
+        {
+          "entry": "nvidia_cuda_runtime-13.0.96.dist-info/licenses/License.txt",
+          "path": "runtime/torch-cuda/2.13.0/licenses/nvidia-cuda-runtime/nvidia_cuda_runtime-13.0.96.dist-info_licenses_License.txt",
+          "sha256": "ad6f5853fba0ca0d159d0f58d49ae49830c2f8c93f7a92648b9ce90adb4c6ccd",
+          "size": 59262
+        }
+      ]
+    },
+    {
+      "id": "nvidia-cuda-cupti-torch-linux-arm64",
+      "name": "nvidia-cuda-cupti",
+      "group": "runtime",
+      "platform": "linux-arm64",
+      "url": "https://files.pythonhosted.org/packages/2a/2a/80353b103fc20ce05ef51e928daed4b6015db4aaa9162ed0997090fe2250/nvidia_cuda_cupti-13.0.85-py3-none-manylinux_2_25_aarch64.whl",
+      "sha256": "796bd679890ee55fb14a94629b698b6db54bcfd833d391d5e94017dd9d7d3151",
+      "size": 10310827,
+      "format": "zip",
+      "files": [
+        {
+          "entry": "nvidia/cu13/lib/libcheckpoint.so",
+          "path": "runtime/torch-cuda/2.13.0/libcheckpoint.so",
+          "sha256": "4260ef8944cf94ad4fcb3806ca2f3560c9ba52557b53fb4c39b543703b54489a",
+          "size": 1249848
+        },
+        {
+          "entry": "nvidia/cu13/lib/libcupti.so.13",
+          "path": "runtime/torch-cuda/2.13.0/libcupti.so.13",
+          "sha256": "a55e03ccab21830f5b9d1ca7a02ecd59c557e0d54c769a181ad1140a3cff8ac1",
+          "size": 3850656
+        },
+        {
+          "entry": "nvidia/cu13/lib/libnvperf_host.so",
+          "path": "runtime/torch-cuda/2.13.0/libnvperf_host.so",
+          "sha256": "f86ee6074eb7bb6e0987b50cc73f57df9318d0dfe1a35164182c709fb62d7fc7",
+          "size": 31998144
+        },
+        {
+          "entry": "nvidia/cu13/lib/libnvperf_target.so",
+          "path": "runtime/torch-cuda/2.13.0/libnvperf_target.so",
+          "sha256": "56a41e50ec880119cb48b96ab84f544450fb4476cfb6a8ed31297e75ed76cbba",
+          "size": 5127544
+        },
+        {
+          "entry": "nvidia/cu13/lib/libpcsamplingutil.so",
+          "path": "runtime/torch-cuda/2.13.0/libpcsamplingutil.so",
+          "sha256": "06c2d067ada2694a183f4b10a591204f38d8322e863698d9ed61301eccfc998b",
+          "size": 724256
+        },
+        {
+          "entry": "nvidia_cuda_cupti-13.0.85.dist-info/licenses/License.txt",
+          "path": "runtime/torch-cuda/2.13.0/licenses/nvidia-cuda-cupti/nvidia_cuda_cupti-13.0.85.dist-info_licenses_License.txt",
+          "sha256": "ad6f5853fba0ca0d159d0f58d49ae49830c2f8c93f7a92648b9ce90adb4c6ccd",
+          "size": 59262
+        }
+      ]
+    },
+    {
+      "id": "nvidia-cuda-nvrtc-torch-linux-arm64",
+      "name": "nvidia-cuda-nvrtc",
+      "group": "runtime",
+      "platform": "linux-arm64",
+      "url": "https://files.pythonhosted.org/packages/b7/dc/6bb80850e0b7edd6588d560758f17e0550893a1feaf436807d64d2da040f/nvidia_cuda_nvrtc-13.0.88-py3-none-manylinux2014_aarch64.manylinux_2_17_aarch64.whl",
+      "sha256": "d27f20a0ca67a4bb34268a5e951033496c5b74870b868bacd046b1b8e0c3267b",
+      "size": 43015449,
+      "format": "zip",
+      "files": [
+        {
+          "entry": "nvidia/cu13/lib/libnvrtc-builtins.so.13.0",
+          "path": "runtime/torch-cuda/2.13.0/libnvrtc-builtins.so.13.0",
+          "sha256": "84f1c5031bfe1146375b367b2c7fb8d31ea00430be7172177eeb5d04ab813b69",
+          "size": 4380456
+        },
+        {
+          "entry": "nvidia/cu13/lib/libnvrtc.so.13",
+          "path": "runtime/torch-cuda/2.13.0/libnvrtc.so.13",
+          "sha256": "64db9c3fc128f4a57a22c314fda08831a8e3a725d439a70076a0fb98f7bea1b7",
+          "size": 99505944
+        },
+        {
+          "entry": "nvidia_cuda_nvrtc-13.0.88.dist-info/licenses/License.txt",
+          "path": "runtime/torch-cuda/2.13.0/licenses/nvidia-cuda-nvrtc/nvidia_cuda_nvrtc-13.0.88.dist-info_licenses_License.txt",
+          "sha256": "ad6f5853fba0ca0d159d0f58d49ae49830c2f8c93f7a92648b9ce90adb4c6ccd",
+          "size": 59262
+        }
+      ]
+    },
+    {
+      "id": "nvidia-cublas-torch-linux-arm64",
+      "name": "nvidia-cublas",
+      "group": "runtime",
+      "platform": "linux-arm64",
+      "url": "https://files.pythonhosted.org/packages/a7/a1/0bd24ee8c8d03adac032fd2909426a00c88f8c57961b1277ded97f91119f/nvidia_cublas-13.1.1.3-py3-none-manylinux_2_27_aarch64.whl",
+      "sha256": "b7a210458267ac818974c53038fbec2e969d5c99f305ab15c72522fa9f001dd5",
+      "size": 542848918,
+      "format": "zip",
+      "files": [
+        {
+          "entry": "nvidia/cu13/lib/libcublas.so.13",
+          "path": "runtime/torch-cuda/2.13.0/libcublas.so.13",
+          "sha256": "4e346a7b60a01552bd9bf4bbc6c862e11eb851559c3da3572293345de6aaed75",
+          "size": 61910216
+        },
+        {
+          "entry": "nvidia/cu13/lib/libcublasLt.so.13",
+          "path": "runtime/torch-cuda/2.13.0/libcublasLt.so.13",
+          "sha256": "930418840b747413584867cb7167dd5911dcf4184135589e0334527e9abbac9f",
+          "size": 629945952
+        },
+        {
+          "entry": "nvidia/cu13/lib/libnvblas.so.13",
+          "path": "runtime/torch-cuda/2.13.0/libnvblas.so.13",
+          "sha256": "61e01bd1688fafc1145fdaa2978d34e17705377c93b2c5d48e53a6b26cc5848b",
+          "size": 728656
+        },
+        {
+          "entry": "nvidia_cublas-13.1.1.3.dist-info/licenses/License.txt",
+          "path": "runtime/torch-cuda/2.13.0/licenses/nvidia-cublas/nvidia_cublas-13.1.1.3.dist-info_licenses_License.txt",
+          "sha256": "ad6f5853fba0ca0d159d0f58d49ae49830c2f8c93f7a92648b9ce90adb4c6ccd",
+          "size": 59262
+        }
+      ]
+    },
+    {
+      "id": "nvidia-cufft-torch-linux-arm64",
+      "name": "nvidia-cufft",
+      "group": "runtime",
+      "platform": "linux-arm64",
+      "url": "https://files.pythonhosted.org/packages/8b/ae/f417a75c0259e85c1d2f83ca4e960289a5f814ed0cea74d18c353d3e989d/nvidia_cufft-12.0.0.61-py3-none-manylinux2014_aarch64.manylinux_2_17_aarch64.whl",
+      "sha256": "2708c852ef8cd89d1d2068bdbece0aa188813a0c934db3779b9b1faa8442e5f5",
+      "size": 214053554,
+      "format": "zip",
+      "files": [
+        {
+          "entry": "nvidia/cu13/lib/libcufft.so.12",
+          "path": "runtime/torch-cuda/2.13.0/libcufft.so.12",
+          "sha256": "58d0f3c53a56aa8e407df4a53be21969b60fa464b4dfa71631188f4e13596c28",
+          "size": 283285752
+        },
+        {
+          "entry": "nvidia/cu13/lib/libcufftw.so.12",
+          "path": "runtime/torch-cuda/2.13.0/libcufftw.so.12",
+          "sha256": "5e2be143a6c953256c5e390aefde1d8720e742b18ba3c6fb7d5a7389fd6521db",
+          "size": 913304
+        },
+        {
+          "entry": "nvidia_cufft-12.0.0.61.dist-info/licenses/License.txt",
+          "path": "runtime/torch-cuda/2.13.0/licenses/nvidia-cufft/nvidia_cufft-12.0.0.61.dist-info_licenses_License.txt",
+          "sha256": "ad6f5853fba0ca0d159d0f58d49ae49830c2f8c93f7a92648b9ce90adb4c6ccd",
+          "size": 59262
+        }
+      ]
+    },
+    {
+      "id": "nvidia-cufile-torch-linux-arm64",
+      "name": "nvidia-cufile",
+      "group": "runtime",
+      "platform": "linux-arm64",
+      "url": "https://files.pythonhosted.org/packages/ab/73/cc4a14c9813a8a0d509417cf5f4bdaba76e924d58beb9864f5a7baceefbf/nvidia_cufile-1.15.1.6-py3-none-manylinux_2_27_aarch64.whl",
+      "sha256": "bdc0deedc61f548bddf7733bdc216456c2fdb101d020e1ab4b88d232d5e2f6d1",
+      "size": 1136992,
+      "format": "zip",
+      "files": [
+        {
+          "entry": "nvidia/cu13/lib/libcufile.so.0",
+          "path": "runtime/torch-cuda/2.13.0/libcufile.so.0",
+          "sha256": "0dc9520a096013cc4009564dcd7824923eb2850fc35dc5812efe3ec9fa4d0068",
+          "size": 3006936
+        },
+        {
+          "entry": "nvidia/cu13/lib/libcufile_rdma.so.1",
+          "path": "runtime/torch-cuda/2.13.0/libcufile_rdma.so.1",
+          "sha256": "07443726609f391b0c9bbd7f12e0ab8f905b83939d9bd5a4510eed6bf196e09e",
+          "size": 42912
+        },
+        {
+          "entry": "nvidia_cufile-1.15.1.6.dist-info/licenses/License.txt",
+          "path": "runtime/torch-cuda/2.13.0/licenses/nvidia-cufile/nvidia_cufile-1.15.1.6.dist-info_licenses_License.txt",
+          "sha256": "ad6f5853fba0ca0d159d0f58d49ae49830c2f8c93f7a92648b9ce90adb4c6ccd",
+          "size": 59262
+        }
+      ]
+    },
+    {
+      "id": "nvidia-curand-torch-linux-arm64",
+      "name": "nvidia-curand",
+      "group": "runtime",
+      "platform": "linux-arm64",
+      "url": "https://files.pythonhosted.org/packages/1e/72/7c2ae24fb6b63a32e6ae5d241cc65263ea18d08802aaae087d9f013335a2/nvidia_curand-10.4.0.35-py3-none-manylinux_2_27_aarch64.whl",
+      "sha256": "133df5a7509c3e292aaa2b477afd0194f06ce4ea24d714d616ff36439cee349a",
+      "size": 61962106,
+      "format": "zip",
+      "files": [
+        {
+          "entry": "nvidia/cu13/lib/libcurand.so.10",
+          "path": "runtime/torch-cuda/2.13.0/libcurand.so.10",
+          "sha256": "80aedb15af13cf3b43cf8394fc9b5f9f299d6eaa5d2ddd6411b26af25b5334a2",
+          "size": 147889368
+        },
+        {
+          "entry": "nvidia_curand-10.4.0.35.dist-info/licenses/License.txt",
+          "path": "runtime/torch-cuda/2.13.0/licenses/nvidia-curand/nvidia_curand-10.4.0.35.dist-info_licenses_License.txt",
+          "sha256": "ad6f5853fba0ca0d159d0f58d49ae49830c2f8c93f7a92648b9ce90adb4c6ccd",
+          "size": 59262
+        }
+      ]
+    },
+    {
+      "id": "nvidia-cusparse-torch-linux-arm64",
+      "name": "nvidia-cusparse",
+      "group": "runtime",
+      "platform": "linux-arm64",
+      "url": "https://files.pythonhosted.org/packages/f8/94/5c26f33738ae35276672f12615a64bd008ed5be6d1ebcb23579285d960a9/nvidia_cusparse-12.6.3.3-py3-none-manylinux2014_aarch64.manylinux_2_17_aarch64.whl",
+      "sha256": "80bcc4662f23f1054ee334a15c72b8940402975e0eab63178fc7e670aa59472c",
+      "size": 162155568,
+      "format": "zip",
+      "files": [
+        {
+          "entry": "nvidia/cu13/lib/libcusparse.so.12",
+          "path": "runtime/torch-cuda/2.13.0/libcusparse.so.12",
+          "sha256": "a6643e78b7f002021a5e8d3b64a3ef7ce7caf8b9d05758cfee7e2b53f13d8988",
+          "size": 174842648
+        },
+        {
+          "entry": "nvidia_cusparse-12.6.3.3.dist-info/licenses/License.txt",
+          "path": "runtime/torch-cuda/2.13.0/licenses/nvidia-cusparse/nvidia_cusparse-12.6.3.3.dist-info_licenses_License.txt",
+          "sha256": "ad6f5853fba0ca0d159d0f58d49ae49830c2f8c93f7a92648b9ce90adb4c6ccd",
+          "size": 59262
+        }
+      ]
+    },
+    {
+      "id": "nvidia-cusparselt-cu13-torch-linux-arm64",
+      "name": "nvidia-cusparselt-cu13",
+      "group": "runtime",
+      "platform": "linux-arm64",
+      "url": "https://files.pythonhosted.org/packages/46/e1/cdc1797eadf82d3a9a575a19b33fdc871a97edbec42c00b5b5e914f4aff4/nvidia_cusparselt_cu13-0.8.1-py3-none-manylinux2014_aarch64.whl",
+      "sha256": "4dca476c50bf4780d46cd0bfbd82e2bc10a08e4fef7950917ce8d7578d22a23f",
+      "size": 221051344,
+      "format": "zip",
+      "files": [
+        {
+          "entry": "nvidia/cusparselt/LICENSE.txt",
+          "path": "runtime/torch-cuda/2.13.0/licenses/nvidia-cusparselt-cu13/nvidia_cusparselt_LICENSE.txt",
+          "sha256": "e8d158885a681b95ec7a6fc06dd8d4a52989f374cb1380c8a4c8fb27fd3d5d5e",
+          "size": 17948
+        },
+        {
+          "entry": "nvidia/cusparselt/lib/libcusparseLt.so.0",
+          "path": "runtime/torch-cuda/2.13.0/libcusparseLt.so.0",
+          "sha256": "fbb03bbf8d2238670f24256c5452281c2a660162899b838bb4d0cc06dad027df",
+          "size": 274143825
+        }
+      ]
+    },
+    {
+      "id": "nvidia-nccl-cu13-torch-linux-arm64",
+      "name": "nvidia-nccl-cu13",
+      "group": "runtime",
+      "platform": "linux-arm64",
+      "url": "https://files.pythonhosted.org/packages/72/0d/daf50d44177ee0cbc7ff0a0c91eb5ff676c82be42f9a970bc7597f440c3a/nvidia_nccl_cu13-2.29.7-py3-none-manylinux_2_18_aarch64.whl",
+      "sha256": "674a12383e3c38a1bcccae7d4f3633b37852230b6047883cb2f4c2d1b36d9bf5",
+      "size": 206014712,
+      "format": "zip",
+      "files": [
+        {
+          "entry": "nvidia/nccl/lib/libnccl.so.2",
+          "path": "runtime/torch-cuda/2.13.0/libnccl.so.2",
+          "sha256": "cc01f863461ea28f3ecc4390716a2d7a5aca9bc00e04eeb6fc7a5c2e666b3dfb",
+          "size": 237975080
+        },
+        {
+          "entry": "nvidia_nccl_cu13-2.29.7.dist-info/licenses/License.txt",
+          "path": "runtime/torch-cuda/2.13.0/licenses/nvidia-nccl-cu13/nvidia_nccl_cu13-2.29.7.dist-info_licenses_License.txt",
+          "sha256": "0f0174a6b4e0b33ac26375bf729533075b32f4c51a5b6802a3d742d7dcdc9a76",
+          "size": 1895
+        }
+      ]
+    },
+    {
+      "id": "nvidia-nvjitlink-torch-linux-arm64",
+      "name": "nvidia-nvjitlink",
+      "group": "runtime",
+      "platform": "linux-arm64",
+      "url": "https://files.pythonhosted.org/packages/69/30/45414e35ff2eee7db3da037e5707037ccf9d2b5218ffbdb055ea4d5aa98a/nvidia_nvjitlink-13.3.33-py3-none-manylinux2014_aarch64.manylinux_2_17_aarch64.whl",
+      "sha256": "ce48b37dfeb3cb1eae4cf85adacb47d7a6539ea2272870c9a3628ce275c2037e",
+      "size": 39168635,
+      "format": "zip",
+      "files": [
+        {
+          "entry": "nvidia/cu13/lib/libnvJitLink.so.13",
+          "path": "runtime/torch-cuda/2.13.0/libnvJitLink.so.13",
+          "sha256": "7cc44a1d3b61de747f8aedb0f69c4e0e1f4a293b43ebd5f8414bfe3ca176608a",
+          "size": 89766888
+        },
+        {
+          "entry": "nvidia_nvjitlink-13.3.33.dist-info/licenses/License.txt",
+          "path": "runtime/torch-cuda/2.13.0/licenses/nvidia-nvjitlink/nvidia_nvjitlink-13.3.33.dist-info_licenses_License.txt",
+          "sha256": "ad6f5853fba0ca0d159d0f58d49ae49830c2f8c93f7a92648b9ce90adb4c6ccd",
+          "size": 59262
+        }
+      ]
+    },
+    {
+      "id": "nvidia-nvshmem-cu13-torch-linux-arm64",
+      "name": "nvidia-nvshmem-cu13",
+      "group": "runtime",
+      "platform": "linux-arm64",
+      "url": "https://files.pythonhosted.org/packages/dc/0f/05cc9c720236dcd2db9c1ab97fff629e96821be2e63103569da0c9b72f19/nvidia_nvshmem_cu13-3.4.5-py3-none-manylinux2014_aarch64.manylinux_2_17_aarch64.whl",
+      "sha256": "6dc2a197f38e5d0376ad52cd1a2a3617d3cdc150fd5966f4aee9bcebb1d68fe9",
+      "size": 60215947,
+      "format": "zip",
+      "files": [
+        {
+          "entry": "nvidia/nvshmem/lib/libnvshmem_host.so.3",
+          "path": "runtime/torch-cuda/2.13.0/libnvshmem_host.so.3",
+          "sha256": "868de4fbf53f19f0a2537e42c70d77396db981475303f3c57ce40e82653c8bba",
+          "size": 40950048
+        },
+        {
+          "entry": "nvidia/nvshmem/lib/nvshmem_bootstrap_mpi.so.3",
+          "path": "runtime/torch-cuda/2.13.0/nvshmem_bootstrap_mpi.so.3",
+          "sha256": "b4aa32d7da03e5d9468f26881ae7804a47ae0b0085f978b35e85e8f1a28c0536",
+          "size": 73928
+        },
+        {
+          "entry": "nvidia/nvshmem/lib/nvshmem_bootstrap_pmi.so.3",
+          "path": "runtime/torch-cuda/2.13.0/nvshmem_bootstrap_pmi.so.3",
+          "sha256": "dc4663dbc3264190103f15d556a7aabf3d78626b821cd089492db46b8d172181",
+          "size": 77312
+        },
+        {
+          "entry": "nvidia/nvshmem/lib/nvshmem_bootstrap_pmi2.so.3",
+          "path": "runtime/torch-cuda/2.13.0/nvshmem_bootstrap_pmi2.so.3",
+          "sha256": "270aee8704f98620cff4a6ef73614c5bc389e9f9dcc24872c89a5887de7c998e",
+          "size": 79736
+        },
+        {
+          "entry": "nvidia/nvshmem/lib/nvshmem_bootstrap_pmix.so.3",
+          "path": "runtime/torch-cuda/2.13.0/nvshmem_bootstrap_pmix.so.3",
+          "sha256": "ca1f11afd539aa3eb0e0334ccf05004dd81386b4598b6f1f9d4882b5362eb63d",
+          "size": 73704
+        },
+        {
+          "entry": "nvidia/nvshmem/lib/nvshmem_bootstrap_shmem.so.3",
+          "path": "runtime/torch-cuda/2.13.0/nvshmem_bootstrap_shmem.so.3",
+          "sha256": "45d9787687a04ff02d20d2dca91d16f24dc5fcb8accdcee16a06d75054975de5",
+          "size": 73736
+        },
+        {
+          "entry": "nvidia/nvshmem/lib/nvshmem_bootstrap_uid.so.3",
+          "path": "runtime/torch-cuda/2.13.0/nvshmem_bootstrap_uid.so.3",
+          "sha256": "df21d2252713b69a7d894f930f42e6f9f0ba4d7ee88f669ef4d17c0d809d46a8",
+          "size": 82864
+        },
+        {
+          "entry": "nvidia/nvshmem/lib/nvshmem_transport_ibdevx.so.3",
+          "path": "runtime/torch-cuda/2.13.0/nvshmem_transport_ibdevx.so.3",
+          "sha256": "57effbb5de485987216cac53b7eb47ffe172081655a2e542129384aa889d2375",
+          "size": 990552
+        },
+        {
+          "entry": "nvidia/nvshmem/lib/nvshmem_transport_ibgda.so.3",
+          "path": "runtime/torch-cuda/2.13.0/nvshmem_transport_ibgda.so.3",
+          "sha256": "e1d243961c443b341e92775c853e87ede47d8ca7ad507036209cc8d937a4ed4f",
+          "size": 1058024
+        },
+        {
+          "entry": "nvidia/nvshmem/lib/nvshmem_transport_ibrc.so.3",
+          "path": "runtime/torch-cuda/2.13.0/nvshmem_transport_ibrc.so.3",
+          "sha256": "b9a176efd4be7cf2651528d93a1e16436263bd962dcb4554497fa382d15da916",
+          "size": 1056880
+        },
+        {
+          "entry": "nvidia/nvshmem/lib/nvshmem_transport_libfabric.so.3",
+          "path": "runtime/torch-cuda/2.13.0/nvshmem_transport_libfabric.so.3",
+          "sha256": "a567ef69562755cfbf643518c67e5680f620dd191005248e1b03819d1cb474a8",
+          "size": 987312
+        },
+        {
+          "entry": "nvidia/nvshmem/lib/nvshmem_transport_ucx.so.3",
+          "path": "runtime/torch-cuda/2.13.0/nvshmem_transport_ucx.so.3",
+          "sha256": "af416251407920b8f66476619ac016b25d9b5efe48a8ca44b17c5f39726ae384",
+          "size": 81808
+        },
+        {
+          "entry": "nvidia_nvshmem_cu13-3.4.5.dist-info/licenses/License.txt",
+          "path": "runtime/torch-cuda/2.13.0/licenses/nvidia-nvshmem-cu13/nvidia_nvshmem_cu13-3.4.5.dist-info_licenses_License.txt",
+          "sha256": "ad6f5853fba0ca0d159d0f58d49ae49830c2f8c93f7a92648b9ce90adb4c6ccd",
+          "size": 59262
+        }
+      ]
+    },
+    {
+      "id": "nvidia-cudnn-cu13-torch-linux-arm64",
+      "name": "nvidia-cudnn-cu13",
+      "group": "runtime",
+      "platform": "linux-arm64",
+      "url": "https://files.pythonhosted.org/packages/56/c5/83384d846b2fd17c44bd499b36c75a45ed4f095fbbb2252294e89cea5c5c/nvidia_cudnn_cu13-9.20.0.48-py3-none-manylinux_2_27_aarch64.whl",
+      "sha256": "e31454ae00094b0c55319d9d15b6fa2fc50a9e1c0f5c8c80fb75258234e731e1",
+      "size": 444574296,
+      "format": "zip",
+      "files": [
+        {
+          "entry": "nvidia/cudnn/lib/libcudnn.so.9",
+          "path": "runtime/torch-cuda/2.13.0/libcudnn.so.9",
+          "sha256": "119059d6ad15f576608a0daa547444538062bf5e6be970f090298b50636e13b6",
+          "size": 6328728
+        },
+        {
+          "entry": "nvidia/cudnn/lib/libcudnn_adv.so.9",
+          "path": "runtime/torch-cuda/2.13.0/libcudnn_adv.so.9",
+          "sha256": "940107ad76ecd853f70c7a48b122cf4369c735fdb57361982d6460ca499a61bf",
+          "size": 132239032
+        },
+        {
+          "entry": "nvidia/cudnn/lib/libcudnn_cnn.so.9",
+          "path": "runtime/torch-cuda/2.13.0/libcudnn_cnn.so.9",
+          "sha256": "9022f5c0607cbeff24c7a1418362417e1238c8f42039a14dd8befb9b292d014d",
+          "size": 2501768
+        },
+        {
+          "entry": "nvidia/cudnn/lib/libcudnn_engines_precompiled.so.9",
+          "path": "runtime/torch-cuda/2.13.0/libcudnn_engines_precompiled.so.9",
+          "sha256": "3b765736f63d724a0de67b7ce915b0d0a780154fe4a2d515ab14040224aa7db4",
+          "size": 299909640
+        },
+        {
+          "entry": "nvidia/cudnn/lib/libcudnn_engines_runtime_compiled.so.9",
+          "path": "runtime/torch-cuda/2.13.0/libcudnn_engines_runtime_compiled.so.9",
+          "sha256": "7b8f371a7718c29549317efdbdeb8d7c301874f9471762a04830846ac4e83510",
+          "size": 33571912
+        },
+        {
+          "entry": "nvidia/cudnn/lib/libcudnn_graph.so.9",
+          "path": "runtime/torch-cuda/2.13.0/libcudnn_graph.so.9",
+          "sha256": "b601fddd333d84ced4a3d833e75bb412c204e39b21755d79cb890335dce660b8",
+          "size": 10749656
+        },
+        {
+          "entry": "nvidia/cudnn/lib/libcudnn_heuristic.so.9",
+          "path": "runtime/torch-cuda/2.13.0/libcudnn_heuristic.so.9",
+          "sha256": "368687b9b5c2c01b55c21f74bd930cb05d3654b4e901e998b7bfb33cebac6ae8",
+          "size": 65015024
+        },
+        {
+          "entry": "nvidia/cudnn/lib/libcudnn_ops.so.9",
+          "path": "runtime/torch-cuda/2.13.0/libcudnn_ops.so.9",
+          "sha256": "9765db5f193984c32b76daca262fa5f2e3d77b29082afcabb5467d555f454258",
+          "size": 50342776
+        },
+        {
+          "entry": "nvidia_cudnn_cu13-9.20.0.48.dist-info/licenses/License.txt",
+          "path": "runtime/torch-cuda/2.13.0/licenses/nvidia-cudnn-cu13/nvidia_cudnn_cu13-9.20.0.48.dist-info_licenses_License.txt",
+          "sha256": "49cf79bdb35734b52fe6203013b3bd759f81e998cd32aa2c65c51db9a88c61d2",
+          "size": 18174
+        }
+      ]
+    },
+    {
+      "id": "manga-lama-torch-native-linux-arm64",
+      "name": "Manga LaMa LibTorch CUDA backend",
+      "group": "runtime",
+      "platform": "linux-arm64",
+      "url": "embedded:engine/manga-lama-torch-linux-arm64.gz",
+      "sha256": "627cdec0d4be3c53030400a5e7cb123fd527f5e29f9de5e1194d233b9bb881ae",
+      "size": 28426,
+      "format": "gzip",
+      "files": [
+        {
+          "path": "runtime/torch-cuda/2.13.0/libmanga_lama_torch.so",
+          "sha256": "04c8713ffc62a93025f4932b80905e8a9bf86022e6704cbaa2c6f551c6dd9be3",
+          "size": 91680
+        }
+      ]
+    },
+    {
+      "id": "manga-lama-torch",
+      "name": "Manga LaMa checkpoint · TorchScript",
+      "group": "restoration",
+      "platform": "linux-arm64",
+      "url": "https://huggingface.co/TareHimself/AnimeMangaInpainting-torchscript/resolve/b592884b2b6589e57df6916db6bcac7a6307fc58/anime_manga_lama.pt",
+      "sha256": "95d4bf7eb2f13729351ac0a0693c9b9b469b264fc1542ca3fa551b59b464a160",
+      "size": 204190262,
+      "format": "raw",
+      "files": [
+        {
+          "path": "models/manga-lama/anime_manga_lama.pt",
+          "sha256": "95d4bf7eb2f13729351ac0a0693c9b9b469b264fc1542ca3fa551b59b464a160",
+          "size": 204190262
         }
       ]
     }

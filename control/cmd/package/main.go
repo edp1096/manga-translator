@@ -106,6 +106,42 @@ func updateEngine(catalog *control.Catalog, bundle, platform, source string) err
 	catalog.Artifacts = append(catalog.Artifacts, control.Artifact{ID: "engine-" + platform, Name: "Manga 이미지 API", Group: "application", Platform: platform, URL: "embedded:engine/" + platform + ".gz", SHA256: sum(compressed), Size: int64(len(compressed)), Format: "gzip", Files: []control.OutputFile{{Path: "bin/manga-translator-server", SHA256: sum(data), Size: int64(len(data)), Executable: true}}})
 	return nil
 }
+func updateTorch(catalog *control.Catalog, bundle, platform, source string) error {
+	if source == "" {
+		return nil
+	}
+	data, err := os.ReadFile(source)
+	if err != nil {
+		return err
+	}
+	var buffer bytes.Buffer
+	z := gzip.NewWriter(&buffer)
+	if _, err = z.Write(data); err != nil {
+		return err
+	}
+	if err = z.Close(); err != nil {
+		return err
+	}
+	compressed := buffer.Bytes()
+	for i := range catalog.Artifacts {
+		a := &catalog.Artifacts[i]
+		if a.ID == "manga-lama-torch-native-"+platform {
+			if !strings.HasPrefix(a.URL, "embedded:engine/") || len(a.Files) != 1 {
+				return fmt.Errorf("invalid Torch bridge catalog")
+			}
+			if err = write(filepath.Join(bundle, strings.TrimPrefix(a.URL, "embedded:")), compressed, 0644); err != nil {
+				return err
+			}
+			a.SHA256 = sum(compressed)
+			a.Size = int64(len(compressed))
+			a.Files[0].SHA256 = sum(data)
+			a.Files[0].Size = int64(len(data))
+			return nil
+		}
+	}
+	return fmt.Errorf("missing Torch bridge catalog for %s", platform)
+}
+
 func archive(app, path string, names []string) error {
 	f, err := os.CreateTemp(filepath.Dir(path), ".release-*.zip")
 	if err != nil {
@@ -223,6 +259,8 @@ func main() {
 	linux := flag.String("linux-native", "", "optional rebuilt Linux ARM64 native server")
 	linuxX64 := flag.String("linux-x64-native", "", "optional rebuilt Linux AMD64 native server")
 	windows := flag.String("windows-native", "", "optional rebuilt Windows AMD64 native server")
+	torchWindows := flag.String("windows-torch", "", "optional rebuilt Windows LibTorch CUDA bridge")
+	torchARM := flag.String("linux-arm64-torch", "", "optional rebuilt Linux ARM64 LibTorch CUDA bridge")
 	output := flag.String("output", "", "release output folder (default: project/dist)")
 	flag.Parse()
 	module, err := exec.Command("go", "env", "GOMOD").Output()
@@ -248,6 +286,8 @@ func main() {
 	must(updateEngine(&catalog, bundle, "linux-arm64", *linux))
 	must(updateEngine(&catalog, bundle, "linux-amd64", *linuxX64))
 	must(updateEngine(&catalog, bundle, "windows-amd64", *windows))
+	must(updateTorch(&catalog, bundle, "windows-amd64", *torchWindows))
+	must(updateTorch(&catalog, bundle, "linux-arm64", *torchARM))
 	data, err = json.MarshalIndent(catalog, "", "  ")
 	must(err)
 	must(write(filepath.Join(bundle, "catalog.json"), append(data, '\n'), 0644))

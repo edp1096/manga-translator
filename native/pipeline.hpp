@@ -59,23 +59,42 @@ inline std::string strip(std::string s){while(!s.empty()&&std::isspace(static_ca
 inline Box raw_box(const float*b,int w,int h){return {std::max(0,int((b[0]-b[2]/2)*w)),std::max(0,int((b[1]-b[3]/2)*h)),std::min(w,int((b[0]+b[2]/2)*w+1)),std::min(h,int((b[1]+b[3]/2)*h+1))};}
 inline void merge_text(std::vector<Region>& all,Region candidate){bool changed=true;while(changed){changed=false;for(size_t i=0;i<all.size();++i){auto&r=all[i];int smaller=std::min(area(r.box),area(candidate.box));if(r.cls!=0||!smaller||double(overlap(r.box,candidate.box))/smaller<.55)continue;require(candidate.mask_side==r.mask_side&&candidate.mask.size()==r.mask.size(),"Mismatched layout masks");candidate.box={std::min(candidate.box[0],r.box[0]),std::min(candidate.box[1],r.box[1]),std::max(candidate.box[2],r.box[2]),std::max(candidate.box[3],r.box[3])};for(size_t j=0;j<candidate.mask.size();++j)candidate.mask[j]|=r.mask[j];candidate.score=std::max(candidate.score,r.score);all.erase(all.begin()+i);changed=true;break;}}all.push_back(std::move(candidate));}
 struct NativePipeline{
- fs::path root;json config;
- NativePipeline(fs::path p,json c):root(std::move(p)),config(std::move(c)){}
+ fs::path root;json config;std::shared_ptr<MangaRestorer> resident_restorer;
+ bool torch_restoration()const{return config.value("inpaint_backend",std::string("onnx"))=="libtorch";}
+ fs::path restoration_path(const std::string& key)const{
+  const auto relative=fs::u8path(config.at(key).get<std::string>());
+  require(!relative.empty()&&!relative.is_absolute()&&!relative.has_root_name(),"Restoration path must be relative to the app folder");
+  for(const auto& part:relative)require(part!="..","Restoration path leaves the app folder");
+  require(fs::is_regular_file(root/relative),"Missing restoration model or runtime");return root/relative;
+ }
+ NativePipeline(fs::path p,json c):root(std::move(p)),config(std::move(c)){
+  const auto backend=config.value("inpaint_backend",std::string("onnx"));
+  require(backend=="onnx"||backend=="libtorch","Unknown restoration backend");
+  if(torch_restoration()){
+   require(config.value("inpaint_execution",std::string{})=="cuda","LibTorch restoration requires CUDA");
+   resident_restorer=std::make_shared<MangaRestorer>(restoration_path("inpaint_model"),config.value("threads",4),OrtExecution{"cuda",config.value("inpaint_gpu_index",config.value("gpu_index",0))},restoration_path("inpaint_library"));
+  }
+ }
+ std::shared_ptr<MangaRestorer> restoration_engine(const fs::path& model,const std::string& execution){
+  if(torch_restoration()){require(execution=="cuda"&&bool(resident_restorer),"LibTorch CUDA restoration is not ready");return resident_restorer;}
+  return std::make_shared<MangaRestorer>(model,config.value("threads",4),OrtExecution{execution,config.value("gpu_index",0)});
+ }
  json restore_manual(const fs::path& folder,const json& input,const std::string& asset,const std::function<void()>& check){
   check();const auto image=load_page(folder/"original.png");const auto mask=checked_manual_mask(input,image.width,image.height);
   const auto relative=fs::u8path(config.value("inpaint_model",std::string("models/manga-lama/manga-lama-512.onnx")));
   require(!relative.empty()&&!relative.is_absolute()&&!relative.has_root_name(),"Invalid restoration model path");for(const auto& p:relative)require(p!="..","Invalid restoration model path");
   const auto model=root/relative;require(fs::is_regular_file(model),"Manga LaMa model is missing");
   std::string execution=config.value("inpaint_execution",config.value("layout_execution",std::string("cpu")));bool fallback=false;std::vector<uint8_t> rgba(size_t(image.width)*image.height*4);
-  auto apply=[&](){MangaRestorer restorer(model,config.value("threads",4),OrtExecution{execution,config.value("gpu_index",0)});restorer.apply(image,mask,rgba);};
-  try{apply();}catch(const std::exception& e){std::string message=e.what();std::transform(message.begin(),message.end(),message.begin(),[](unsigned char c){return char(std::tolower(c));});if(execution=="cpu"||(message.find("dml")==std::string::npos&&message.find("cuda")==std::string::npos&&message.find("gpu")==std::string::npos&&message.find("887a")==std::string::npos&&message.find("out of memory")==std::string::npos))throw;check();execution="cpu";fallback=true;std::fill(rgba.begin(),rgba.end(),0);apply();}
+  auto apply=[&](){auto restorer=restoration_engine(model,execution);restorer->apply(image,mask,rgba);};
+  try{apply();}catch(const std::exception& e){if(torch_restoration())throw;std::string message=e.what();std::transform(message.begin(),message.end(),message.begin(),[](unsigned char c){return char(std::tolower(c));});if(execution=="cpu"||(message.find("dml")==std::string::npos&&message.find("cuda")==std::string::npos&&message.find("gpu")==std::string::npos&&message.find("887a")==std::string::npos&&message.find("out of memory")==std::string::npos))throw;check();execution="cpu";fallback=true;std::fill(rgba.begin(),rgba.end(),0);apply();}
   check();const auto b=mask.bounds;const int w=b[2]-b[0],h=b[3]-b[1];std::vector<uint8_t> crop(size_t(w)*h*4);for(int y=0;y<h;y++)std::copy_n(rgba.data()+(size_t(y+b[1])*image.width+b[0])*4,w*4,crop.data()+size_t(y)*w*4);
   write_png(folder/asset,w,h,4,crop.data());
-  return {{"version",1},{"width",image.width},{"height",image.height},{"asset",asset},{"mask",{{"bounds",b},{"runs",input.at("runs")},{"maskPixels",mask.count}}},{"execution",execution},{"cpuFallback",fallback}};
+  return {{"version",1},{"width",image.width},{"height",image.height},{"asset",asset},{"mask",{{"bounds",b},{"runs",input.at("runs")},{"maskPixels",mask.count}}},{"execution",execution},{"backend",config.value("inpaint_backend",std::string("onnx"))},{"cpuFallback",fallback}};
  }
  json restore_outside(const fs::path& folder,const std::function<void()>& check_cancel){
   const auto preferred=config.value("inpaint_execution",config.value("layout_execution",std::string("cpu")));
   try{return restore_outside_on(folder,check_cancel,preferred,false);}catch(const std::exception& error){
+   if(torch_restoration())throw;
    std::string message=error.what();std::transform(message.begin(),message.end(),message.begin(),[](unsigned char c){return char(std::tolower(c));});
    if((preferred=="cpu"&&config.value("layout_execution",std::string("cpu"))=="cpu")||(message.find("dml")==std::string::npos&&message.find("cuda")==std::string::npos&&message.find("gpu")==std::string::npos&&message.find("887a")==std::string::npos&&message.find("out of memory")==std::string::npos))throw;
    check_cancel();std::cerr<<"Restoration GPU failed; retrying this page on CPU: "<<error.what()<<std::endl;
@@ -91,6 +110,9 @@ struct NativePipeline{
   json source=json::array();for(const auto& r:result.at("regions"))source.push_back({r.value("id",-1),r.value("type",std::string{}),r.at("bbox"),r.value("text",std::string{}),r.value("mode",std::string{}),r.value("ocrTruncated",false),!r.value("translation",std::string{}).empty(),r.value("textVerification",json::object()),r.value("detectorConfidence",0.),r.value("manual",false),r.value("layoutOverride",false),r.value("displayOverride",false),r.value("truncated",false),r.value("punctuationMismatch",json::object()),r.value("punctuationFragments",json::array()),r.value("paragraphCorrection",json::object()),r.value("ocrDuplicateGeometry",json::object())});
   const auto layout_path=root/config.at("layout_model").get<std::string>();
   json key={{"algorithm",41},{"model",relative.u8string()},{"bytes",fs::file_size(model)},{"modified",fs::last_write_time(model).time_since_epoch().count()},{"source",source},{"execution",config.value("inpaint_execution",config.value("layout_execution",std::string("cpu")))},{"layout",config.at("layout_model")},{"layoutModified",fs::last_write_time(layout_path).time_since_epoch().count()},{"layoutExecution",config.value("layout_execution",std::string("cpu"))}};
+  key["restorationBackend"]=config.value("inpaint_backend",std::string("onnx"));
+  key["restorationDevice"]=config.value("inpaint_gpu_index",config.value("gpu_index",0));
+  if(torch_restoration()){auto library=restoration_path("inpaint_library");key["restorationLibrary"]={config.at("inpaint_library"),fs::file_size(library),fs::last_write_time(library).time_since_epoch().count()};}
   json ocrFiles=json::array();const auto validationModel=root/config.at("ocr_dir").get<std::string>();
   if(fs::is_directory(validationModel)){std::vector<fs::path> files;for(const auto& entry:fs::directory_iterator(validationModel))if(entry.is_regular_file())files.push_back(entry.path());std::sort(files.begin(),files.end());for(const auto& file:files)ocrFiles.push_back({file.filename().u8string(),fs::file_size(file),fs::last_write_time(file).time_since_epoch().count()});}
   key["readingValidation"]={config.value("ocr_backend",std::string("litert")),config.at("ocr_dir"),config.value("ocr_execution",std::string("cpu")),config.value("gpu_index",0),ocrFiles};
@@ -139,10 +161,10 @@ struct NativePipeline{
    masks.emplace_back(recognized,std::move(mask));
   }
   restorationRaw=LayoutRaw{};
-  // Reuse the model for all crops of this page, then release its GPU workspace
-  // before the next detector/OCR/LLM job competes for VRAM.
-  std::unique_ptr<MangaRestorer> restorer;
-  if(!masks.empty())restorer=std::make_unique<MangaRestorer>(model,config.value("threads",4),OrtExecution{execution,config.value("gpu_index",0)});
+  // ONNX retains page-scoped lifetime. LibTorch is loaded/warmed at API startup
+  // and held by NativePipeline for repeated pages and manual edits.
+  std::shared_ptr<MangaRestorer> restorer;
+  if(!masks.empty())restorer=restoration_engine(model,execution);
   // Only masks which already passed every glyph/neighbor guard participate.
   // Their overlapping background margins share one restoration, rather than
   // causing the later label to be discarded or producing competing patches.

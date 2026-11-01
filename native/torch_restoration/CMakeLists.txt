@@ -1,0 +1,25 @@
+cmake_minimum_required(VERSION 3.20)
+project(manga_lama_torch LANGUAGES CXX)
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+# This bridge compiles C++, not CUDA kernels. Use the published LibTorch C++
+# headers/import libraries; neither a Python interpreter nor nvcc is needed.
+if(NOT DEFINED TORCH_ROOT)
+ message(FATAL_ERROR "Set TORCH_ROOT to the verified LibTorch SDK (include/ and lib/)")
+endif()
+add_library(manga_lama_torch SHARED backend.cpp)
+target_include_directories(manga_lama_torch PRIVATE "${TORCH_ROOT}/include" "${TORCH_ROOT}/include/torch/csrc/api/include")
+foreach(name torch torch_cpu torch_cuda c10 c10_cuda)
+ find_library(${name}_LIB NAMES ${name} PATHS "${TORCH_ROOT}/lib" NO_DEFAULT_PATH REQUIRED)
+ target_link_libraries(manga_lama_torch PRIVATE "${${name}_LIB}")
+endforeach()
+set_property(TARGET manga_lama_torch PROPERTY CXX_VISIBILITY_PRESET hidden)
+if(MSVC)
+ target_compile_options(manga_lama_torch PRIVATE /EHsc /utf-8 /bigobj)
+ target_link_options(manga_lama_torch PRIVATE /INCLUDE:?warp_size@cuda@at@@YAHXZ)
+else()
+ # CI compilation does not require a GPU/driver or installing CUDA dependencies.
+ # All dynamic dependencies are verified by the portable installer at runtime.
+ target_link_options(manga_lama_torch PRIVATE -Wl,--no-as-needed -Wl,--allow-shlib-undefined)
+ set_target_properties(manga_lama_torch PROPERTIES BUILD_WITH_INSTALL_RPATH TRUE INSTALL_RPATH "$ORIGIN")
+endif()

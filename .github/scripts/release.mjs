@@ -23,7 +23,10 @@ async function dependency(work, name, url, sha) {
   const archive = path.join(work, name);
   run('curl', ['--fail', '--location', '--retry', '5', '--connect-timeout', '30', '--max-time', '600', '--output', archive, url]);
   assert(hash(archive) === sha, `${name}: SHA256 mismatch`);
-  if (name.endsWith('.zip')) run('unzip', ['-q', archive, '-d', work]);
+  if (name.endsWith('.zip') || name.endsWith('.whl')) {
+    if (process.platform === 'win32') run('tar', ['-xf', archive, '-C', work]);
+    else run('unzip', ['-q', archive, '-d', work]);
+  }
   else run('tar', ['-xzf', archive, '-C', work]);
 }
 if (mode === 'version') {
@@ -58,6 +61,24 @@ if (mode === 'version') {
     const r = spawnSync(path.join(work, 'out', name), [], { encoding: 'utf8', env: { ...process.env, LD_LIBRARY_PATH: path.join(ortRoot, 'lib') }, timeout: 30000 });
     assert(r.status === 1 && `${r.stdout}${r.stderr}`.includes('Usage:'), `Native startup failed: ${r.error || r.stderr}`);
   }
+} else if (mode === 'torch') {
+  const [sourceArg, platform, workArg] = args;
+  const source=path.resolve(sourceArg),work=path.resolve(workArg);
+  fs.mkdirSync(work,{recursive:true});
+  const catalog=read(path.join(source,'control/internal/assets/bundle/catalog.json'));
+  const runtime=catalog.runtimes.find(r=>r.id==='torch-cuda'&&r.platform===platform);
+  assert(runtime,'Missing Torch runtime');
+  const artifact=catalog.artifacts.find(a=>a.id===runtime.artifact);
+  const archive=platform==='windows-amd64'?'libtorch.zip':'torch.whl';
+  await dependency(work,archive,artifact.url,artifact.sha256);
+  const sdk=path.join(work,platform==='windows-amd64'?'libtorch':'torch');
+  const build=path.join(work,'build');
+  const config=['-S',path.join(source,'native/torch_restoration'),'-B',build,'-DCMAKE_BUILD_TYPE=Release',`-DTORCH_ROOT=${sdk}`];
+  if(platform==='windows-amd64')config.push('-A','x64');
+  run('cmake',config);run('cmake',['--build',build,'--config','Release','--parallel','2']);
+  const name=platform==='windows-amd64'?'manga_lama_torch.dll':'libmanga_lama_torch.so';
+  fs.mkdirSync(path.join(work,'out'),{recursive:true});
+  fs.copyFileSync(path.join(build,...(platform==='windows-amd64'?['Release',name]:[name])),path.join(work,'out',name));
 } else if (mode === 'verify') {
   const [distArg, tag] = args, dist = path.resolve(distArg), v = tag.slice(1);
   const expected = ['linux-arm64', 'linux-x64', 'windows-x64'].map(p => `manga-translator-${p}-${v}.zip`);

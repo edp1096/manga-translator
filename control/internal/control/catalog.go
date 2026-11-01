@@ -15,7 +15,7 @@ import (
 	"strings"
 )
 
-const Version = "0.4.0"
+const Version = "0.4.1"
 const ControlPort = 8794
 const VisionPort = 8793
 const LLMPort = 8792
@@ -50,6 +50,7 @@ type License struct {
 	License string `json:"license"`
 }
 type Model struct {
+	Platforms       []string         `json:"platforms,omitempty"`
 	LLM             *LLMModelOptions `json:"llm,omitempty"`
 	InputSize       int              `json:"inputSize,omitempty"`
 	VisionLimitMiB  int              `json:"visionLimitMiB,omitempty"`
@@ -89,7 +90,18 @@ func loadCatalog(bundle fs.FS, platform string) (Catalog, error) {
 	if err = json.Unmarshal(raw, &all); err != nil {
 		return all, err
 	}
-	result := Catalog{Version: all.Version, Licenses: all.Licenses, Models: all.Models}
+	result := Catalog{Version: all.Version, Licenses: all.Licenses}
+	for _, model := range all.Models {
+		include := len(model.Platforms) == 0
+		for _, target := range model.Platforms {
+			if target == platform {
+				include = true
+			}
+		}
+		if include {
+			result.Models = append(result.Models, model)
+		}
+	}
 	seen := map[string]bool{}
 	outputs := map[string]bool{}
 	for _, a := range all.Artifacts {
