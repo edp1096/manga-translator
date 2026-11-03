@@ -18,6 +18,10 @@ const {chromium}=require(process.env.MANGA_PLAYWRIGHT||'playwright');
   check(balloon.regions[0].mode==='restore'&&balloon.regions[0].restorationScope==='bubble','Connected balloon not restored');
   check(JSON.stringify(MangaRender.editedBase(balloon,result))===before,'Balloon presentation leaked into saved edit');
   check(MangaRender.presentation(result,'white',bubbleGeometry,'tooltip',bubbleMeta).regions[0].mode==='tooltip','Balloon restoration did not switch off');
+  const tonedGeometry=structuredClone(bubbleGeometry),tonedMeta=structuredClone(bubbleMeta);tonedGeometry.bubbles[0].confidence=.95;tonedGeometry.bubbles[0].verifiedWhite=false;tonedMeta.regions[0].bubble=tonedGeometry.bubbles[0];
+  check(MangaRender.presentation(result,'auto',tonedGeometry,'tooltip',tonedMeta).regions[0].mode==='restore','Confirmed toned balloon must restore independently of outside tooltip');
+  check(MangaRender.presentation(result,'auto',tonedGeometry,'tooltip',tonedMeta,true).regions[0].mode==='tooltip','Lightweight started automatic balloon restoration');
+  const explicitTip=structuredClone(result);explicitTip.regions[0].displayOverride=true;check(MangaRender.presentation(explicitTip,'auto',tonedGeometry,'tooltip',tonedMeta).regions[0].mode==='tooltip','Explicit tooltip overridden');
   const paddingNeighbor=structuredClone(result);paddingNeighbor.preservedRegions=[{bbox:[322,440,330,460]}];
   check(MangaRender.presentation(paddingNeighbor,'white',bubbleGeometry,'restore',bubbleMeta).regions[0].mode==='restore','Empty mask padding blocked a safe restoration');
   for(const change of ['missingAuthorization','weakBubble','missingBubble','badMask','manual','displayOverride','effect','unfittable','preservedNeighbor','manualOverlap']){
@@ -123,8 +127,8 @@ const {chromium}=require(process.env.MANGA_PLAYWRIGHT||'playwright');
   const narrowGeometry={width:960,height:1360,bubbles:[]},narrowMask={id:1,sourceText:'A narrow thought',sourceBox:[200,300,222,442],scope:'outside',bounds:[198,298,224,444],runs:[]};for(let y=4;y<140;y++)narrowMask.runs.push(y*26+4,18);
   const narrowMeta={version:1,width:960,height:1360,regions:[narrowMask]};
   const narrowShown=MangaRender.presentation(narrow,'white',narrowGeometry,'restore',narrowMeta).regions[0];
-  check(narrowShown.mode==='restore'&&narrowShown.fontSize>=8&&narrowShown.fontSize<11,'Narrow punctuation did not shrink for authorized restoration');
-  check(MangaRender.presentation(narrow,'white',narrowGeometry,'white',narrowMeta).regions[0].mode==='tooltip','Restoration retry changed white mode');guarded++;
+  check(narrowShown.mode==='restore'&&narrowShown.fontSize>=8&&MangaRender.textLayout(narrowShown)?.metrics.every(m=>m.width<=narrowShown.box[2]-narrowShown.box[0]-4),'Narrow punctuation must fit its authorized restoration box');
+  check(MangaRender.presentation(narrow,'white',narrowGeometry,'white',narrowMeta).regions[0].mode!=='restore','Outside white mode unexpectedly used image restoration');guarded++;
   const readable=structuredClone(narrow);Object.assign(readable.regions[0],{bbox:[200,300,226,472],box:[200,300,226,472],translation:'이게 다야.'});
   const readableMask={...narrowMask,sourceBox:[200,300,226,472],bounds:[200,300,226,472],runs:[0,26*172]},readableMeta={...narrowMeta,regions:[readableMask]};
   const readableShown=MangaRender.presentation(readable,'white',narrowGeometry,'restore',readableMeta).regions[0];
@@ -140,7 +144,9 @@ const {chromium}=require(process.env.MANGA_PLAYWRIGHT||'playwright');
   for(const change of ['manual','layoutOverride','displayOverride','missingMask','staleMask','tooLong','neighbor']){
    const r=structuredClone(narrow),m=structuredClone(narrowMeta);
    if(change==='missingMask')m.regions=[];else if(change==='staleMask')m.regions[0].sourceText='stale';else if(change==='tooLong')r.regions[0].translation='Long '.repeat(500);else if(change==='neighbor')r.preservedRegions=[{bbox:[200,300,222,442]}];else r.regions[0][change]=true;
-   check(MangaRender.presentation(r,'white',narrowGeometry,'restore',m).regions[0].mode==='tooltip','Narrow restoration guard failed: '+change);guarded++;
+   const guardedLayout=MangaRender.presentation(r,'white',narrowGeometry,'restore',m).regions[0];
+   if(change==='layoutOverride')check(JSON.stringify(guardedLayout.box)===JSON.stringify(r.regions[0].box)&&guardedLayout.fontSize<=r.regions[0].fontSize,'Explicit narrow layout changed');
+   else check(guardedLayout.mode==='tooltip','Narrow restoration guard failed: '+change);guarded++;
   }
   const strongGeometry=structuredClone(bubbleGeometry);strongGeometry.bubbles[0].confidence=.96;
   check(MangaRender.presentation(result,'white',strongGeometry,'restore',bubbleMeta).regions[0].mode==='white','Restoration overrode existing white balloon');

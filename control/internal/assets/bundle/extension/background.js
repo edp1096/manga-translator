@@ -97,7 +97,7 @@ chrome.runtime.onMessage.addListener((msg,sender,respond)=>{
       }
       case 'connect':{
         if(!Number.isInteger(msg.tabId)||msg.tabId<0)throw Error('만화 페이지를 선택한 뒤 새로고침을 눌러주세요.');
-        await chrome.scripting.executeScript({target:{tabId:msg.tabId},files:['polygon.js','fonts.js','render.js','readers.js','names.js','content.js']});
+        await chrome.scripting.executeScript({target:{tabId:msg.tabId},files:['polygon.js','fonts.js','rotation.js','render.js','readers.js','names.js','content.js']});
         return chrome.tabs.sendMessage(msg.tabId,{type:'control',action:'scan'});
       }
       case 'control':{
@@ -109,7 +109,7 @@ chrome.runtime.onMessage.addListener((msg,sender,respond)=>{
           if(!/Receiving end does not exist|Could not establish connection|message port closed/i.test(error.message||''))throw error;
           const tab=await chrome.tabs.get(msg.tabId);
           if(!/^https?:/.test(tab.url||''))throw Error('만화 페이지를 연 뒤 다시 연결하세요.');
-          await chrome.scripting.executeScript({target:{tabId:msg.tabId},files:['polygon.js','fonts.js','render.js','readers.js','names.js','content.js']});
+          await chrome.scripting.executeScript({target:{tabId:msg.tabId},files:['polygon.js','fonts.js','rotation.js','render.js','readers.js','names.js','content.js']});
           const state=await chrome.tabs.sendMessage(msg.tabId,{type:'control',action:'scan'});
           if(['status','scan'].includes(msg.action))return state;
           if(msg.action==='locate'&&msg.sourceURL)return chrome.tabs.sendMessage(msg.tabId,command);
@@ -204,7 +204,7 @@ chrome.runtime.onMessageExternal.addListener((msg,sender,respond)=>{
 chrome.tabs.onUpdated.addListener((tabId,change,tab)=>{
  if(change.status!=='complete'||!/^https?:/.test(tab.url||'')||/^http:\/\/(localhost|127\.0\.0\.1):8794/.test(tab.url||''))return;
  (async()=>{if(!await MangaLibrary.known(tab.url,tabId))return;const saved=await MangaLibrary.restore(tab.url,tabId);if(!saved.length)return;const current=await chrome.tabs.get(tabId);if(current.url!==tab.url)return;
- await chrome.scripting.executeScript({target:{tabId,frameIds:[0]},files:['polygon.js','fonts.js','render.js','readers.js','names.js','content.js']});
+ await chrome.scripting.executeScript({target:{tabId,frameIds:[0]},files:['polygon.js','fonts.js','rotation.js','render.js','readers.js','names.js','content.js']});
  await chrome.tabs.sendMessage(tabId,{type:'control',action:'scan'});
  })().catch(error=>console.debug('저장 번역 불러오기:',error.message));
 });

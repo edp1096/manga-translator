@@ -3,20 +3,20 @@
     "source": "https://copyright.keris.or.kr/wft/fntDwnldView?fntGrpId=GFT202301110000000000001",
     "sha256": "d546786fe2cbeefa4f378607573fdb8d68d94116205dcfa7c2adaa375dde5be9"
   },
-  "friendly": {
-    "source": "https://copyright.keris.or.kr/wft/fntDwnldView?fntGrpId=GFT202301120000000000006",
-    "sha256": "fb5442c0dfd4f7fcb8237b038b99366912c97ac35bdf9277c83aa9ed107da553"
-  },
   "reflective": {
-    "source": "https://copyright.keris.or.kr/wft/fntDwnldView?fntGrpId=GFT202301120000000000007",
-    "sha256": "633cd24d735f73cf1ec0e3aef49a0d408e3799684453cb0116fb6aeb73188a9f"
+    "source": "https://copyright.keris.or.kr/wft/fntDwnldView?fntGrpId=GFT202510270000000000003",
+    "sha256": "32e266511499727b0e8d17374641d55f5d5f2fe2dc99a203db02a3eb6dee346c"
   },
   "narration": {
     "source": "https://copyright.keris.or.kr/wft/fntDwnldView?fntGrpId=GFT202301120000000000002",
     "sha256": "da196e6907d80c59aa18879918c74a67eb758c98f74b09d9e6d0f8f7bdb758b5"
   },
   "shout": {
-    "source": "https://copyright.keris.or.kr/wft/fntDwnldView?fntGrpId=GFT202312110000000000010",
-    "sha256": "e14871143c190b6a5da57f5df17acb349dac1cece5d60c0fe1997cd95c081def"
+    "source": "https://copyright.keris.or.kr/wft/fntDwnldView?fntGrpId=GFT202312110000000000020",
+    "sha256": "845eca2d318bfd87db2b35caa90bdc2eb4f358df1448a898366895e0e98fac40"
+  },
+  "impact": {
+    "source": "https://copyright.keris.or.kr/wft/fntDwnldView?fntGrpId=GFT202312110000000000015",
+    "sha256": "7a729454b6379763c84e5b021e4001306cf782f4b44d5d7bb8d2f115cb3a45a2"
   }
 }

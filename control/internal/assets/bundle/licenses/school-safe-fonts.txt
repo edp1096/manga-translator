@@ -3,7 +3,7 @@ Copyright © KERIS. All rights reserved.
 
 Unmodified WOFF files from https://copyright.keris.or.kr/wft/fntDwnld
 Licensed under the SIL Open Font License 1.1.
-Original families: 학교안심 바른돋움 R, 학교안심 우주 R, 학교안심 가을소풍 B, 학교안심 바른바탕 R, 학교안심 물결 B.
+Original families: 학교안심 바른돋움 R, 학교안심 날개 R, 학교안심 바른바탕 R, 학교안심 여행 R, 학교안심 투호 R.
 
 SIL OPEN FONT LICENSE Version 1.1 - 26 February 2007
 -----------------------------------------------------------

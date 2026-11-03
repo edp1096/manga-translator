@@ -38,12 +38,12 @@ function coverage(background,result,box){
 }
 function whiteBackground(result,region,geometry){
  if(geometry.width!==result.width||geometry.height!==result.height||!Array.isArray(geometry.bubbles))throw Error('말풍선 경계와 이미지 크기가 다릅니다.');
- if(region.type==='effect')throw Error('효과음은 말풍선 내부를 자동으로 채우지 않습니다. 흰 배경 범위에서 글상자를 선택하세요.');
+ // Explicit editor requests still require a safe, unoccupied bubble below.
  const area=background=>background.runs.filter((value,index)=>index%2).reduce((sum,length)=>sum+length,0)/(background.width*background.height);
  const candidates=geometry.bubbles.filter(background=>background.confidence>=.85&&coverage(background,result,region.bbox)>=.98&&coverage(background,result,region.box)>=.98&&area(background)<=.4).sort((left,right)=>area(left)-area(right));
  const background=candidates[0];
- if(!background)throw Error('안전하게 채울 말풍선 경계를 찾지 못했습니다. 흰 배경 범위를 글상자로 바꾸거나 툴팁을 사용하세요.');
- if(result.regions.some(other=>other!==region&&other.text?.trim()&&coverage(background,result,other.bbox)>=.5))throw Error('같은 말풍선에 다른 글자가 있습니다. 다른 대사를 가리지 않도록 흰 배경 범위를 글상자로 선택하세요.');
+ if(!background)throw Object.assign(Error('안전하게 채울 말풍선 경계를 찾지 못했습니다. 흰 배경 범위를 글상자로 바꾸거나 툴팁을 사용하세요.'),{code:'NO_SAFE_BUBBLE'});
+ if(result.regions.some(other=>other!==region&&other.text?.trim()&&coverage(background,result,other.bbox)>=.5))throw Object.assign(Error('같은 말풍선에 다른 글자가 있습니다. 다른 대사를 가리지 않도록 흰 배경 범위를 글상자로 선택하세요.'),{code:'NO_SAFE_BUBBLE'});
  return {...background,kind:'bubble'};
 }
 const confirmedPanel=region=>!region.panelCandidate||(region.textVerification?.version===1&&['ocr-consensus','ocr-context'].includes(region.textVerification.method)&&['LABEL','DIALOGUE'].includes(region.textVerification.role)&&Array.isArray(region.textVerification.sources)&&region.textVerification.sources.length>0);
@@ -98,7 +98,7 @@ function wrapTextUncached(context,text,width,keepHangul=true){
   for(const word of paragraph.trim().split(/\s+/u).filter(Boolean)){
    const joined=line?line+' '+word:word;
    if(measureText(context,joined).width<=width){line=joined;continue;}
-   if(closing.test(word)&&line){line+=word;continue;}
+   if(closing.test(word)&&line&&measureText(context,line+word).width<=width){line+=word;continue;}
    if(line){lines.push(line);line='';}
    if(measureText(context,word).width<=width){line=word;continue;}
    const units=[];
@@ -115,7 +115,7 @@ function wrapTextUncached(context,text,width,keepHangul=true){
    }
    for(const part of parts){
     const segments=measureText(context,part).width<=width?[part]:textSegments(part);
-    for(const segment of segments){if(closing.test(segment)&&units.length)units[units.length-1]+=segment;else units.push(segment);}
+    for(const segment of segments){if(closing.test(segment)&&units.length&&measureText(context,units[units.length-1]+segment).width<=width)units[units.length-1]+=segment;else units.push(segment);}
    }
    for(const unit of units){if(line&&measureText(context,line+unit).width>width){lines.push(line);if(!/^\p{Pd}+$/u.test(line))breaks++;line='';}line+=unit;}
   }
@@ -123,15 +123,17 @@ function wrapTextUncached(context,text,width,keepHangul=true){
  }
  return {lines,breaks,grouped};
 }
+function outlineWidth(region,size){return region.outlineChoice==='none'?0:region.outlineChoice==='white'||region.mode==='restore'?Math.max(2,size*.15):0;}
 function textLayout(region,box=region.box,maximum=region.fontSize||24,minimum=8){
  if(!Array.isArray(box)||box.length!==4||!box.every(Number.isFinite)||typeof region.translation!=='string')return null;
  const requestedMaximum=Number.isFinite(region.automaticFontMaximum)?Math.max(maximum,region.automaticFontMaximum):maximum;
- const key=[...box,maximum,minimum,requestedMaximum,font(24,region),region.translation,!!region.manual,!!region.layoutOverride,!!region.displayOverride].join('\u0000'),cached=layouts.get(region);
+ const key=[...box,maximum,minimum,requestedMaximum,font(24,region),region.outlineChoice,region.mode,region.translation,!!region.manual,!!region.layoutOverride,!!region.displayOverride].join('\u0000'),cached=layouts.get(region);
  if(cached?.key===key)return cached.value;
- const width=box[2]-box[0]-4,height=box[3]-box[1]-4;
- if(width<=0||height<=0||region.translation.length>8192)return null;
+ const boxWidth=box[2]-box[0],boxHeight=box[3]-box[1];
+ if(boxWidth<=4||boxHeight<=4||region.translation.length>8192)return null;
  let best=null;
  for(let points=Math.min(256,Math.floor(maximum));points>=minimum;points--){
+  const margin=Math.max(2,outlineWidth(region,points)/2+1),width=boxWidth-2*margin,height=boxHeight-2*margin;
   textContext.font=font(points,region);const primary=wrapText(textContext,region.translation,width);
   // A fitting word must not force a much smaller paragraph. Retain the
   // previous grapheme layout as an alternative at the same measured font.
@@ -800,20 +802,28 @@ function tooltipClip(region,result){
  for(const contour of contours){const p=contour.map(([x,y])=>`${x*100}% ${y*100}%`);if(p.length)points.push(...p,p[0],'0% 0%');}
  return `polygon(evenodd,${points.join(',')})`;
 }
+function bubbleRestorationCandidate(region,result,geometry){
+ if(!outsideCandidate(region)||region.layoutOverride||region.panelCandidate||!geometry||geometry.width!==result.width||geometry.height!==result.height||!Array.isArray(geometry.bubbles))return false;
+ return geometry.bubbles.some(b=>{try{return b.confidence>=.85&&b.verifiedWhite===false&&validBox(b.bbox,result)&&whiteMask(b).area<=.4&&coverage(b,result,region.bbox)>=.98;}catch{return false;}});
+}
 function presentation(result,mode,geometry,outsideMode='tooltip',restoration,lightweight=result._fontLight===true){
  if(globalThis.MangaFonts)result=MangaFonts.decorate(result,lightweight);
  const previousMeasures=presentationMeasures,previousWraps=presentationWraps,previousSegments=presentationSegments;presentationMeasures=new Map();presentationWraps=new Map();presentationSegments=new Map();
  try{
  const guarded={...result,regions:result.regions.map(r=>punctuationMismatch(r,result)?{...r,mode:'tooltip',automaticPunctuation:true}:r)};
  const shown=bubblePresentation(guarded,mode,geometry);
- if(outsideMode==='restore')return restorationPresentation(shown,geometry,restoration);
- return outsideMode==='white'?outsidePresentation(shown,geometry):shown;
+ let displayed=outsideMode==='restore'?restorationPresentation(shown,geometry,restoration):outsideMode==='white'?outsidePresentation(shown,geometry):shown;
+ if(!lightweight&&outsideMode!=='restore'&&shown.regions.some(r=>bubbleRestorationCandidate(r,shown,geometry))){
+  const restored=restorationPresentation(shown,geometry,restoration);
+  displayed={...displayed,regions:displayed.regions.map((r,i)=>r.mode==='tooltip'&&bubbleRestorationCandidate(shown.regions[i],shown,geometry)&&restored.regions[i].mode==='restore'?restored.regions[i]:r)};
+ }
+ return globalThis.MangaRotation?MangaRotation.apply(displayed,textLayout,lightweight):displayed;
  }finally{presentationMeasures=previousMeasures;presentationWraps=previousWraps;presentationSegments=previousSegments;}
 }
 function editedBase(result,base){
- const clean={...result};delete clean._fontLight;
+ const clean={...result};delete clean._fontLight;delete clean._rotationPrepared;
  return {...clean,regions:result.regions.map(region=>{
-  const restored={...region};delete restored._fontId;
+  const restored={...region};delete restored._fontId;delete restored._rotation;delete restored.automaticRotation;
   const prior=base?.regions.find(candidate=>candidate.id===region.id);
   if(!prior)return restored;
   const keys=region.displayOverride?[]:['mode','whiteScope','whiteBackground','displayOverride','restorationMask'];
@@ -832,6 +842,16 @@ function paintWhite(context,result,region){
   context.drawImage(mask.smooth,0,0,result.width,result.height);return;
  }
  context.fillStyle='#fff';
+ if(globalThis.MangaRotation&&globalThis.MangaPolygon?.subtractPolygons){
+  const padded=b=>[Math.max(0,b[0]-4),Math.max(0,b[1]-4),Math.min(result.width,b[2]+4),Math.min(result.height,b[3]+4)];
+  const polygons=[MangaRotation.corners(padded(region.box),MangaRotation.angle(region))];
+  if(!region.manual)polygons.push(MangaRotation.corners(padded(region.bbox)));
+  const clips=[...result.regions,...(result.preservedRegions||[])].filter(r=>r!==region&&(r.text?.trim()||r.translation?.trim())).flatMap(r=>[r.bbox,r.box].filter(Array.isArray).map(b=>MangaRotation.corners(b,b===r.box?MangaRotation.angle(r):0)));
+  const paths=MangaPolygon.subtractPolygons(polygons,clips);
+  if(paths){context.beginPath();for(const p of paths){context.moveTo(...p[0]);for(const v of p.slice(1))context.lineTo(...v);context.closePath();}context.fill();return;}
+  // Fail closed if a protected white patch cannot be computed.
+  if(clips.length)return;
+ }
  for(const box of region.manual?[region.box]:[region.bbox,region.box]){
   const left=Math.max(0,box[0]-4),top=Math.max(0,box[1]-4),right=Math.min(result.width,box[2]+4),bottom=Math.min(result.height,box[3]+4);
   context.fillRect(left,top,right-left,bottom-top);
@@ -842,11 +862,13 @@ function drawRegion(ctx,r){
  const [x1,y1,x2,y2]=r.box, w=x2-x1,h=y2-y1;
  const layout=textLayout(r);if(!layout)return;
  const size=layout.fontSize,lines=layout.lines;ctx.font=font(size,r);
- ctx.save();ctx.beginPath();ctx.rect(x1,y1,w,h);ctx.clip();
+ ctx.save();
+ const rotation=globalThis.MangaRotation?.angle(r)||0;if(rotation){const cx=(x1+x2)/2,cy=(y1+y2)/2;ctx.translate(cx,cy);ctx.rotate(rotation*Math.PI/180);ctx.translate(-cx,-cy);}
+ ctx.beginPath();ctx.rect(x1,y1,w,h);ctx.clip();
 
  ctx.fillStyle=r.mode==='white'?'#111':r.color||'#111';ctx.textAlign='left';ctx.textBaseline='alphabetic';
  let top=y1+(h-layout.height)/2;
- lines.forEach((line,index)=>{const metric=layout.metrics[index],x=(x1+x2+metric.left-metric.right)/2,y=top+(metric.height-metric.ascent-metric.descent)/2+metric.ascent;if(r.mode==='restore'){ctx.strokeStyle='#fff';ctx.lineWidth=Math.max(2,size*.15);ctx.lineJoin='round';ctx.strokeText(line,x,y);}ctx.fillText(line,x,y);top+=metric.height;});ctx.restore();
+ lines.forEach((line,index)=>{const metric=layout.metrics[index],x=(x1+x2+metric.left-metric.right)/2,y=top+(metric.height-metric.ascent-metric.descent)/2+metric.ascent;if(outlineWidth(r,size)){ctx.strokeStyle='#fff';ctx.lineWidth=outlineWidth(r,size);ctx.lineJoin='round';ctx.strokeText(line,x,y);}ctx.fillText(line,x,y);top+=metric.height;});ctx.restore();
 }
 function prepare(result){return result;}
 const restorationMasks=new WeakMap();
@@ -869,6 +891,7 @@ function restorationMaskOverlaps(mask,result,box){
 }
 async function render(canvas,result,original,cleaned,restored){
  if(globalThis.MangaFonts){await MangaFonts.ensure(result);result=MangaFonts.decorate(result);}
+ if(globalThis.MangaRotation&&!result._rotationPrepared)result=MangaRotation.apply(result,textLayout,result._fontLight===true);
  prepare(result);
  canvas.width=result.width;canvas.height=result.height;
  // These full-page buffers are copied/exported, not animated. Keep their
@@ -892,5 +915,5 @@ async function render(canvas,result,original,cleaned,restored){
  for(const r of result.regions)drawRegion(ctx,r);
  return canvas;
 }
-globalThis.MangaRender={setAssetLoader,image,render,prepare,direct,tooltipRegions,tooltipClip,tooltipContours,whiteBackground,coverage,whiteCandidate,outsideCandidate,presentation,editedBase,textLayout};
+globalThis.MangaRender={setAssetLoader,image,render,prepare,direct,tooltipRegions,tooltipClip,tooltipContours,whiteBackground,coverage,whiteCandidate,outsideCandidate,bubbleRestorationCandidate,presentation,editedBase,textLayout};
 })();

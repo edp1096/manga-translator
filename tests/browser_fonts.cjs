@@ -12,12 +12,12 @@ const root=path.resolve(__dirname,'..'),evidence=process.env.FONT_EVIDENCE||path
  await page.route('http://font-test.local/**',route=>route.fulfill({contentType:'text/html',body:'<meta http-equiv="Content-Security-Policy" content="font-src \'none\'; script-src \'none\'"><canvas id="preview"></canvas>'}));
  await page.goto('http://font-test.local/');
  for(const file of ['polygon.js','fonts.js','render.js'])await page.evaluate(fs.readFileSync(path.join(root,'extension',file),'utf8'));
- const files=Object.fromEntries(['dialogue','friendly','reflective','narration','shout'].map(id=>[id,fs.readFileSync(path.join(root,'extension/fonts',id+'.woff')).toString('base64')]));
+ const files=Object.fromEntries(['dialogue','reflective','narration','shout','impact'].map(id=>[id,fs.readFileSync(path.join(root,'extension/fonts',id+'.woff')).toString('base64')]));
  const report=await page.evaluate(async files=>{
   let requests=0;MangaFonts.setLoader(async id=>{requests++;return 'data:font/woff;base64,'+files[id];});
-  const roles=Object.keys(files),texts=['내일 다시 만나자.','와 줘서 정말 고마워!','그때 솔직하게 말했더라면…','그날 이후, 마을은 다시 평화를 되찾았다.','당장 멈춰!!'];
-  const result={width:800,height:750,target:'Korean',regions:roles.map((role,i)=>({id:i,manual:true,box:[30,20+i*145,770,145+i*145],bbox:[30,20+i*145,770,145+i*145],fontSize:36,text:texts[i],translation:texts[i],mode:'replace',fontStyle:{version:1,role}}))};
-  const white=document.createElement('canvas');white.width=result.width;white.height=result.height;white.getContext('2d').fillStyle='white';white.getContext('2d').fillRect(0,0,800,750);const source=white.toDataURL();
+  const roles=Object.keys(files),texts=['내일 다시 만나자.','그때 솔직하게 말했더라면…','그날 이후, 마을은 다시 평화를 되찾았다.','당장 멈춰!!','콰앙!'];
+  const result={width:800,height:900,target:'Korean',regions:roles.map((role,i)=>({id:i,manual:true,box:[30,20+i*145,770,145+i*145],bbox:[30,20+i*145,770,145+i*145],fontSize:36,text:texts[i],translation:texts[i],mode:'replace',fontChoice:role,fontStyle:{version:1,role}}))};
+  const white=document.createElement('canvas');white.width=result.width;white.height=result.height;white.getContext('2d').fillStyle='white';white.getContext('2d').fillRect(0,0,800,900);const source=white.toDataURL();
   const light=MangaFonts.decorate(result,true);await MangaFonts.ensure(light);if(requests!==0)throw Error('Light mode loaded fonts');
   const preview=document.querySelector('canvas'),snapshot=async data=>{await MangaRender.render(preview,data,source,source);return preview.toDataURL();};
   const baseline=await snapshot(light);await MangaFonts.ensure(result);const shown=MangaRender.presentation(result,'auto',undefined,'tooltip',undefined,false);const styled=await snapshot(shown);
@@ -25,13 +25,23 @@ const root=path.resolve(__dirname,'..'),evidence=process.env.FONT_EVIDENCE||path
   if(styled===baseline)throw Error('Custom fonts not painted');
   const back=await snapshot(MangaFonts.decorate(result,true));if(back!==baseline)throw Error('Light mode changed legacy pixels');
   if(await snapshot(shown)!==styled)throw Error('Mode round trip not stable');
+  const weightSample={...shown,regions:[{...shown.regions[0],fontWeight:400}]};
+  const regular=await snapshot(weightSample);weightSample.regions[0].fontWeight=700;
+  const bold=await snapshot(weightSample);if(regular===bold)throw Error('Bold did not change pixels');
+  const weightSaved=MangaRender.editedBase(weightSample,result);
+  if(weightSaved.regions[0].fontWeight!==700||await snapshot(JSON.parse(JSON.stringify(weightSample)))!==bold)throw Error('Weight persistence failed');
+  const cachedWeight=MangaRender.textLayout(weightSample.regions[0]);weightSample.regions[0].fontWeight=400;
+  if(MangaRender.textLayout(weightSample.regions[0])===cachedWeight)throw Error('Weight metrics cache stale');
+  if(MangaFonts.weight({fontStyle:{role:'shout'},translation:'멈춰!'})!==700||MangaFonts.weight({fontStyle:{role:'dialogue'},translation:'안녕!!'})!==400||MangaFonts.weight({fontStyle:{role:'shout'},translation:'멈춰!',fontWeight:400})!==400)throw Error('Automatic/manual weight policy failed');
+  const lightWeight=MangaFonts.decorate(weightSample,true);const lightRegular=await snapshot(lightWeight);lightWeight.regions[0].fontWeight=700;
+  if(await snapshot(lightWeight)!==lightRegular)throw Error('Light mode applied weight override');
   const single=shown.regions[0],old=MangaRender.textLayout(single);single.fontChoice='shout';const manual=MangaFonts.decorate(shown);const changed=await snapshot(manual);if(changed===styled)throw Error('Manual font did not change pixels');
   const saved=MangaRender.editedBase(manual,result);if(saved.regions[0].fontChoice!=='shout')throw Error('Manual choice lost');
   const reloaded=JSON.parse(JSON.stringify(saved));await MangaFonts.ensure(reloaded);if(await snapshot(reloaded)!==changed)throw Error('Saved font pixels changed');
-  if(MangaFonts.choice(single,'English',false)!=='shout')throw Error('Manual choice ignored');if(MangaFonts.choice(result.regions[1],'English')!=='default')throw Error('Non-Korean automatically styled');
+  if(MangaFonts.choice(single,'English',false)!=='shout')throw Error('Manual choice ignored');if(MangaFonts.choice({...result.regions[1],fontChoice:undefined},'English')!=='default')throw Error('Non-Korean automatically styled');
   // Same region identity, changed family: cached metrics must change.
   const cacheRegion={...single,translation:'다시 만날 수 있을까?',box:[0,0,180,100],fontSize:35,_fontId:'dialogue'};const a=MangaRender.textLayout(cacheRegion);cacheRegion._fontId='shout';const b=MangaRender.textLayout(cacheRegion);if(a===b)throw Error('Stale layout cache');
-  delete shown.regions[0].fontChoice;await snapshot(shown);return {requests,loaded:document.fonts.size,layouts,roundTrip:true,manualSaveReload:true,lightweightPixelParity:true,cspBinaryFonts:true};
+  shown.regions[0].fontChoice='dialogue';await snapshot(shown);return {requests,loaded:document.fonts.size,layouts,roundTrip:true,manualSaveReload:true,lightweightPixelParity:true,cspBinaryFonts:true};
  },files);
  assert.equal(report.loaded,5);assert.equal(report.requests,5);assert.deepEqual(errors,[]);
  await page.screenshot({path:path.join(evidence,'font-styles.png'),fullPage:true});fs.writeFileSync(path.join(evidence,'report.json'),JSON.stringify(report,null,2));

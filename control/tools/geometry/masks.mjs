@@ -59,3 +59,13 @@ export function subtract(background,exclusions,result,padding=1){
   return {...background,width:w,height:h,runs:encode(bits),pixels:bits.reduce((n,v)=>n+v,0),effectExclusions:blockedMask,polygonOverlap:{originalArea:area(bp),remainingArea:polygonArea,remainingFraction:area(bp)?polygonArea/area(bp):0}};
  }catch{return null;}
 }
+
+// Display polygons are page-space coordinates. Keep rotation collision and
+// white-background clipping on the same Clipper engine as mask protection.
+function displayPaths(polygons){
+ if(!Array.isArray(polygons)||polygons.length>512)throw Error('Too many display polygons');
+ return polygons.map(p=>{if(!Array.isArray(p)||p.length<3||p.length>256)throw Error('Invalid polygon');return p.map(v=>{if(!Array.isArray(v)||v.length!==2||!v.every(Number.isFinite)||v.some(n=>Math.abs(n)>100000))throw Error('Invalid point');return {x:Math.round(v[0]*scale),y:Math.round(v[1]*scale)};});});
+}
+export function polygonOverlap(first,second){try{const a=displayPaths([first]),b=displayPaths([second]),aa=area(a),bb=area(b),intersectionArea=area(intersect(a,b,FillRule.NonZero));return {firstArea:aa,secondArea:bb,intersectionArea,firstFraction:aa?intersectionArea/aa:0,secondFraction:bb?intersectionArea/bb:0};}catch{return null;}}
+export function polygonCoverage(polygon,mask,result){try{const a=displayPaths([polygon]),m=decode(mask,result);if(!m)return null;const total=area(a);return total?area(intersect(a,paths(m,result),FillRule.NonZero))/total:0;}catch{return null;}}
+export function subtractPolygons(subjects,clips){try{const a=union(displayPaths(subjects),FillRule.NonZero),b=union(displayPaths(clips),FillRule.NonZero);return (b.length?difference(a,b,FillRule.NonZero):a).map(p=>p.map(v=>[v.x/scale,v.y/scale]));}catch{return null;}}

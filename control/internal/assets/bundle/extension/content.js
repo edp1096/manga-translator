@@ -36,8 +36,8 @@ function setDisplayModes(mode,outside,retry=false,light=lightweightDisplay){
  queueDisplay();
 }
 const needsDisplay=entry=>entry.result&&entry.original&&entry.cleaned&&!entry.restoring&&!entry.cachedRestore&&!entry.pendingJob&&(entry.displayRevision!==displayRevision||entry.displayResult!==entry.result);
-const needsGeometry=result=>!lightweightDisplay&&(displayMode==='white'&&result.regions.some(MangaRender.whiteCandidate)||outsideTextMode!=='tooltip'&&result.regions.some(MangaRender.outsideCandidate));
-const restorationReady=entry=>lightweightDisplay||outsideTextMode!=='restore'||!entry.result.regions.some(MangaRender.outsideCandidate)||!!entry.restored&&entry.restoration?.version===1;
+const needsGeometry=result=>!lightweightDisplay&&(displayMode==='white'&&result.regions.some(MangaRender.whiteCandidate)||result.regions.some(MangaRender.outsideCandidate));
+const restorationReady=entry=>lightweightDisplay||!(outsideTextMode==='restore'&&entry.result.regions.some(MangaRender.outsideCandidate)||entry.result.regions.some(r=>MangaRender.bubbleRestorationCandidate(r,entry.result,entry.bubbles)))||!!entry.restored&&entry.restoration?.version===1;
 const geometryReady=entry=>entry.bubbles&&(entry.bubbles.version>=3||entry.geometryChecked===entry.job);
 async function applyEntryDisplay(entry,active=()=>true,progress=()=>{}){
  const revision=displayRevision,job=entry.job,result=entry.result;

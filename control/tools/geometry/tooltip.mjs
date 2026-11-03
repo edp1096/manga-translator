@@ -1,5 +1,5 @@
 import {union,intersect,difference,FillRule} from 'clipper2-ts';
-export {overlap,subtract,validRegionMask} from './masks.mjs';
+export {overlap,subtract,validRegionMask,polygonOverlap,polygonCoverage,subtractPolygons} from './masks.mjs';
 export const version='clipper2-ts/2.0.1-18';
 export const interaction='filled-text-envelope-1';
 const scale=100,rectangle=([x,y,right,bottom])=>[{x,y},{x:right,y},{x:right,y:bottom},{x,y:bottom}];
