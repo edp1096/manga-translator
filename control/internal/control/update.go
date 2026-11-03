@@ -125,6 +125,9 @@ func updateResponse(ctx context.Context, client *http.Client, address string) (*
 	}
 	if res.StatusCode != http.StatusOK {
 		res.Body.Close()
+		if (res.StatusCode == http.StatusForbidden && res.Header.Get("X-RateLimit-Remaining") == "0") || res.StatusCode == http.StatusTooManyRequests {
+			return nil, fmt.Errorf("GitHub 요청 한도 초과 · 잠시 후 다시 확인하세요")
+		}
 		return nil, fmt.Errorf("업데이트 서버 응답: HTTP %d", res.StatusCode)
 	}
 	return res, nil

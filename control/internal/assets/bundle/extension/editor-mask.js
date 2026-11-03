@@ -5,9 +5,15 @@ function beginManualMask(){
  const c=$('erase-mask');c.width=result.width;c.height=result.height;c.hidden=false;$('mask-controls').hidden=false;
  const previous=r.manualRestoration?.mask;
  if(previous){const [x,y,x1,y1]=previous.bounds,w=x1-x;const ctx=c.getContext('2d');ctx.fillStyle='rgba(245,70,10,.5)';for(let i=0;i<previous.runs.length;i+=2){let p=previous.runs[i],end=p+previous.runs[i+1];while(p<end){const n=Math.min(w-p%w,end-p);ctx.fillRect(x+p%w,y+Math.floor(p/w),n,1);p+=n;}}}
- else fillManualBox();select(selected);draw();tell('빨간 부분만 복원합니다. 영역을 조정한 뒤 복원 미리보기를 누르세요.');
+ $('mask-tool').value='rectangle';select(selected);draw();tell('사각형은 기존 선택을 바꿉니다. 빨간 부분을 확인한 뒤 복원 미리보기를 누르세요.');
 }
 function fillManualBox(){const r=result?.regions[selected];if(!r)return;const c=$('erase-mask'),ctx=c.getContext('2d'),b=r.bbox;ctx.clearRect(0,0,c.width,c.height);ctx.fillStyle='rgba(245,70,10,.5)';ctx.fillRect(Math.floor(b[0]),Math.floor(b[1]),Math.ceil(b[2])-Math.floor(b[0]),Math.ceil(b[3])-Math.floor(b[1]));}
+function fillManualLayoutBox(){
+ const r=result?.regions[selected];if(!r||!maskEditing||busy)return;
+ const c=$('erase-mask'),ctx=c.getContext('2d'),points=MangaRotation.corners(r.box,MangaRotation.angle(r));
+ ctx.clearRect(0,0,c.width,c.height);ctx.fillStyle='rgba(245,70,10,.5)';ctx.beginPath();points.forEach(([x,y],i)=>i?ctx.lineTo(x,y):ctx.moveTo(x,y));ctx.closePath();ctx.fill();
+ tell('현재 글상자의 이미지 안쪽 부분을 선택했습니다. 복원 미리보기를 누르세요.');
+}
 function finishManualMask(){maskEditing=false;maskTarget=undefined;$('erase-mask').hidden=true;$('mask-controls').hidden=true;showOriginal=maskPriorOriginal;$('toggle').textContent=showOriginal?'번역 보기':'원본 보기';select(selected);}
 function encodedManualMask(){
  const c=$('erase-mask'),w=c.width,h=c.height,pixels=c.getContext('2d',{willReadFrequently:true}).getImageData(0,0,w,h).data;let x0=w,y0=h,x1=0,y1=0,count=0;
@@ -26,8 +32,8 @@ async function previewManualMask(){
  }catch(e){tell(/서버 409:/.test(e.message)?'진행 중인 작업이 끝난 뒤 복원 미리보기를 다시 누르세요.':e.message);}finally{busy=false;select(selected);}
 }
 function setupManualMask(){
- $('mask-edit').onclick=beginManualMask;$('mask-box').onclick=fillManualBox;$('mask-clear').onclick=()=>{const c=$('erase-mask');c.getContext('2d').clearRect(0,0,c.width,c.height);};$('mask-cancel').onclick=async()=>{finishManualMask();try{await draw();tell('영역 지정을 취소했습니다.');}catch(e){tell(e.message);}};$('mask-preview').onclick=previewManualMask;
- const c=$('erase-mask');c.onpointerdown=e=>{if(!maskEditing||busy)return;e.preventDefault();c.setPointerCapture(e.pointerId);const rect=c.getBoundingClientRect(),point=e=>[Math.max(0,Math.min(c.width,(e.clientX-rect.left)*c.width/rect.width)),Math.max(0,Math.min(c.height,(e.clientY-rect.top)*c.height/rect.height))],ctx=c.getContext('2d'),start=point(e),tool=$('mask-tool').value,base=tool==='rectangle'?ctx.getImageData(0,0,c.width,c.height):null;let prior=start;const radius=Math.max(2,Math.min(160,Number($('mask-size').value)||20));
-  const paint=event=>{const p=point(event);ctx.save();if(tool==='rectangle'){ctx.putImageData(base,0,0);ctx.fillStyle='rgba(245,70,10,.5)';ctx.fillRect(Math.min(start[0],p[0]),Math.min(start[1],p[1]),Math.abs(start[0]-p[0]),Math.abs(start[1]-p[1]));}else{ctx.globalCompositeOperation=tool==='erase'?'destination-out':'source-over';ctx.strokeStyle=ctx.fillStyle=tool==='erase'?'rgba(245,70,10,1)':'rgba(245,70,10,.5)';ctx.lineWidth=radius;ctx.lineCap='round';ctx.beginPath();ctx.moveTo(...prior);ctx.lineTo(...p);ctx.stroke();ctx.beginPath();ctx.arc(...p,radius/2,0,Math.PI*2);ctx.fill();}ctx.restore();prior=p;};paint(e);c.onpointermove=paint;const end=()=>{c.onpointermove=null;c.onpointerup=null;c.onpointercancel=null;};c.onpointerup=end;c.onpointercancel=end;
+ $('mask-edit').onclick=beginManualMask;$('mask-box').onclick=fillManualBox;$('mask-layout-box').onclick=fillManualLayoutBox;$('mask-clear').onclick=()=>{const c=$('erase-mask');c.getContext('2d').clearRect(0,0,c.width,c.height);};$('mask-cancel').onclick=async()=>{finishManualMask();try{await draw();tell('영역 지정을 취소했습니다.');}catch(e){tell(e.message);}};$('mask-preview').onclick=previewManualMask;
+ const c=$('erase-mask');c.onpointerdown=e=>{if(!maskEditing||busy)return;e.preventDefault();c.setPointerCapture(e.pointerId);const rect=c.getBoundingClientRect(),point=e=>[Math.max(0,Math.min(c.width,(e.clientX-rect.left)*c.width/rect.width)),Math.max(0,Math.min(c.height,(e.clientY-rect.top)*c.height/rect.height))],ctx=c.getContext('2d'),start=point(e),tool=$('mask-tool').value,base=tool.startsWith('rectangle')?ctx.getImageData(0,0,c.width,c.height):null;let prior=start;const radius=Math.max(2,Math.min(160,Number($('mask-size').value)||20));
+  const paint=event=>{const p=point(event);ctx.save();if(tool.startsWith('rectangle')){if(tool==='rectangle')ctx.clearRect(0,0,c.width,c.height);else ctx.putImageData(base,0,0);ctx.fillStyle='rgba(245,70,10,.5)';ctx.fillRect(Math.min(start[0],p[0]),Math.min(start[1],p[1]),Math.abs(start[0]-p[0]),Math.abs(start[1]-p[1]));}else{ctx.globalCompositeOperation=tool==='erase'?'destination-out':'source-over';ctx.strokeStyle=ctx.fillStyle=tool==='erase'?'rgba(245,70,10,1)':'rgba(245,70,10,.5)';ctx.lineWidth=radius;ctx.lineCap='round';ctx.beginPath();ctx.moveTo(...prior);ctx.lineTo(...p);ctx.stroke();ctx.beginPath();ctx.arc(...p,radius/2,0,Math.PI*2);ctx.fill();}ctx.restore();prior=p;};paint(e);c.onpointermove=paint;const end=()=>{c.onpointermove=null;c.onpointerup=null;c.onpointercancel=null;};c.onpointerup=end;c.onpointercancel=end;
  };
 }

@@ -12,17 +12,17 @@ async function draw(){
  result=MangaRender.presentation(MangaRender.editedBase(result,baseResult),displayMode,displayGeometry,outsideTextMode,restoration,lightweightDisplay);
  const canvas=document.createElement('canvas');
  if(showOriginal||maskEditing){canvas.width=result.width;canvas.height=result.height;canvas.getContext('2d').drawImage(await MangaRender.image(original),0,0);}else await MangaRender.render(canvas,result,original,cleaned,restored);
- if(seq!==drawSeq)return;$('canvas').width=canvas.width;$('canvas').height=canvas.height;$('canvas').getContext('2d',{willReadFrequently:true}).drawImage(canvas,0,0);if(document.activeElement!==$('rotation'))$('rotation').value=result.regions[selected]?MangaRotation.angle(result.regions[selected]):0;handles();
+ if(seq!==drawSeq)return;syncEditMode(result.regions[selected]);$('canvas').width=canvas.width;$('canvas').height=canvas.height;$('canvas').getContext('2d',{willReadFrequently:true}).drawImage(canvas,0,0);if(document.activeElement!==$('rotation'))$('rotation').value=result.regions[selected]?MangaRotation.angle(result.regions[selected]):0;handles();
 }
 function refreshRegions(){
  $('regions').replaceChildren();for(const [i,r]of result.regions.entries())$('regions').append(new Option(`${i+1}. ${r.text.slice(0,24)||'새 글상자'}`,String(i)));
  $('add').disabled=result.regions.length>=150;select(selected);
 }
 function select(i){selected=i;const r=result.regions[i];
- for(const id of ['source','translation','mode','white-area','font','font-family','font-weight','text-outline','rotation','rotation-auto','reset','delete','regions'])$(id).disabled=!r||busy||maskEditing;
+ for(const id of ['source','translation','mode','white-area','font','font-family','font-weight','text-outline','paint-preset','text-color','text-hex','stroke-color','stroke-hex','stroke-width','rotation','rotation-auto','reset','delete','regions'])$(id).disabled=!r||busy||maskEditing;
  for(const id of ['apply','png','project','toggle'])$(id).disabled=busy||maskEditing;
  $('add').disabled=busy||maskEditing||result.regions.length>=150;
- $('regions').value=r?String(i):'';$('source').value=r?.text||'';$('translation').value=r?.translation||'';$('mode').value=maskEditing?'restore':r?.mode||'replace';$('white-area').value=r?.whiteScope||r?.whiteBackground?.kind||'bubble';$('font-family').value=(r?.fontChoice==='friendly'?'dialogue':r?.fontChoice)||'auto';$('font-weight').value=r?.fontWeight===400||r?.fontWeight===700?String(r.fontWeight):'auto';$('font-note').textContent=lightweightDisplay?'경량 모드에서는 기본 글꼴로 표시합니다. 선택은 저장됩니다.':'기본 대사는 바른돋움입니다. 직접 고르면 이 영역에 우선 적용됩니다.';$('font').value=r?.fontSize||24;$('text-outline').value=r?.outlineChoice||'auto';$('rotation').value=r?MangaRotation.angle(r):0;handles();$('mask-edit').disabled=!r||busy||maskEditing;for(const id of ['mask-tool','mask-size','mask-box','mask-clear','mask-preview','mask-cancel'])$(id).disabled=busy;
+ $('regions').value=r?String(i):'';$('source').value=r?.text||'';$('translation').value=r?.translation||'';$('mode').value=maskEditing?'restore':r?.mode||'replace';$('white-area').value=r?.whiteScope||r?.whiteBackground?.kind||'bubble';$('font-family').value=(r?.fontChoice==='friendly'?'dialogue':r?.fontChoice)||'auto';$('font-weight').value=r?.fontWeight===400||r?.fontWeight===700?String(r.fontWeight):'auto';$('font-note').textContent=lightweightDisplay?'경량 모드에서는 기본 글꼴로 표시합니다. 선택은 저장됩니다.':'기본 대사는 바른돋움입니다. 직접 고르면 이 영역에 우선 적용됩니다.';$('font').value=r?.fontSize||24;syncPaint(r);$('rotation').value=r?MangaRotation.angle(r):0;handles();syncEditMode(r);$('mask-edit').disabled=!r||busy||maskEditing;for(const id of ['mask-tool','mask-size','mask-layout-box','mask-box','mask-clear','mask-preview','mask-cancel'])$(id).disabled=busy;
 }
 async function changeDisplay(){
  const region=result?.regions[selected];if(!region||busy)return;
@@ -63,7 +63,7 @@ function handles(){
   node.onpointerdown=e=>{
    if(busy||maskEditing)return;e.preventDefault();drawSeq++;selected=i;
    for(const el of $('handles').children)el.classList.toggle('selected',el===node);
-   $('regions').value=String(i);$('source').value=r.text;$('translation').value=r.translation;$('mode').value=r.mode;$('white-area').value=r.whiteScope||r.whiteBackground?.kind||'bubble';$('font').value=r.fontSize;$('font-family').value=(r.fontChoice==='friendly'?'dialogue':r.fontChoice)||'auto';$('font-weight').value=r.fontWeight===400||r.fontWeight===700?String(r.fontWeight):'auto';$('text-outline').value=r.outlineChoice||'auto';$('rotation').value=MangaRotation.angle(r);
+   $('regions').value=String(i);$('source').value=r.text;$('translation').value=r.translation;$('mode').value=r.mode;$('white-area').value=r.whiteScope||r.whiteBackground?.kind||'bubble';$('font').value=r.fontSize;$('font-family').value=(r.fontChoice==='friendly'?'dialogue':r.fontChoice)||'auto';$('font-weight').value=r.fontWeight===400||r.fontWeight===700?String(r.fontWeight):'auto';syncPaint(r);$('rotation').value=MangaRotation.angle(r);
    const start=[e.clientX,e.clientY],old=[...r.box],oldAngle=MangaRotation.angle(r),oldRotation=r.rotation,scale=result.width/$('canvas').getBoundingClientRect().width,handle=e.target.dataset.handle;
    const bounds=$('canvas').getBoundingClientRect(),center=[(old[0]+old[2])/2/scale+bounds.left,(old[1]+old[3])/2/scale+bounds.top],startAngle=Math.atan2(e.clientY-center[1],e.clientX-center[0]);let changed=false;
    node.setPointerCapture(e.pointerId);
@@ -72,15 +72,15 @@ function handles(){
     if(handle==='rotate'){angle=MangaRotation.normalize(oldAngle+(Math.atan2(ev.clientY-center[1],ev.clientX-center[0])-startAngle)*180/Math.PI);angle=ev.shiftKey?Math.round(angle/15)*15:Math.round(angle);box=old;}
     else if(handle)box=MangaRotation.resize(old,oldAngle,handle,dx,dy);
     else box=[old[0]+dx,old[1]+dy,old[2]+dx,old[3]+dy];
-    const candidate={...r,box,rotation:angle};if(!MangaRotation.allowed(candidate,result)){tell('글상자는 페이지와 선택한 말풍선 안쪽에 배치하세요.');return;}
+    if(!box.every(Number.isFinite)||box[2]<=box[0]||box[3]<=box[1])return;
     r.box=[...box];r.rotation=angle;changed=true;place();$('rotation').value=angle;
    };
-   const finish=()=>{node.onpointermove=null;node.onpointerup=null;node.onpointercancel=null;if(changed)r.layoutOverride=true;draw();};node.onpointerup=finish;
+   const finish=()=>{node.onpointermove=null;node.onpointerup=null;node.onpointercancel=null;if(changed){r.layoutOverride=true;r.displayOverride=true;}draw();};node.onpointerup=finish;
    node.onpointercancel=()=>{r.box=old;if(oldRotation===undefined)delete r.rotation;else r.rotation=oldRotation;changed=false;finish();};
   };$('handles').append(node);
  });
 }
-$('rotation').onchange=()=>{const r=result?.regions[selected],angle=Number($('rotation').value);if(!r||busy||!Number.isFinite(angle))return;const value=MangaRotation.normalize(angle);if(!MangaRotation.allowed({...r,rotation:value},result)){$('text-outline').value=r.outlineChoice||'auto';$('rotation').value=MangaRotation.angle(r);tell('회전한 글상자가 페이지 또는 말풍선 경계를 벗어납니다. 먼저 상자를 줄이세요.');return;}r.rotation=value;r.layoutOverride=true;draw();};
+$('rotation').onchange=()=>{const r=result?.regions[selected],angle=Number($('rotation').value);if(!r||busy||!Number.isFinite(angle))return;const value=MangaRotation.normalize(angle);r.rotation=value;r.layoutOverride=true;r.displayOverride=true;draw();};
 $('rotation-auto').onclick=()=>{const r=result?.regions[selected];if(!r||busy)return;delete r.rotation;draw();};
 for(const [id,prop]of [['source','text'],['translation','translation'],['font','fontSize']])$(id).oninput=()=>{if(!result?.regions[selected])return;if(id==='font')result.regions[selected].layoutOverride=true;result.regions[selected][prop]=id==='font'?Math.max(8,Math.min(100,Number($(id).value)||24)):$(id).value;draw();};
 $('font-family').onchange=()=>{const r=result?.regions[selected];if(!r||busy)return;const choice=$('font-family').value;if(choice==='auto')delete r.fontChoice;else r.fontChoice=choice;draw();};
@@ -99,4 +99,33 @@ setupManualMask();
 
 $('font-weight').onchange=()=>{const r=result?.regions[selected];if(!r||busy)return;const value=$('font-weight').value;if(value==='auto')delete r.fontWeight;else r.fontWeight=Number(value);draw();};
 
-$('text-outline').onchange=()=>{const r=result?.regions[selected];if(!r||busy)return;const value=$('text-outline').value;if(value==='auto')delete r.outlineChoice;else r.outlineChoice=value;draw();};
+const paintPresets={black:{fill:'#111111',stroke:null,width:3},'black-white':{fill:'#111111',stroke:'#ffffff',width:3},'white-black':{fill:'#ffffff',stroke:'#111111',width:3},'yellow-black':{fill:'#ffdf00',stroke:'#111111',width:3}};
+function syncPaint(r){
+ const p=r&&MangaRender.paintOverride(r),fallback=r?MangaRender.resolvePaint(r,null,lightweightDisplay):{fill:'#111111',stroke:null};
+ $('paint-preset').value=p?(Object.keys(paintPresets).find(k=>JSON.stringify(paintPresets[k])===JSON.stringify(p))||'custom'):'auto';
+ $('text-color').value=$('text-hex').value=p?.fill||fallback.fill;
+ $('stroke-color').value=$('stroke-hex').value=p?.stroke||fallback.stroke||'#ffffff';
+ $('stroke-width').value=p?.width??3;
+ $('text-outline').value=p?(p.stroke?'white':'none'):r?.outlineChoice||'auto';
+}
+function setPaint(p){const r=result?.regions[selected];if(!r||busy||maskEditing)return;if(p)r.textPaint={...p};else delete r.textPaint;delete r.outlineChoice;syncPaint(r);draw();}
+function customPaint(){return {fill:$('text-color').value,stroke:$('text-outline').value==='none'?null:$('stroke-color').value,width:Number($('stroke-width').value)};}
+$('paint-preset').onchange=()=>{const key=$('paint-preset').value;setPaint(key==='auto'?null:paintPresets[key]||customPaint());};
+for(const [color,hex]of [['text-color','text-hex'],['stroke-color','stroke-hex']]){
+ $(color).oninput=()=>{$(hex).value=$(color).value;setPaint(customPaint());};
+ $(hex).onchange=()=>{if(!/^#[0-9a-f]{6}$/i.test($(hex).value)){tell('색상은 #RRGGBB 형식으로 입력하세요.');syncPaint(result.regions[selected]);return;}$(color).value=$(hex).value;setPaint(customPaint());};
+}
+$('stroke-width').onchange=()=>{const width=Number($('stroke-width').value);if(!Number.isFinite(width)||width<0||width>12){tell('테두리 두께는 0~12px입니다.');syncPaint(result.regions[selected]);return;}setPaint(customPaint());};
+$('text-outline').onchange=()=>setPaint($('text-outline').value==='auto'?null:customPaint());
+
+function syncEditMode(r){
+ $('text-tools').hidden=maskEditing;$('manual-tools').hidden=!maskEditing;
+ $('layout-mode').disabled=busy;$('layout-mode').setAttribute('aria-pressed',String(!maskEditing));$('mask-edit').setAttribute('aria-pressed',String(maskEditing));
+ $('edit-mode-note').textContent=maskEditing?'빨간 부분이 지워집니다. 미리보기 전 선택은 배치 모드로 돌아가면 취소됩니다.':'상자는 번역문 위치와 크기만 바꿉니다. 이미지 밖으로도 이동할 수 있습니다.';
+ $('restoration-compare').hidden=maskEditing||!r?.manualRestoration;
+ for(const id of ['compare-before','compare-after'])$(id).disabled=busy;
+ $('compare-before').setAttribute('aria-pressed',String(showOriginal));$('compare-after').setAttribute('aria-pressed',String(!showOriginal));
+}
+$('layout-mode').onclick=()=>{if(maskEditing)$('mask-cancel').click();};
+$('compare-before').onclick=()=>{showOriginal=true;$('toggle').textContent='번역 보기';draw();};
+$('compare-after').onclick=()=>{showOriginal=false;$('toggle').textContent='원본 보기';draw();};

@@ -84,7 +84,9 @@ const {chromium}=require(process.env.MANGA_PLAYWRIGHT||'playwright');
     assert.equal(empty,original,'An empty translation erased the original text');
     const handle=await page.locator('.box.selected').boundingBox();
     await page.mouse.move(handle.x+handle.width/2,handle.y+handle.height/2);await page.mouse.down();await page.mouse.move(handle.x+handle.width/2,handle.y+handle.height/2+220);await page.mouse.up();
-    await page.locator('#apply').click();assert.deepEqual(await page.evaluate(()=>fixture.applied.regions[0].box),[110,135,250,195],'Text could be dragged outside its white bubble');
+    await page.locator('#apply').click();assert((await page.evaluate(()=>fixture.applied.regions[0].box))[1]>195,'Manual placement remained confined to its bubble');
+    assert.equal(await page.evaluate(()=>MangaRotation.allowed(fixture.applied.regions[0],fixture.applied)),false,'Automatic bubble guard was relaxed');
+    await page.locator('#reset').click();await page.evaluate(()=>draw());
    }else{
     assert.equal(await page.locator('#mode').inputValue(),'tooltip','Unsafe lookup changed the display mode');
     assert.equal(await page.locator('#canvas').evaluate(canvas=>canvas.toDataURL()),original);

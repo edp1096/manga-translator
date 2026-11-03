@@ -3,6 +3,7 @@
  import Icon from './Icon.svelte';
  import InfoPopover from './InfoPopover.svelte';
  import Library from './Library.svelte';
+ import {updateLabel} from './update-label.js';
  let state=$state(null),view=$state('overview'),error=$state(''),notice=$state(''),offline=$state(false),quitting=$state(false);
  let extension=$state({installed:false,connected:false}),probing=$state(false),acting=$state(false),logTab=$state('control'),logText=$state('기록을 불러오는 중…');
  let draftRestoration=$state('onnx'),draftLLM=$state('cpu'),draftLayout=$state('cpu'),draftOCR=$state('cpu'),draftGPU=$state('');
@@ -69,14 +70,12 @@
    {#if notice}<div class="banner success" role="status"><Icon name="check"/>{notice}<button aria-label="알림 닫기" onclick={()=>notice=''}>×</button></div>{/if}
    {#if state&&!state.supported}<div class="banner danger"><Icon name="warning"/>현재 배포판은 Windows x64, Linux ARM64와 x64를 지원합니다.</div>{/if}
    <section class="card app-update" aria-label="앱 업데이트">
-    <div class="card-heading"><h3>앱 업데이트</h3><InfoPopover title="앱 업데이트"><p>시작할 때 최신 정식 버전을 확인합니다. 설치 버튼을 눌렀을 때만 다운로드하고 앱을 다시 시작합니다.</p><p>설정·모델·인증키·번역 결과는 보존합니다. API를 중지한 뒤 설치하세요. 기동에 실패하면 이전 버전을 복구합니다.</p><p>완료 후 브라우저 확장 관리 화면에서 기존 확장을 새로고침하세요. 확장을 삭제할 필요는 없습니다.</p></InfoPopover></div>
-    <div class="update-actions"><span role="status">{appUpdate?.status==='checking'?'새 버전 확인 중':appUpdate?.status==='available'?'새 버전 '+appUpdate.version:appUpdate?.status==='downloading'?'업데이트 다운로드·검증 중':appUpdate?.status==='restarting'?'업데이트 적용·재시작 중':appUpdate?.status==='latest'?'최신 버전입니다 · '+state?.version:appUpdate?.status==='error'?'업데이트 확인 또는 설치 실패':'현재 버전 '+(state?.version||'…')}</span>
+    <div class="card-heading"><h3>앱 업데이트</h3><InfoPopover title="앱 업데이트">{#if appUpdate?.error}<p role="alert">현재 오류: {appUpdate.error}</p>{/if}{#if updateResult}<p>지난 설치 결과: {updateResult.message}</p>{/if}<p>시작할 때 최신 정식 버전을 확인합니다. 설치 버튼을 눌렀을 때만 다운로드하고 앱을 다시 시작합니다.</p><p>설정·모델·인증키·번역 결과는 보존합니다. API를 중지한 뒤 설치하세요. 기동에 실패하면 이전 버전을 복구합니다.</p><p>완료 후 브라우저 확장 관리 화면에서 기존 확장을 새로고침하세요. 확장을 삭제할 필요는 없습니다.</p></InfoPopover></div>
+    <div class="update-actions"><span role="status">{updateLabel(appUpdate,updateResult,state?.version)}</span>
     <button class="button secondary" onclick={()=>act('update/check')} disabled={acting||quitting||['checking','downloading','restarting'].includes(appUpdate?.status)}>업데이트 확인</button>
     {#if appUpdate?.status==='available'}<button class="button primary" onclick={async()=>{await act('update/install');}} disabled={acting||quitting||Boolean(appUpdate.disabledReason)}>업데이트 설치·재시작</button>{/if}</div>
-    {#if appUpdate?.error}<p role="alert">{appUpdate.error}</p>{/if}
     {#if appUpdate?.status==='available'&&appUpdate.disabledReason}<p>{appUpdate.disabledReason}</p>{/if}
     {#if appUpdate?.status==='available'&&appUpdate.notes}<details><summary>변경 내용</summary><pre class="update-notes">{appUpdate.notes}</pre></details>{/if}
-    {#if updateResult}<p role="status">{updateResult.message}</p>{/if}
    </section>
    {#if view==='overview'}
     <section class="page-heading"><div><div class="eyebrow">OVERVIEW</div><h1>번역 준비 현황</h1><p>설치부터 API 실행, 크롬 확장 연결까지 한곳에서 관리하세요.</p></div><button class="button secondary" onclick={()=>view='setup'}><Icon name="download" size={17}/>설치 관리</button></section>

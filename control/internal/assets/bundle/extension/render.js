@@ -123,11 +123,32 @@ function wrapTextUncached(context,text,width,keepHangul=true){
  }
  return {lines,breaks,grouped};
 }
-function outlineWidth(region,size){return region.outlineChoice==='none'?0:region.outlineChoice==='white'||region.mode==='restore'?Math.max(2,size*.15):0;}
+const paintColor=value=>typeof value==='string'&&/^#[0-9a-f]{6}$/i.test(value)?value.toLowerCase():null;
+function paintOverride(r){
+ const p=r.textPaint;if(!p||!paintColor(p.fill)||!(p.stroke===null||paintColor(p.stroke))||!Number.isFinite(p.width)||p.width<0||p.width>12)return null;
+ return {fill:paintColor(p.fill),stroke:p.stroke===null?null:paintColor(p.stroke),width:p.width};
+}
+function resolvePaint(r,samples,light=false){
+ const manual=paintOverride(r);if(manual)return manual;
+ let fill=paintColor(r.color)||'#111111',stroke=r.mode==='restore'?'#ffffff':null;
+ if(!light&&samples?.length){
+  const lum=rgb=>rgb.map(c=>{c/=255;return c<=.04045?c/12.92:((c+.055)/1.055)**2.4;}).reduce((sum,c,i)=>sum+c*[.2126,.7152,.0722][i],0);
+  const levels=samples.map(lum).sort((a,b)=>a-b),median=levels[Math.floor(levels.length/2)],spread=levels[Math.floor(levels.length*.9)]-levels[Math.floor(levels.length*.1)];
+  fill=median<.22?'#ffffff':'#111111';stroke=median<.22||spread>.25||r.mode==='restore'?(fill==='#ffffff'?'#111111':'#ffffff'):null;
+  const source=paintColor(r._sourceColor||r.color);if(source){const rgb=[1,3,5].map(i=>parseInt(source.slice(i,i+2),16)),value=lum(rgb);if(Math.max(...rgb)-Math.min(...rgb)>=60&&(Math.max(value,median)+.05)/(Math.min(value,median)+.05)>=4.5){fill=source;if(stroke)stroke=value>.35?'#111111':'#ffffff';}}
+ }
+ if(r.outlineChoice==='none')stroke=null;else if(r.outlineChoice==='white')stroke='#ffffff';
+ return {fill,stroke,width:null};
+}
+function outlineWidth(region,size){
+ const p=region._paintStyle||paintOverride(region);if(p)return p.stroke?(p.width===null?Math.max(2,size*.15):p.width):0;
+ if(region.outlineChoice==='none')return 0;
+ return region.outlineChoice==='white'||region.mode==='restore'?Math.max(2,size*.15):0;
+}
 function textLayout(region,box=region.box,maximum=region.fontSize||24,minimum=8){
  if(!Array.isArray(box)||box.length!==4||!box.every(Number.isFinite)||typeof region.translation!=='string')return null;
  const requestedMaximum=Number.isFinite(region.automaticFontMaximum)?Math.max(maximum,region.automaticFontMaximum):maximum;
- const key=[...box,maximum,minimum,requestedMaximum,font(24,region),region.outlineChoice,region.mode,region.translation,!!region.manual,!!region.layoutOverride,!!region.displayOverride].join('\u0000'),cached=layouts.get(region);
+ const key=[...box,maximum,minimum,requestedMaximum,font(24,region),region.outlineChoice,JSON.stringify(region.textPaint),JSON.stringify(region._paintStyle),!!region._fontLight,region.mode,region.translation,!!region.manual,!!region.layoutOverride,!!region.displayOverride].join('\u0000'),cached=layouts.get(region);
  if(cached?.key===key)return cached.value;
  const boxWidth=box[2]-box[0],boxHeight=box[3]-box[1];
  if(boxWidth<=4||boxHeight<=4||region.translation.length>8192)return null;
@@ -140,7 +161,7 @@ function textLayout(region,box=region.box,maximum=region.fontSize||24,minimum=8)
   for(const wrapped of primary.grouped?[primary,wrapText(textContext,region.translation,width,false)]:[primary]){
   const metrics=wrapped.lines.map(line=>{
    const measured=measureText(textContext,line),left=measured.actualBoundingBoxLeft,right=measured.actualBoundingBoxRight,ascent=measured.actualBoundingBoxAscent,descent=measured.actualBoundingBoxDescent;
-   return {left,right,ascent,descent,width:Math.max(measured.width,left+right),height:Math.max(points*1.22,ascent+descent)};
+   return {left,right,ascent,descent,width:Math.max(measured.width,left+right),height:Math.max(points*1.22,ascent+descent+outlineWidth(region,points))};
   });
   const totalHeight=metrics.reduce((sum,metric)=>sum+metric.height,0);
   if(totalHeight>height||metrics.some(metric=>metric.width>width))continue;
@@ -817,13 +838,14 @@ function presentation(result,mode,geometry,outsideMode='tooltip',restoration,lig
   const restored=restorationPresentation(shown,geometry,restoration);
   displayed={...displayed,regions:displayed.regions.map((r,i)=>r.mode==='tooltip'&&bubbleRestorationCandidate(shown.regions[i],shown,geometry)&&restored.regions[i].mode==='restore'?restored.regions[i]:r)};
  }
+ displayed={...displayed,regions:displayed.regions.map((r,i)=>({...r,_sourceColor:result.regions[i]?._sourceColor||result.regions[i]?.color}))};
  return globalThis.MangaRotation?MangaRotation.apply(displayed,textLayout,lightweight):displayed;
  }finally{presentationMeasures=previousMeasures;presentationWraps=previousWraps;presentationSegments=previousSegments;}
 }
 function editedBase(result,base){
  const clean={...result};delete clean._fontLight;delete clean._rotationPrepared;
  return {...clean,regions:result.regions.map(region=>{
-  const restored={...region};delete restored._fontId;delete restored._rotation;delete restored.automaticRotation;
+  const restored={...region};delete restored._sourceColor;delete restored._paintStyle;delete restored._fontId;delete restored._fontLight;delete restored._rotation;delete restored.automaticRotation;
   const prior=base?.regions.find(candidate=>candidate.id===region.id);
   if(!prior)return restored;
   const keys=region.displayOverride?[]:['mode','whiteScope','whiteBackground','displayOverride','restorationMask'];
@@ -843,7 +865,7 @@ function paintWhite(context,result,region){
  }
  context.fillStyle='#fff';
  if(globalThis.MangaRotation&&globalThis.MangaPolygon?.subtractPolygons){
-  const padded=b=>[Math.max(0,b[0]-4),Math.max(0,b[1]-4),Math.min(result.width,b[2]+4),Math.min(result.height,b[3]+4)];
+  const padded=b=>[b[0]-4,b[1]-4,b[2]+4,b[3]+4];
   const polygons=[MangaRotation.corners(padded(region.box),MangaRotation.angle(region))];
   if(!region.manual)polygons.push(MangaRotation.corners(padded(region.bbox)));
   const clips=[...result.regions,...(result.preservedRegions||[])].filter(r=>r!==region&&(r.text?.trim()||r.translation?.trim())).flatMap(r=>[r.bbox,r.box].filter(Array.isArray).map(b=>MangaRotation.corners(b,b===r.box?MangaRotation.angle(r):0)));
@@ -854,7 +876,7 @@ function paintWhite(context,result,region){
  }
  for(const box of region.manual?[region.box]:[region.bbox,region.box]){
   const left=Math.max(0,box[0]-4),top=Math.max(0,box[1]-4),right=Math.min(result.width,box[2]+4),bottom=Math.min(result.height,box[3]+4);
-  context.fillRect(left,top,right-left,bottom-top);
+  if(right>left&&bottom>top)context.fillRect(left,top,right-left,bottom-top);
  }
 }
 function drawRegion(ctx,r){
@@ -866,9 +888,9 @@ function drawRegion(ctx,r){
  const rotation=globalThis.MangaRotation?.angle(r)||0;if(rotation){const cx=(x1+x2)/2,cy=(y1+y2)/2;ctx.translate(cx,cy);ctx.rotate(rotation*Math.PI/180);ctx.translate(-cx,-cy);}
  ctx.beginPath();ctx.rect(x1,y1,w,h);ctx.clip();
 
- ctx.fillStyle=r.mode==='white'?'#111':r.color||'#111';ctx.textAlign='left';ctx.textBaseline='alphabetic';
+ const paint=r._paintStyle||resolvePaint(r,null,r._fontLight);ctx.fillStyle=paint.fill;ctx.textAlign='left';ctx.textBaseline='alphabetic';
  let top=y1+(h-layout.height)/2;
- lines.forEach((line,index)=>{const metric=layout.metrics[index],x=(x1+x2+metric.left-metric.right)/2,y=top+(metric.height-metric.ascent-metric.descent)/2+metric.ascent;if(outlineWidth(r,size)){ctx.strokeStyle='#fff';ctx.lineWidth=outlineWidth(r,size);ctx.lineJoin='round';ctx.strokeText(line,x,y);}ctx.fillText(line,x,y);top+=metric.height;});ctx.restore();
+ lines.forEach((line,index)=>{const metric=layout.metrics[index],x=(x1+x2+metric.left-metric.right)/2,y=top+(metric.height-metric.ascent-metric.descent)/2+metric.ascent;if(paint.stroke&&outlineWidth(r,size)){ctx.strokeStyle=paint.stroke;ctx.lineWidth=outlineWidth(r,size);ctx.lineJoin='round';ctx.strokeText(line,x,y);}ctx.fillText(line,x,y);top+=metric.height;});ctx.restore();
 }
 function prepare(result){return result;}
 const restorationMasks=new WeakMap();
@@ -912,8 +934,20 @@ async function render(canvas,result,original,cleaned,restored){
  }
  for(const region of result.regions)paintWhite(ctx,result,region);
  for(const r of result.regions)if(r.mode==='restore'&&r.manualRestoration){const ref=checkedManual(r.manualRestoration,result),patch=await manualImage(ref,result),b=ref.mask.bounds;if(patch.width!==b[2]-b[0]||patch.height!==b[3]-b[1])throw Error('수동 복원 이미지 크기가 다릅니다.');const layer=document.createElement('canvas');layer.width=patch.width;layer.height=patch.height;const c=layer.getContext('2d',{willReadFrequently:true});try{c.drawImage(patch,0,0);c.globalCompositeOperation='destination-in';c.drawImage(restorationMaskCanvas(ref.mask,result),0,0);ctx.drawImage(layer,b[0],b[1]);}finally{layer.width=0;layer.height=0;}}
- for(const r of result.regions)drawRegion(ctx,r);
+ const sample=document.createElement('canvas');sample.width=sample.height=16;const sampler=sample.getContext('2d',{willReadFrequently:true});sampler.imageSmoothingEnabled=false;
+ const painted=result.regions.map(r=>{
+  let samples;
+  if(!result._fontLight&&!paintOverride(r)&&direct(r)){
+   const b=r.box;sampler.clearRect(0,0,16,16);sampler.drawImage(canvas,b[0],b[1],b[2]-b[0],b[3]-b[1],0,0,16,16);const pixels=sampler.getImageData(0,0,16,16).data;samples=[];for(let i=0;i<pixels.length;i+=4)if(pixels[i+3])samples.push([pixels[i],pixels[i+1],pixels[i+2]]);
+  }
+  const styled={...r,_paintStyle:resolvePaint(r,samples,result._fontLight)};
+  // An automatic stroke must not make an already authorized tiny caption vanish.
+  if(!paintOverride(r)&&direct(r)&&!direct(styled))styled._paintStyle={...styled._paintStyle,stroke:null};
+  return styled;
+ });
+ for(const r of painted)drawRegion(ctx,r);
+ sample.width=sample.height=0;
  return canvas;
 }
-globalThis.MangaRender={setAssetLoader,image,render,prepare,direct,tooltipRegions,tooltipClip,tooltipContours,whiteBackground,coverage,whiteCandidate,outsideCandidate,bubbleRestorationCandidate,presentation,editedBase,textLayout};
+globalThis.MangaRender={setAssetLoader,image,render,prepare,direct,tooltipRegions,tooltipClip,tooltipContours,whiteBackground,coverage,whiteCandidate,outsideCandidate,bubbleRestorationCandidate,resolvePaint,paintOverride,presentation,editedBase,textLayout};
 })();

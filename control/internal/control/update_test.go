@@ -211,3 +211,21 @@ func TestFreshRootDoesNotTriggerUpdateRecovery(t *testing.T) {
 		t.Fatal("recovery check should not create fresh root")
 	}
 }
+
+func TestUpdateRateLimitMessage(t *testing.T) {
+	for _, test := range []struct {
+		status    int
+		remaining string
+		limited   bool
+	}{{403, "0", true}, {429, "", true}, {403, "12", false}, {500, "", false}} {
+		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			w.Header().Set("X-RateLimit-Remaining", test.remaining)
+			w.WriteHeader(test.status)
+		}))
+		_, err := updateResponse(context.Background(), server.Client(), server.URL)
+		server.Close()
+		if err == nil || strings.Contains(err.Error(), "요청 한도") != test.limited {
+			t.Fatalf("status=%d remaining=%s error=%v", test.status, test.remaining, err)
+		}
+	}
+}

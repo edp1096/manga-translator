@@ -26,6 +26,17 @@ const report=await page.evaluate(async()=>{
  const bubble={width:60,height:60,runs:[],confidence:.99};for(let y=8;y<38;y++)bubble.runs.push(y*60+8,30);
  check(MangaRender.whiteBackground({width:600,height:600,regions:[effect]},effect,{width:600,height:600,bubbles:[bubble]}).kind==='bubble','Safe manual effect bubble denied');
  let blocked=false;try{MangaRender.whiteBackground(protectedResult,effect,{width:600,height:600,bubbles:[bubble]});}catch(e){blocked=e.code==='NO_SAFE_BUBBLE';}check(blocked,'Occupied bubble permitted');
+ // Manual editor coordinates must never relax automatic placement checks.
+ for(const box of [[-10,100,90,200],[100,-10,200,90],[550,100,650,200],[100,550,200,650]]){
+  check(!MangaRotation.allowed({...effect,box},protectedResult),'Automatic out-of-page box accepted '+box);
+ }
+ for(const box of [[-100,100,-20,200],[620,100,700,200],[100,-100,200,-20],[100,620,200,700]]){
+  const outside={...effect,bbox:box,box,translation:'X',layoutOverride:true};await MangaRender.render(canvas,{width:600,height:600,regions:[outside]},image,image);
+  check(canvas.toDataURL()===image,'Off-page manual box painted image '+box);
+ }
+ const partial={...effect,bbox:[-20,100,50,200],box:[-20,100,50,200],translation:'X',layoutOverride:true};await MangaRender.render(canvas,{width:600,height:600,regions:[partial]},image,image);
+ check(canvas.getContext('2d').getImageData(0,150,1,1).data[0]===255,'Partial box not clipped at page edge');
+ check(canvas.getContext('2d').getImageData(100,150,1,1).data[0]===170,'Partial box painted unrelated pixels');
  const protectedAuto=fixture(20);protectedAuto.regions.push({...peer,bbox:[180,180,420,420],box:[180,180,420,420]});check(!MangaRender.presentation(protectedAuto,'auto').regions[0]._rotation,'Auto rotated into neighbor');
  await MangaRender.render(canvas,shown,image,image);return {estimates,automatic:true,manual:true,resizeAnchors:true,lightweight:true,saveReloadExport:true,neighborProtection:true};
 });console.log(JSON.stringify(report));if(process.env.MANGA_EVIDENCE){fs.mkdirSync(process.env.MANGA_EVIDENCE,{recursive:true});await page.screenshot({path:path.join(process.env.MANGA_EVIDENCE,'rotation.png')});}assert.equal(report.automatic,true);
