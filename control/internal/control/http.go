@@ -270,24 +270,24 @@ func (m *Manager) Handler() http.Handler {
 		w.Header().Set("Content-Disposition", `attachment; filename="manga-translator-extension.zip"`)
 		z := zip.NewWriter(w)
 		defer z.Close()
-		entries, e := fs.ReadDir(m.bundle, "extension")
-		if e != nil {
-			return
-		}
-		for _, entry := range entries {
+		_ = fs.WalkDir(m.bundle, "extension", func(name string, entry fs.DirEntry, err error) error {
+			if err != nil {
+				return err
+			}
 			if entry.IsDir() {
-				continue
+				return nil
 			}
-			data, e := fs.ReadFile(m.bundle, "extension/"+entry.Name())
-			if e != nil {
-				return
+			data, err := fs.ReadFile(m.bundle, name)
+			if err != nil {
+				return err
 			}
-			f, e := z.Create(entry.Name())
-			if e != nil {
-				return
+			f, err := z.Create(strings.TrimPrefix(name, "extension/"))
+			if err != nil {
+				return err
 			}
-			f.Write(data)
-		}
+			_, err = f.Write(data)
+			return err
+		})
 	})
 	web, e := fs.Sub(m.bundle, "web")
 	if e != nil {

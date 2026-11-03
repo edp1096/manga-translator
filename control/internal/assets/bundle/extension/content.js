@@ -2,6 +2,7 @@
 if(globalThis.__mangaTranslator)return;globalThis.__mangaTranslator=true;
 const rpc=async msg=>{const r=await chrome.runtime.sendMessage(msg);if(!r?.ok)throw Error(r?.error||'확장 연결이 끊어졌습니다. 새로고침하세요.');return r.value;};
 MangaRender.setAssetLoader((id,name)=>rpc({type:'asset',id,name}));
+globalThis.MangaFonts?.setLoader(id=>rpc({type:'font',id}));
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 const pageIdentity=()=>{if(globalThis.MangaReaders)return MangaReaders.pageIdentity(location.href);const u=new URL(location.href);u.hash='';return u.href;};
 const captureReader=async()=>{if((await rpc({type:'settings'})).captureFallback===false)throw Error('이 뷰어는 확장 설정의 화면 캡처 허용이 필요합니다.');return rpc({type:'capture'});};
@@ -15,8 +16,8 @@ let nameMessage='',nameBusy=false;
 function presentation(entry){
  const mode=lightweightDisplay?'auto':displayMode,outside=lightweightDisplay?'tooltip':outsideTextMode;
  const restoration=entry.restored?entry.restoration:undefined;
- if(entry.presentationBase!==entry.result||entry.presentationGeometry!==entry.bubbles||entry.presentationMode!==mode||entry.presentationOutsideMode!==outside||entry.presentationRestoration!==restoration){
-  entry.presentation=MangaRender.presentation(entry.result,mode,entry.bubbles,outside,restoration);entry.presentationRestoration=restoration;
+ if(entry.presentationLight!==lightweightDisplay||entry.presentationFontRevision!==(globalThis.MangaFonts?.revision||0)||entry.presentationBase!==entry.result||entry.presentationGeometry!==entry.bubbles||entry.presentationMode!==mode||entry.presentationOutsideMode!==outside||entry.presentationRestoration!==restoration){
+  entry.presentation=MangaRender.presentation(entry.result,mode,entry.bubbles,outside,restoration,lightweightDisplay);entry.presentationLight=lightweightDisplay;entry.presentationFontRevision=globalThis.MangaFonts?.revision||0;entry.presentationRestoration=restoration;
   entry.presentationBase=entry.result;entry.presentationGeometry=entry.bubbles;entry.presentationMode=mode;entry.presentationOutsideMode=outside;
  }
  return entry.presentation;
@@ -262,13 +263,16 @@ function place(e){
 }
 
 async function overlay(e){
- const epoch=e.renderEpoch=(e.renderEpoch||0)+1,job=e.job,result=e.result,shown=presentation(e),revision=displayRevision;
+ const epoch=e.renderEpoch=(e.renderEpoch||0)+1,job=e.job,result=e.result,revision=displayRevision;
+ await globalThis.MangaFonts?.ensure(result,lightweightDisplay);
+ if(e.renderEpoch!==epoch||e.job!==job||e.result!==result||displayRevision!==revision)return;
+ const shown=presentation(e);
  const original=e.original||await rpc({type:'asset',id:job,name:'original.png'});
  const cleaned=e.cleaned||await rpc({type:'asset',id:job,name:'cleaned.png'});
- if(e.renderEpoch!==epoch||e.job!==job||e.result!==result)return;
+ if(e.renderEpoch!==epoch||e.job!==job||e.result!==result||displayRevision!==revision)return;
  const canvas=document.createElement('canvas');
  try{await MangaRender.render(canvas,shown,original,cleaned,e.restored);
- if(e.renderEpoch!==epoch||e.job!==job||e.result!==result)return;
+ if(e.renderEpoch!==epoch||e.job!==job||e.result!==result||displayRevision!==revision)return;
  e.original=original;e.cleaned=cleaned;
  if(!e.overlay){e.overlay=document.createElement('div');e.overlay.dataset.mangaTranslatorOverlay=overlayInstance;e.overlay.style.cssText='position:absolute;z-index:999;pointer-events:auto;display:none';e.canvas=document.createElement('canvas');e.canvas.style.cssText='display:block;width:100%;height:100%';e.overlay.append(e.canvas);document.body.append(e.overlay);e.resizeObserver=new ResizeObserver(()=>place(e));if(e.img)e.resizeObserver.observe(e.img);}
  e.overlay.dataset.mangaSource=e.sourceURL||urlOf(e.img);
@@ -448,15 +452,15 @@ chrome.runtime.onMessage.addListener((m,s,reply)=>{
     const original=e.original||await readImage(e,false);let data=original,kind='original',warning='';
     if(!e.error&&e.result?.regions.length){try{
      const cleaned=e.cleaned||await rpc({type:'asset',id:e.job,name:'cleaned.png'});
-     const canvas=document.createElement('canvas');await MangaRender.render(canvas,presentation(e),original,cleaned,e.restored);data=canvas.toDataURL('image/png');kind='translated';
+     await globalThis.MangaFonts?.ensure(e.result,lightweightDisplay);const canvas=document.createElement('canvas');await MangaRender.render(canvas,presentation(e),original,cleaned,e.restored);data=canvas.toDataURL('image/png');kind='translated';
     }catch(error){warning='번역 이미지 렌더링 실패 · 원본 저장: '+error.message;}}
     return {data,kind,warning,state:e.state};
    }
-   if(m.action==='edit'){const e=entries.find(e=>e.key===m.key);if(e?.result)await rpc({type:'edit',id:e.job,key:e.key,result:presentation(e),baseResult:e.result,geometry:e.bubbles,restoration:e.restoration,displayMode:lightweightDisplay?'auto':displayMode,outsideTextMode:lightweightDisplay?'tooltip':outsideTextMode});}
+   if(m.action==='edit'){const e=entries.find(e=>e.key===m.key);if(e?.result)await rpc({type:'edit',id:e.job,key:e.key,result:presentation(e),baseResult:e.result,geometry:e.bubbles,restoration:e.restoration,displayMode:lightweightDisplay?'auto':displayMode,outsideTextMode:lightweightDisplay?'tooltip':outsideTextMode,lightweightDisplay});}
    return snapshot();
   })().then(reply,e=>reply({error:e.message}));return true;
  }
- if(m.type==='applyEdited'){const e=entries.find(e=>e.key===m.key);if(e){e.result=m.result;overlay(e).then(()=>{remember(e);queueDisplay();reply({result:presentation(e),baseResult:e.result,geometry:e.bubbles,restoration:e.restoration,displayMode:lightweightDisplay?'auto':displayMode,outsideTextMode:lightweightDisplay?'tooltip':outsideTextMode});}).catch(err=>reply({error:err.message}));}else reply({error:'페이지를 다시 열어 원본 이미지 연결이 끊어졌습니다.'});return true;}
+ if(m.type==='applyEdited'){const e=entries.find(e=>e.key===m.key);if(e){e.result=m.result;overlay(e).then(()=>{remember(e);queueDisplay();reply({result:presentation(e),baseResult:e.result,geometry:e.bubbles,restoration:e.restoration,displayMode:lightweightDisplay?'auto':displayMode,outsideTextMode:lightweightDisplay?'tooltip':outsideTextMode,lightweightDisplay});}).catch(err=>reply({error:err.message}));}else reply({error:'페이지를 다시 열어 원본 이미지 연결이 끊어졌습니다.'});return true;}
  if(m.type==='namesApplied'){const entry=entries.find(entry=>entry.job===m.id&&entry.sourceURL===m.sourceURL);if(entry&&!running&&JSON.stringify(entry.result)===JSON.stringify(m.before)){const before=entry.result;entry.result=m.result;overlay(entry).then(()=>{entry.state='명칭 통일 완료';queueDisplay();reply({ok:true});}).catch(error=>{entry.result=before;overlay(entry).catch(()=>{});reply({error:error.message});});return true;}reply({ok:false});}
 });
 })();

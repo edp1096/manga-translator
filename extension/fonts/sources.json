@@ -1,0 +1,22 @@
+{
+  "dialogue": {
+    "source": "https://copyright.keris.or.kr/wft/fntDwnldView?fntGrpId=GFT202301110000000000001",
+    "sha256": "d546786fe2cbeefa4f378607573fdb8d68d94116205dcfa7c2adaa375dde5be9"
+  },
+  "friendly": {
+    "source": "https://copyright.keris.or.kr/wft/fntDwnldView?fntGrpId=GFT202301120000000000006",
+    "sha256": "fb5442c0dfd4f7fcb8237b038b99366912c97ac35bdf9277c83aa9ed107da553"
+  },
+  "reflective": {
+    "source": "https://copyright.keris.or.kr/wft/fntDwnldView?fntGrpId=GFT202301120000000000007",
+    "sha256": "633cd24d735f73cf1ec0e3aef49a0d408e3799684453cb0116fb6aeb73188a9f"
+  },
+  "narration": {
+    "source": "https://copyright.keris.or.kr/wft/fntDwnldView?fntGrpId=GFT202301120000000000002",
+    "sha256": "da196e6907d80c59aa18879918c74a67eb758c98f74b09d9e6d0f8f7bdb758b5"
+  },
+  "shout": {
+    "source": "https://copyright.keris.or.kr/wft/fntDwnldView?fntGrpId=GFT202312110000000000010",
+    "sha256": "e14871143c190b6a5da57f5df17acb349dac1cece5d60c0fe1997cd95c081def"
+  }
+}

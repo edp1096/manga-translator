@@ -1003,14 +1003,14 @@
       "group": "application",
       "platform": "windows-amd64",
       "url": "embedded:engine/windows-amd64.gz",
-      "sha256": "5f6c4bfb65ff1ed64e177cf58edbfeb43368fdccbf4a53652baadc2f09fc5a9c",
-      "size": 2221359,
+      "sha256": "dcc2a562d95cfb0930a684321aa275b22960eb0d06cb311b5d95d65de40f60b6",
+      "size": 2371231,
       "format": "gzip",
       "files": [
         {
           "path": "bin/manga-translator-server.exe",
-          "sha256": "24148ac9861d8715b26954c39f04bb51cb651ca147ee0b1506cc7195a390c088",
-          "size": 7311246,
+          "sha256": "150e2599e9472872a94dda751dde50af103d3989102c564eaf90fbcd5f9d7052",
+          "size": 7476087,
           "executable": true
         }
       ]
@@ -4368,6 +4368,11 @@
     }
   ],
   "licenses": [
+    {
+      "name": "KERIS 학교안심 글꼴",
+      "url": "https://copyright.keris.or.kr/wft/fntDwnld",
+      "license": "OFL-1.1"
+    },
     {
       "name": "Koharu / Manga109",
       "url": "https://huggingface.co/mayocream/koharu-layout-rfdetr-seg-2xl-1152",

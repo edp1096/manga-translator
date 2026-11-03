@@ -60,7 +60,7 @@ const intersection=(left,right)=>Math.max(0,Math.min(left[2],right[2])-Math.max(
 const boxArea=box=>Math.max(0,box[2]-box[0])*Math.max(0,box[3]-box[1]);
 const validBox=(box,result)=>Array.isArray(box)&&box.length===4&&box.every(Number.isFinite)&&box[0]>=0&&box[1]>=0&&box[2]<=result.width&&box[3]<=result.height&&boxArea(box)>0;
 const textContext=document.createElement('canvas').getContext('2d');
-const font=points=>`600 ${points}px "Noto Sans CJK KR", "Malgun Gothic", sans-serif`;
+const font=(points,region)=>globalThis.MangaFonts?MangaFonts.css(points,region):`600 ${points}px "Noto Sans CJK KR", "Malgun Gothic", sans-serif`;
 const graphemes=new Intl.Segmenter(undefined,{granularity:'grapheme'});
 const layouts=new WeakMap();
 const closing=/^[,.;:!?…、。，．？！：；％%°)\]}>»”’」』】〕〉》☆♡♥]+$/u;
@@ -126,13 +126,13 @@ function wrapTextUncached(context,text,width,keepHangul=true){
 function textLayout(region,box=region.box,maximum=region.fontSize||24,minimum=8){
  if(!Array.isArray(box)||box.length!==4||!box.every(Number.isFinite)||typeof region.translation!=='string')return null;
  const requestedMaximum=Number.isFinite(region.automaticFontMaximum)?Math.max(maximum,region.automaticFontMaximum):maximum;
- const key=[...box,maximum,minimum,requestedMaximum,region.translation,!!region.manual,!!region.layoutOverride,!!region.displayOverride].join('\u0000'),cached=layouts.get(region);
+ const key=[...box,maximum,minimum,requestedMaximum,font(24,region),region.translation,!!region.manual,!!region.layoutOverride,!!region.displayOverride].join('\u0000'),cached=layouts.get(region);
  if(cached?.key===key)return cached.value;
  const width=box[2]-box[0]-4,height=box[3]-box[1]-4;
  if(width<=0||height<=0||region.translation.length>8192)return null;
  let best=null;
  for(let points=Math.min(256,Math.floor(maximum));points>=minimum;points--){
-  textContext.font=font(points);const primary=wrapText(textContext,region.translation,width);
+  textContext.font=font(points,region);const primary=wrapText(textContext,region.translation,width);
   // A fitting word must not force a much smaller paragraph. Retain the
   // previous grapheme layout as an alternative at the same measured font.
   for(const wrapped of primary.grouped?[primary,wrapText(textContext,region.translation,width,false)]:[primary]){
@@ -393,7 +393,7 @@ function outsidePresentation(result,geometry,shrinkForRestoration=false){
     // numeric runs intact while choosing the larger automatic font.
     const runs=region.translation.match(/[\p{Script=Latin}\p{M}\p{N}]+(?:[.,][\p{N}]+)*/gu)||[];
     let fitting=maximum;
-    for(;fitting>=8;fitting--){textContext.font=font(fitting);if(runs.every(run=>{const m=textContext.measureText(run);return Math.max(m.width,m.actualBoundingBoxLeft+m.actualBoundingBoxRight)<=box[2]-box[0]-4;}))break;}
+    for(;fitting>=8;fitting--){textContext.font=font(fitting,region);if(runs.every(run=>{const m=textContext.measureText(run);return Math.max(m.width,m.actualBoundingBoxLeft+m.actualBoundingBoxRight)<=box[2]-box[0]-4;}))break;}
     maximum=fitting>=8?fitting:legacyMaximum;
    }
   }
@@ -800,7 +800,8 @@ function tooltipClip(region,result){
  for(const contour of contours){const p=contour.map(([x,y])=>`${x*100}% ${y*100}%`);if(p.length)points.push(...p,p[0],'0% 0%');}
  return `polygon(evenodd,${points.join(',')})`;
 }
-function presentation(result,mode,geometry,outsideMode='tooltip',restoration){
+function presentation(result,mode,geometry,outsideMode='tooltip',restoration,lightweight=result._fontLight===true){
+ if(globalThis.MangaFonts)result=MangaFonts.decorate(result,lightweight);
  const previousMeasures=presentationMeasures,previousWraps=presentationWraps,previousSegments=presentationSegments;presentationMeasures=new Map();presentationWraps=new Map();presentationSegments=new Map();
  try{
  const guarded={...result,regions:result.regions.map(r=>punctuationMismatch(r,result)?{...r,mode:'tooltip',automaticPunctuation:true}:r)};
@@ -810,11 +811,11 @@ function presentation(result,mode,geometry,outsideMode='tooltip',restoration){
  }finally{presentationMeasures=previousMeasures;presentationWraps=previousWraps;presentationSegments=previousSegments;}
 }
 function editedBase(result,base){
- if(!base)return result;
- return {...result,regions:result.regions.map(region=>{
-  const prior=base.regions.find(candidate=>candidate.id===region.id);
-  if(!prior)return region;
-  const restored={...region};
+ const clean={...result};delete clean._fontLight;
+ return {...clean,regions:result.regions.map(region=>{
+  const restored={...region};delete restored._fontId;
+  const prior=base?.regions.find(candidate=>candidate.id===region.id);
+  if(!prior)return restored;
   const keys=region.displayOverride?[]:['mode','whiteScope','whiteBackground','displayOverride','restorationMask'];
   if(!region.layoutOverride)keys.push('box','fontSize','color');
   for(const key of keys){
@@ -840,7 +841,7 @@ function drawRegion(ctx,r){
  if(!direct(r)||!r.translation)return;
  const [x1,y1,x2,y2]=r.box, w=x2-x1,h=y2-y1;
  const layout=textLayout(r);if(!layout)return;
- const size=layout.fontSize,lines=layout.lines;ctx.font=font(size);
+ const size=layout.fontSize,lines=layout.lines;ctx.font=font(size,r);
  ctx.save();ctx.beginPath();ctx.rect(x1,y1,w,h);ctx.clip();
 
  ctx.fillStyle=r.mode==='white'?'#111':r.color||'#111';ctx.textAlign='left';ctx.textBaseline='alphabetic';
@@ -867,6 +868,7 @@ function restorationMaskOverlaps(mask,result,box){
  return false;
 }
 async function render(canvas,result,original,cleaned,restored){
+ if(globalThis.MangaFonts){await MangaFonts.ensure(result);result=MangaFonts.decorate(result);}
  prepare(result);
  canvas.width=result.width;canvas.height=result.height;
  // These full-page buffers are copied/exported, not animated. Keep their

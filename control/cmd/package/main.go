@@ -12,6 +12,7 @@ import (
 	"flag"
 	"fmt"
 	"io"
+	"io/fs"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -291,13 +292,20 @@ func main() {
 	data, err = json.MarshalIndent(catalog, "", "  ")
 	must(err)
 	must(write(filepath.Join(bundle, "catalog.json"), append(data, '\n'), 0644))
-	extensions, err := os.ReadDir(filepath.Join(project, "extension"))
-	must(err)
-	for _, entry := range extensions {
-		if !entry.IsDir() {
-			must(copyFile(filepath.Join(project, "extension", entry.Name()), filepath.Join(bundle, "extension", entry.Name())))
+	extensionRoot := filepath.Join(project, "extension")
+	must(filepath.WalkDir(extensionRoot, func(name string, entry fs.DirEntry, err error) error {
+		if err != nil {
+			return err
 		}
-	}
+		if entry.IsDir() {
+			return nil
+		}
+		relative, err := filepath.Rel(extensionRoot, name)
+		if err != nil {
+			return err
+		}
+		return copyFile(name, filepath.Join(bundle, "extension", relative))
+	}))
 	npm := "npm"
 	if runtime.GOOS == "windows" {
 		npm = "npm.cmd"

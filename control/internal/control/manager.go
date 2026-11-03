@@ -255,31 +255,29 @@ func (m *Manager) ensureCredentials() error {
 }
 func (m *Manager) installExtension() error {
 	for _, dir := range []string{"extension", "licenses"} {
-		entries, e := fs.ReadDir(m.bundle, dir)
-		if e != nil {
-			if dir == "licenses" && os.IsNotExist(e) {
-				continue
+		err := fs.WalkDir(m.bundle, dir, func(name string, entry fs.DirEntry, err error) error {
+			if err != nil {
+				return err
 			}
-			return e
-		}
-		for _, entry := range entries {
 			if entry.IsDir() {
-				continue
+				return nil
 			}
-			data, e := fs.ReadFile(m.bundle, dir+"/"+entry.Name())
-			if e != nil {
-				return e
+			data, err := fs.ReadFile(m.bundle, name)
+			if err != nil {
+				return err
 			}
-			p := filepath.Join(m.root, dir, entry.Name())
-			old, _ := os.ReadFile(p)
+			destination := filepath.Join(m.root, filepath.FromSlash(name))
+			old, _ := os.ReadFile(destination)
 			if bytes.Equal(data, old) {
-				continue
+				return nil
 			}
-			if e = atomicBytes(p, data, 0644); e != nil {
-				return e
-			}
+			return atomicBytes(destination, data, 0644)
+		})
+		if err != nil && !(dir == "licenses" && os.IsNotExist(err)) {
+			return err
 		}
 	}
+
 	return nil
 }
 func (m *Manager) fileReady(f OutputFile) bool {
