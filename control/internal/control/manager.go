@@ -711,8 +711,19 @@ func (m *Manager) Start() error {
 	}()
 	return nil
 }
+func (m *Manager) checkVisionStartupMemory(sys SystemInfo) error {
+	_, required := m.visionRequirements()
+	if sys.MemoryAvailable > 0 && sys.MemoryAvailable < required {
+		return fmt.Errorf("이미지 API(탐지·OCR·복원)를 시작할 RAM이 부족합니다: 여유 %s / 필요 %s. GPU VRAM과 별도입니다", formatBytes(sys.MemoryAvailable), formatBytes(required))
+	}
+	return nil
+}
+
 func (m *Manager) start(ctx context.Context) error {
 	if e := ctx.Err(); e != nil {
+		return e
+	}
+	if e := m.checkVisionStartupMemory(systemInfo(m.root)); e != nil {
 		return e
 	}
 	if e := m.prerequisites(ctx, m.root, prerequisiteFiles(m.selectedArtifacts())); e != nil {
@@ -748,6 +759,7 @@ func (m *Manager) start(ctx context.Context) error {
 	}
 	args := []string{"-m", filepath.Join(m.root, filepath.FromSlash(model.Path)), "--device", "none", "--gpu-layers", "0", "--no-op-offload", "--threads", fmt.Sprint(threads), "--threads-batch", fmt.Sprint(threads), "--ctx-size", "4096", "--parallel", "1", "--batch-size", "512", "--ubatch-size", "512", "--flash-attn", "off", "--cache-ram", "0", "--host", "127.0.0.1", "--port", fmt.Sprint(LLMPort), "--alias", modelID, "--api-key-file", filepath.Join(m.root, "data", "api-key"), "--jinja", "--reasoning", "off", "--reasoning-budget", "0", "--n-predict", "2048"}
 	args = llmExecutionArgs(args, settings.LLMExecution)
+	args = llmMemoryArgs(args, settings.LLMExecution, m.platform)
 	args, modelArgsError := m.llmModelArgs(args, *model, settings.LLMExecution)
 	if modelArgsError != nil {
 		return modelArgsError
@@ -766,9 +778,8 @@ func (m *Manager) start(ctx context.Context) error {
 	if e := m.waitHealthy(ctx, "llm", LLMPort, 3*time.Minute); e != nil {
 		return e
 	}
-	_, required := m.visionRequirements()
-	if sys := systemInfo(m.root); sys.MemoryAvailable > 0 && sys.MemoryAvailable < required {
-		return fmt.Errorf("선택한 탐지 모델을 시작하려면 여유 메모리 %s 이상이 필요합니다", formatBytes(required))
+	if e := m.checkVisionStartupMemory(systemInfo(m.root)); e != nil {
+		return e
 	}
 	if e := m.launch("vision", filepath.Join(m.root, "bin", "manga-translator-server"+ext), []string{"--root", m.root}); e != nil {
 		return e

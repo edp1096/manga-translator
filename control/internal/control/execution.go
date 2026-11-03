@@ -253,6 +253,23 @@ func llmExecutionArgs(args []string, backend string) []string {
 	return append(result, "--device", device, "--gpu-layers", "999", "-lv", "4")
 }
 
+// Windows can retain model file mappings in physical RAM after CUDA offload.
+// Explicit buffered loading releases the staging allocations once copied to the
+// GPU. Keep mmap for CPU and unverified platforms/backends.
+func llmMemoryArgs(args []string, backend, platform string) []string {
+	if backend != "cuda" || !strings.HasPrefix(platform, "windows-") {
+		return args
+	}
+	result := append([]string(nil), args...)
+	for i := 0; i+1 < len(result); i++ {
+		if result[i] == "--load-mode" {
+			result[i+1] = "none"
+			return result
+		}
+	}
+	return append(result, "--load-mode", "none")
+}
+
 func llmGPUEnvironment(backend string, gpu GPUInfo) map[string]string {
 	if backend == "cuda" {
 		return map[string]string{"CUDA_VISIBLE_DEVICES": fmt.Sprint(*gpu.CUDAIndex)}
