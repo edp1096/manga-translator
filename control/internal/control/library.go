@@ -268,7 +268,7 @@ func (m *Manager) libraryRoutes(mux *http.ServeMux) {
 	mux.HandleFunc("POST /api/library/presentation/{id}", func(w http.ResponseWriter, r *http.Request) {
 		token, e := os.ReadFile(filepath.Join(m.root, "data/native_api/access-token"))
 		expected := "Bearer " + strings.TrimSpace(string(token))
-		if e != nil || len(token) < 32 || subtle.ConstantTimeCompare([]byte(r.Header.Get("Authorization")), []byte(expected)) != 1 {
+		if (e != nil || len(token) < 32 || subtle.ConstantTimeCompare([]byte(r.Header.Get("Authorization")), []byte(expected)) != 1) && !m.deviceAPIAccess(strings.TrimPrefix(r.Header.Get("Authorization"), "Bearer ")) {
 			respond(w, map[string]string{"error": "인증 실패"}, 403)
 			return
 		}

@@ -219,14 +219,14 @@
   "runtimes": [
     {
       "id": "llama",
-      "version": "0.7.0",
+      "version": "0.9.0",
       "platform": "linux-arm64",
       "artifact": "llama-linux-arm64",
-      "releaseUrl": "https://github.com/ggml-org/llama.cpp/releases/tag/v0.7.0",
-      "buildTag": "b11669",
-      "executable": "runtime/llama-0.7.0/llama-server",
+      "releaseUrl": "https://github.com/ggml-org/llama.cpp/releases/tag/v0.9.0",
+      "buildTag": "b12110",
+      "executable": "runtime/llama-0.9.0/llama-server",
       "libraryDirs": [
-        "runtime/llama-0.7.0"
+        "runtime/llama-0.9.0"
       ],
       "family": "llama",
       "backend": "cpu"
@@ -259,14 +259,14 @@
     },
     {
       "id": "llama",
-      "version": "0.7.0",
+      "version": "0.9.0",
       "platform": "windows-amd64",
       "artifact": "llama-windows-amd64",
-      "releaseUrl": "https://github.com/ggml-org/llama.cpp/releases/tag/v0.7.0",
-      "buildTag": "b11669",
-      "executable": "runtime/llama-0.7.0/llama-server.exe",
+      "releaseUrl": "https://github.com/ggml-org/llama.cpp/releases/tag/v0.9.0",
+      "buildTag": "b12110",
+      "executable": "runtime/llama-0.9.0/llama-server.exe",
       "libraryDirs": [
-        "runtime/llama-0.7.0"
+        "runtime/llama-0.9.0"
       ],
       "family": "llama",
       "backend": "cpu"
@@ -299,56 +299,56 @@
     },
     {
       "id": "llama-vulkan",
-      "version": "0.7.0",
+      "version": "0.9.0",
       "platform": "linux-arm64",
       "artifact": "llama-vulkan-linux-arm64",
-      "releaseUrl": "https://github.com/ggml-org/llama.cpp/releases/tag/v0.7.0",
-      "buildTag": "b11669",
-      "executable": "runtime/llama-vulkan-0.7.0/llama-server",
+      "releaseUrl": "https://github.com/ggml-org/llama.cpp/releases/tag/v0.9.0",
+      "buildTag": "b12110",
+      "executable": "runtime/llama-vulkan-0.9.0/llama-server",
       "libraryDirs": [
-        "runtime/llama-vulkan-0.7.0"
+        "runtime/llama-vulkan-0.9.0"
       ],
       "family": "llama",
       "backend": "vulkan"
     },
     {
       "id": "llama-vulkan",
-      "version": "0.7.0",
+      "version": "0.9.0",
       "platform": "linux-amd64",
       "artifact": "llama-vulkan-linux-amd64",
-      "releaseUrl": "https://github.com/ggml-org/llama.cpp/releases/tag/v0.7.0",
-      "buildTag": "b11669",
-      "executable": "runtime/llama-vulkan-0.7.0/llama-server",
+      "releaseUrl": "https://github.com/ggml-org/llama.cpp/releases/tag/v0.9.0",
+      "buildTag": "b12110",
+      "executable": "runtime/llama-vulkan-0.9.0/llama-server",
       "libraryDirs": [
-        "runtime/llama-vulkan-0.7.0"
+        "runtime/llama-vulkan-0.9.0"
       ],
       "family": "llama",
       "backend": "vulkan"
     },
     {
       "id": "llama-vulkan",
-      "version": "0.7.0",
+      "version": "0.9.0",
       "platform": "windows-amd64",
       "artifact": "llama-vulkan-windows-amd64",
-      "releaseUrl": "https://github.com/ggml-org/llama.cpp/releases/tag/v0.7.0",
-      "buildTag": "b11669",
-      "executable": "runtime/llama-vulkan-0.7.0/llama-server.exe",
+      "releaseUrl": "https://github.com/ggml-org/llama.cpp/releases/tag/v0.9.0",
+      "buildTag": "b12110",
+      "executable": "runtime/llama-vulkan-0.9.0/llama-server.exe",
       "libraryDirs": [
-        "runtime/llama-vulkan-0.7.0"
+        "runtime/llama-vulkan-0.9.0"
       ],
       "family": "llama",
       "backend": "vulkan"
     },
     {
       "id": "llama",
-      "version": "0.7.0",
+      "version": "0.9.0",
       "platform": "linux-amd64",
       "artifact": "llama-linux-amd64",
-      "releaseUrl": "https://github.com/ggml-org/llama.cpp/releases/tag/v0.7.0",
-      "buildTag": "b11669",
-      "executable": "runtime/llama-0.7.0/llama-server",
+      "releaseUrl": "https://github.com/ggml-org/llama.cpp/releases/tag/v0.9.0",
+      "buildTag": "b12110",
+      "executable": "runtime/llama-0.9.0/llama-server",
       "libraryDirs": [
-        "runtime/llama-0.7.0"
+        "runtime/llama-0.9.0"
       ],
       "family": "llama",
       "backend": "cpu"
@@ -441,14 +441,14 @@
     },
     {
       "id": "llama-cuda",
-      "version": "0.7.0",
+      "version": "0.9.0",
       "platform": "windows-amd64",
       "artifact": "llama-cuda-windows-amd64",
-      "releaseUrl": "https://github.com/ggml-org/llama.cpp/releases/tag/b11669",
-      "buildTag": "b11669",
-      "executable": "runtime/llama-cuda-0.7.0/llama-server.exe",
+      "releaseUrl": "https://github.com/ggml-org/llama.cpp/releases/tag/v0.9.0",
+      "buildTag": "b12110",
+      "executable": "runtime/llama-cuda-0.9.0/llama-server.exe",
       "libraryDirs": [
-        "runtime/llama-cuda-0.7.0"
+        "runtime/llama-cuda-0.9.0"
       ],
       "family": "llama",
       "backend": "cuda",
@@ -499,6 +499,40 @@
         "nvidia-nvshmem-cu13-torch-linux-arm64",
         "nvidia-cudnn-cu13-torch-linux-arm64",
         "manga-lama-torch-native-linux-arm64"
+      ]
+    },
+    {
+      "id": "llama-cuda",
+      "version": "0.9.0",
+      "platform": "linux-amd64",
+      "artifact": "llama-cuda-linux-amd64",
+      "releaseUrl": "https://github.com/ggml-org/llama.cpp/releases/tag/v0.9.0",
+      "buildTag": "b12110",
+      "executable": "runtime/llama-cuda-0.9.0/llama-server",
+      "libraryDirs": [
+        "runtime/llama-cuda-0.9.0"
+      ],
+      "family": "llama",
+      "backend": "cuda",
+      "additionalArtifacts": [
+        "llama-cudart-linux-amd64"
+      ]
+    },
+    {
+      "id": "llama-cuda",
+      "version": "0.9.0",
+      "platform": "linux-arm64",
+      "artifact": "llama-cuda-linux-arm64",
+      "releaseUrl": "https://github.com/ggml-org/llama.cpp/releases/tag/v0.9.0",
+      "buildTag": "b12110",
+      "executable": "runtime/llama-cuda-0.9.0/llama-server",
+      "libraryDirs": [
+        "runtime/llama-cuda-0.9.0"
+      ],
+      "family": "llama",
+      "backend": "cuda",
+      "additionalArtifacts": [
+        "llama-cudart-linux-arm64"
       ]
     }
   ],
@@ -553,110 +587,116 @@
     },
     {
       "id": "llama-linux-arm64",
-      "name": "llama.cpp 0.7.0",
+      "name": "llama.cpp 0.9.0",
       "group": "runtime",
       "platform": "linux-arm64",
-      "url": "https://github.com/ggml-org/llama.cpp/releases/download/b11669/llama-b11669-bin-ubuntu-vulkan-arm64.tar.gz",
-      "sha256": "d283522e479c0d532e3a04d715dd852ffb2d95925caa6d41ef2ba53a65e46a51",
-      "size": 24187561,
+      "url": "https://github.com/ggml-org/llama.cpp/releases/download/b12110/llama-b12110-bin-ubuntu-arm64.tar.gz",
+      "sha256": "4758b51335e37b4346251f2687d64841ff1c07ecb27fc46323945bb2ec9c44d2",
+      "size": 18723578,
       "format": "tgz",
       "files": [
         {
-          "entry": "llama-b11669/llama-server",
-          "path": "runtime/llama-0.7.0/llama-server",
-          "sha256": "b319c96bfd668ea1825600415275beaffcf14e76edb303bce521a818b0b00aa5",
-          "size": 72448,
-          "executable": true
+          "entry": "llama-b12110/libggml-cpu-armv8.2_3.so",
+          "path": "runtime/llama-0.9.0/libggml-cpu-armv8.2_3.so",
+          "sha256": "02639d1498da8974df9e7daad3261daa85264cf2c56437287bc61f17677de715",
+          "size": 1005392
         },
         {
-          "entry": "llama-b11669/libllama-server-impl.so",
-          "path": "runtime/llama-0.7.0/libllama-server-impl.so",
-          "sha256": "cc3a8ff2ca7a2840424634d66367a30323f73fb1228a7c623871874f4c1d1964",
-          "size": 6891304
+          "entry": "llama-b12110/libggml-cpu-armv9.2_1.so",
+          "path": "runtime/llama-0.9.0/libggml-cpu-armv9.2_1.so",
+          "sha256": "0ef8eed64ac2cb8bcb70f1f3fd4c77d26b0607f01e39da5e52149e6d99f12667",
+          "size": 1071320
         },
         {
-          "entry": "llama-b11669/libllama.so.0.7.0",
-          "path": "runtime/llama-0.7.0/libllama.so.0",
-          "sha256": "d5568269dbc18479cc7361e2ee516a99b57bfaab4c01e58bc20d22726f6ee6fa",
-          "size": 4801520
+          "entry": "llama-b12110/libggml-base.so.0.29.0",
+          "path": "runtime/llama-0.9.0/libggml-base.so.0",
+          "sha256": "58ac4abb227bf2083dde001289f8e376a39edbf72f67264ec596bab2953ba6c7",
+          "size": 870808
         },
         {
-          "entry": "llama-b11669/libllama-common.so.0.7.0",
-          "path": "runtime/llama-0.7.0/libllama-common.so.0",
-          "sha256": "50d0b0b9ccccc1d270c3dc06a5ed8cdd57af4c71900d5e44543a5e6f4c48723f",
-          "size": 5693232
-        },
-        {
-          "entry": "llama-b11669/libmtmd.so.0.7.0",
-          "path": "runtime/llama-0.7.0/libmtmd.so.0",
-          "sha256": "9c8dd28c13166f934e7d96714c4670b8519929079bc8bacf91b2bf05c5186ac9",
-          "size": 1893920
-        },
-        {
-          "entry": "llama-b11669/libggml.so.0.27.0",
-          "path": "runtime/llama-0.7.0/libggml.so.0",
+          "entry": "llama-b12110/libggml.so.0.29.0",
+          "path": "runtime/llama-0.9.0/libggml.so.0",
           "sha256": "6be1305cdda55f0001e87fae600f1148b2f0b9c8b3f98f60c33b4fdfe3cfaf64",
           "size": 77528
         },
         {
-          "entry": "llama-b11669/libggml-base.so.0.27.0",
-          "path": "runtime/llama-0.7.0/libggml-base.so.0",
-          "sha256": "094d810465713b5b7bad2718c4bd884312e6cb3bdae7cfa13e8ff4f958d59bf1",
-          "size": 802072
+          "entry": "llama-b12110/libmtmd.so.0.9.0",
+          "path": "runtime/llama-0.9.0/libmtmd.so.0",
+          "sha256": "4bf8be764c92dac5e5d5cd4a24484607774b4961553821358903a2a5389d3bca",
+          "size": 2403680
         },
         {
-          "entry": "llama-b11669/LICENSE",
-          "path": "runtime/llama-0.7.0/LICENSE",
+          "entry": "llama-b12110/llama-server",
+          "path": "runtime/llama-0.9.0/llama-server",
+          "sha256": "4eafcc5400649f84beefbdc396f55286f4808df894104a7bb7885888cd462b63",
+          "size": 72448,
+          "executable": true
+        },
+        {
+          "entry": "llama-b12110/libggml-cpu-armv8.2_2.so",
+          "path": "runtime/llama-0.9.0/libggml-cpu-armv8.2_2.so",
+          "sha256": "8d7be0dc91dc749d02aacf3690ef91d076b480717dc3656a4f08024c12528e3f",
+          "size": 1070424
+        },
+        {
+          "entry": "llama-b12110/libllama-common.so.0.9.0",
+          "path": "runtime/llama-0.9.0/libllama-common.so.0",
+          "sha256": "dfa38eec9c202758d683cdd2f908bb7267ab2a204488040bfae34d1be8aea62f",
+          "size": 5929752
+        },
+        {
+          "entry": "llama-b12110/libggml-cpu-armv8.0_1.so",
+          "path": "runtime/llama-0.9.0/libggml-cpu-armv8.0_1.so",
+          "sha256": "193dbae76ff608aa2822d45afe89569a00d46665188352b206ded6f0936f1631",
+          "size": 1003496
+        },
+        {
+          "entry": "llama-b12110/libllama.so.0.9.0",
+          "path": "runtime/llama-0.9.0/libllama.so.0",
+          "sha256": "72a17735f5090d1761c492feb0fef9aac325d59c9f2f6a4458017a7fe1751170",
+          "size": 5165200
+        },
+        {
+          "entry": "llama-b12110/LICENSE",
+          "path": "runtime/llama-0.9.0/LICENSE",
           "sha256": "94f29bbed6a22c35b992c5c6ebf0e7c92f13b836b90f36f461c9cf2f0f1d010d",
           "size": 1078
         },
         {
-          "entry": "llama-b11669/libggml-cpu-armv9.2_2.so",
-          "path": "runtime/llama-0.7.0/libggml-cpu-armv9.2_2.so",
-          "sha256": "826288cba28f27c9a32b600c9fb93452ac0f2caad1ea56617ac8005eec75bd41",
-          "size": 1069816
+          "entry": "llama-b12110/libggml-rpc.so",
+          "path": "runtime/llama-0.9.0/libggml-rpc.so",
+          "sha256": "649bf693701b946de70e9ae6e7fbdae92e8a1a05cf4e456b77f82d3becbf8a6c",
+          "size": 337792
         },
         {
-          "entry": "llama-b11669/libggml-cpu-armv8.0_1.so",
-          "path": "runtime/llama-0.7.0/libggml-cpu-armv8.0_1.so",
-          "sha256": "801f370ba5d872cfa6aaa5a2cce696153cc51b94d31cfcef53f258c2c0fc87ad",
-          "size": 1002088
+          "entry": "llama-b12110/libggml-cpu-armv8.6_1.so",
+          "path": "runtime/llama-0.9.0/libggml-cpu-armv8.6_1.so",
+          "sha256": "d5ad40b8085792cdc6ae7b2b6e4b68e0051d832f21b4b9efb9188b9a3b38f1fe",
+          "size": 1071304
         },
         {
-          "entry": "llama-b11669/libggml-cpu-armv9.2_1.so",
-          "path": "runtime/llama-0.7.0/libggml-cpu-armv9.2_1.so",
-          "sha256": "c5bb9e856d207bc55d3a4ebeaac19d4d6d8e150f18059800d4e80834c551e888",
-          "size": 1069816
+          "entry": "llama-b12110/libggml-cpu-armv8.2_1.so",
+          "path": "runtime/llama-0.9.0/libggml-cpu-armv8.2_1.so",
+          "sha256": "44953a3fdca5e82ae2a95bdc28fa7ad96cdc0a5199127a5e7757cd1f7a4e4eb4",
+          "size": 1070424
         },
         {
-          "entry": "llama-b11669/libggml-cpu-armv8.2_1.so",
-          "path": "runtime/llama-0.7.0/libggml-cpu-armv8.2_1.so",
-          "sha256": "547f1fe937e31c192a47e16488a318978646b9b05009bed3f72db47bf5a713a0",
-          "size": 1068992
+          "entry": "llama-b12110/libggml-cpu-armv8.6_2.so",
+          "path": "runtime/llama-0.9.0/libggml-cpu-armv8.6_2.so",
+          "sha256": "0fe5868f18db0dfa1dd0907baba25f64cc51beb0b5bc27bcb10b84f1dece1d97",
+          "size": 1071280
         },
         {
-          "entry": "llama-b11669/libggml-cpu-armv8.2_2.so",
-          "path": "runtime/llama-0.7.0/libggml-cpu-armv8.2_2.so",
-          "sha256": "4ba86d67010d29da42b61fd21bac405652d641b28ca0470f41d7361dfb6d9f90",
-          "size": 1068992
+          "entry": "llama-b12110/libggml-cpu-armv9.2_2.so",
+          "path": "runtime/llama-0.9.0/libggml-cpu-armv9.2_2.so",
+          "sha256": "54d5e4a2b70d55f610832cabd71f78d131f4850cfd6ba3d8354dd30a4c732222",
+          "size": 1071320
         },
         {
-          "entry": "llama-b11669/libggml-cpu-armv8.2_3.so",
-          "path": "runtime/llama-0.7.0/libggml-cpu-armv8.2_3.so",
-          "sha256": "63ecf98e196a06e58e976256f5c839144054a48e5f5f2689b9b86949f15c2017",
-          "size": 1003936
-        },
-        {
-          "entry": "llama-b11669/libggml-cpu-armv8.6_1.so",
-          "path": "runtime/llama-0.7.0/libggml-cpu-armv8.6_1.so",
-          "sha256": "8cd090f0ea7c6f8176facf48e183f8402aa4c40a04764aa828b5879a8a182628",
-          "size": 1069720
-        },
-        {
-          "entry": "llama-b11669/libggml-cpu-armv8.6_2.so",
-          "path": "runtime/llama-0.7.0/libggml-cpu-armv8.6_2.so",
-          "sha256": "eea821102b3e571eb3ef41a835e2cf8e7f986fac7f694908e441d5c1803ce332",
-          "size": 1069720
+          "entry": "llama-b12110/libllama-server-impl.so",
+          "path": "runtime/llama-0.9.0/libllama-server-impl.so",
+          "sha256": "91843bbd33d886b97d76566d747c3f03aff4639fb4db3b6e710dec35e1d926b6",
+          "size": 7484472
         }
       ]
     },
@@ -666,14 +706,14 @@
       "group": "application",
       "platform": "linux-arm64",
       "url": "embedded:engine/linux-arm64.gz",
-      "sha256": "6694d6ff604bd114823d0ac7e45152a37ad952de09e14654275461f0e5d9428c",
-      "size": 1390831,
+      "sha256": "961a320ab7821783cf66ca95c90d5ba08bc0a3e7ca49a1810ab05072b19ed10d",
+      "size": 1452107,
       "format": "gzip",
       "files": [
         {
           "path": "bin/manga-translator-server",
-          "sha256": "d0c2cf11da20ea72113275a8b7ef34c0b0d6a011c7f9da94a9d13bebdb2d17ff",
-          "size": 3005200,
+          "sha256": "1f5313c707713f41c334cbd07a09f40bc5a5a816797ef10d0fb4517d1a93ce87",
+          "size": 3232056,
           "executable": true
         }
       ]
@@ -733,200 +773,200 @@
     },
     {
       "id": "llama-windows-amd64",
-      "name": "llama.cpp 0.7.0",
+      "name": "llama.cpp 0.9.0",
       "group": "runtime",
       "platform": "windows-amd64",
-      "url": "https://github.com/ggml-org/llama.cpp/releases/download/b11669/llama-b11669-bin-win-cpu-x64.zip",
-      "sha256": "37b3efcf962847ca869745fd4ccf7f5e7e8dacfeff9fa3523b4ca8cdc66d632b",
-      "size": 19537886,
+      "url": "https://github.com/ggml-org/llama.cpp/releases/download/b12110/llama-b12110-bin-win-cpu-x64.zip",
+      "sha256": "98901e327c252875accaf2d1bf364e10e868843b0b63468baad1aa945cdc5da2",
+      "size": 24708445,
       "format": "zip",
       "files": [
         {
           "entry": "ggml-base.dll",
-          "path": "runtime/llama-0.7.0/ggml-base.dll",
-          "sha256": "0a259689ea3c105a8122159eb97fb53733f2531fadd3e9739689961cdab27600",
-          "size": 803840
+          "path": "runtime/llama-0.9.0/ggml-base.dll",
+          "sha256": "3a0399fa51102a86824255beda9d021ea7e8cd2bd8ca448a43a9a80aa4829290",
+          "size": 832512
         },
         {
           "entry": "ggml-cpu-alderlake.dll",
-          "path": "runtime/llama-0.7.0/ggml-cpu-alderlake.dll",
-          "sha256": "98b3bd12a84e848f57686f6d5f0969654ec79cda0c7636498933ea1063d14aa6",
-          "size": 1420288
+          "path": "runtime/llama-0.9.0/ggml-cpu-alderlake.dll",
+          "sha256": "1de7a0d14d70bd741f2e4cdfa959176fee26680d6fbc78c717c0bd19e20b6233",
+          "size": 1442816
         },
         {
           "entry": "ggml-cpu-cannonlake.dll",
-          "path": "runtime/llama-0.7.0/ggml-cpu-cannonlake.dll",
-          "sha256": "fef636daea23b26f935cf5983be9a29b79f0541cd148b9d64a32bc9ea0cec704",
-          "size": 1598976
+          "path": "runtime/llama-0.9.0/ggml-cpu-cannonlake.dll",
+          "sha256": "1451909b84c223739247088a0e03db0f89bcd83461f2af43f53d794727afddcd",
+          "size": 1638400
         },
         {
           "entry": "ggml-cpu-cascadelake.dll",
-          "path": "runtime/llama-0.7.0/ggml-cpu-cascadelake.dll",
-          "sha256": "b32ee94fa0a366886cd03be48f80f1d8c1bbb338d71fc734a263753ec46aa8fd",
-          "size": 1583616
+          "path": "runtime/llama-0.9.0/ggml-cpu-cascadelake.dll",
+          "sha256": "74d79278bd20143d3e7deeb2b5c033555f9d621016a7152b5190a2fcbf30265c",
+          "size": 1611776
         },
         {
           "entry": "ggml-cpu-cooperlake.dll",
-          "path": "runtime/llama-0.7.0/ggml-cpu-cooperlake.dll",
-          "sha256": "e67357a558e71b834360b6f6d62abc6b9fe19930f6f7dd21ee0339e7b144306e",
-          "size": 1593344
+          "path": "runtime/llama-0.9.0/ggml-cpu-cooperlake.dll",
+          "sha256": "737f0e96f23ca7d66c8dc55eace36ebbfd47770a9a228c804ffff5bf66f933a8",
+          "size": 1621504
         },
         {
           "entry": "ggml-cpu-haswell.dll",
-          "path": "runtime/llama-0.7.0/ggml-cpu-haswell.dll",
-          "sha256": "d33deb9bf3dd25427404f0f94a13c6b3da92b9b57b794199a9f354c3a327efb6",
-          "size": 1425408
+          "path": "runtime/llama-0.9.0/ggml-cpu-haswell.dll",
+          "sha256": "85d9ffd6f84fd0ec01586420b935ac4d5a5c9a1ab76b533eb3ddc060c1fe2869",
+          "size": 1447424
         },
         {
           "entry": "ggml-cpu-icelake.dll",
-          "path": "runtime/llama-0.7.0/ggml-cpu-icelake.dll",
-          "sha256": "41abb00a64bbf099c137cdb3b9547c7eb90bcd9c1d7b83238cbf10a74f97addd",
-          "size": 1590272
+          "path": "runtime/llama-0.9.0/ggml-cpu-icelake.dll",
+          "sha256": "41ca727e74b171983ea9afe0250553706c09225c10a8c6ad72a619f9189279a8",
+          "size": 1618432
         },
         {
           "entry": "ggml-cpu-ivybridge.dll",
-          "path": "runtime/llama-0.7.0/ggml-cpu-ivybridge.dll",
-          "sha256": "d674c12b3f40d657b0989801699560e68247dbe9509823651b055ac3816ba37c",
-          "size": 1301504
+          "path": "runtime/llama-0.9.0/ggml-cpu-ivybridge.dll",
+          "sha256": "39752b7667cb34b3bbd06178fac83803f6089771d43873a9c81015d2a98c280b",
+          "size": 1328640
         },
         {
           "entry": "ggml-cpu-piledriver.dll",
-          "path": "runtime/llama-0.7.0/ggml-cpu-piledriver.dll",
-          "sha256": "bb5215c806397adf56e986f52aa0c75b04b3b5b33203a722f647254eae2b94b2",
-          "size": 1294336
+          "path": "runtime/llama-0.9.0/ggml-cpu-piledriver.dll",
+          "sha256": "65bef2ae4f69256d9aff053a6fff1abdbd33acdbc51ede863d8bc5bd43c53ee8",
+          "size": 1321472
         },
         {
           "entry": "ggml-cpu-sandybridge.dll",
-          "path": "runtime/llama-0.7.0/ggml-cpu-sandybridge.dll",
-          "sha256": "55d5659b45afcbe7a1d7611ab1914d2888476fc3024933e4b82122cdc58d6fd5",
-          "size": 1291264
+          "path": "runtime/llama-0.9.0/ggml-cpu-sandybridge.dll",
+          "sha256": "5359624dee5670cb299c08f4a49347f7a6f4d0df35ed4c0a91164e4d771b3e23",
+          "size": 1319424
         },
         {
           "entry": "ggml-cpu-sapphirerapids.dll",
-          "path": "runtime/llama-0.7.0/ggml-cpu-sapphirerapids.dll",
-          "sha256": "83af3cacf3bf32b98626791358f950da4b45a22af85bde63afe537fe51e60848",
-          "size": 1869824
+          "path": "runtime/llama-0.9.0/ggml-cpu-sapphirerapids.dll",
+          "sha256": "a7a395d0e49f182240c9a2ed1d623398911506bdae418baf161354541aa06a89",
+          "size": 1897472
         },
         {
           "entry": "ggml-cpu-skylakex.dll",
-          "path": "runtime/llama-0.7.0/ggml-cpu-skylakex.dll",
-          "sha256": "20722299dc5e4703056ff95b7ef329c223390ab87469c822721c1e67e4cc2a24",
-          "size": 1592320
+          "path": "runtime/llama-0.9.0/ggml-cpu-skylakex.dll",
+          "sha256": "6bd53dc5731c5b9e4d3fbf98a9dc5b3ce76d357be9a579bc6c8cedac035462e8",
+          "size": 1631744
         },
         {
           "entry": "ggml-cpu-sse42.dll",
-          "path": "runtime/llama-0.7.0/ggml-cpu-sse42.dll",
-          "sha256": "1c0fc615b6d97a79e58f33e8a7fb4e8de1834ad0f3f0e00e8943a4d416ddd242",
-          "size": 916992
+          "path": "runtime/llama-0.9.0/ggml-cpu-sse42.dll",
+          "sha256": "1e1700e6b6eef26b6abb0bc68669b6ee9fdad2b8d00058e491cb5160eb54afc2",
+          "size": 944128
         },
         {
           "entry": "ggml-cpu-x64.dll",
-          "path": "runtime/llama-0.7.0/ggml-cpu-x64.dll",
-          "sha256": "7c9df996db7fe98510571524e3e62dd267a4034350185014814418dbad3c25ea",
-          "size": 909824
+          "path": "runtime/llama-0.9.0/ggml-cpu-x64.dll",
+          "sha256": "81877c8787f9d5680b990f4cf5f8b89ba5b02ee5064b36abfd53d9d2ffb50916",
+          "size": 936448
         },
         {
           "entry": "ggml-cpu-zen4.dll",
-          "path": "runtime/llama-0.7.0/ggml-cpu-zen4.dll",
-          "sha256": "83ae254f6204670e9011e11db84786122567bde2fab07354e7c4827c18589ee1",
-          "size": 1600000
+          "path": "runtime/llama-0.9.0/ggml-cpu-zen4.dll",
+          "sha256": "b5c1eec79e83878303acfa774f1275d9e025493b2c23f2a01af09fe985cdc21a",
+          "size": 1627648
         },
         {
           "entry": "ggml-rpc.dll",
-          "path": "runtime/llama-0.7.0/ggml-rpc.dll",
-          "sha256": "b52bd8eddb79ebd1dc0b832b34483bef23d44a34c6d5639301d92cb971f874a4",
-          "size": 231424
+          "path": "runtime/llama-0.9.0/ggml-rpc.dll",
+          "sha256": "6f7508cdb895ba2d5cba72ade374ba04a3bf408da0c8f0203ac9de9ec5993ebf",
+          "size": 236032
         },
         {
           "entry": "ggml.dll",
-          "path": "runtime/llama-0.7.0/ggml.dll",
-          "sha256": "2649a5d914934188cccbe2c58e4642d2d4408bcda0f7068d58390686bd7ea62f",
+          "path": "runtime/llama-0.9.0/ggml.dll",
+          "sha256": "06dfdff8b7b834c757ec5b5411abfc0f732604fb595eaaffbdc6da563523e8a1",
           "size": 78848
         },
         {
           "entry": "libomp.dll",
-          "path": "runtime/llama-0.7.0/libomp.dll",
+          "path": "runtime/llama-0.9.0/libomp.dll",
           "sha256": "a12116ba72d1d6820407cf30be23da04ce79d6bb8a71a5ee71759c5a1faa6f1c",
           "size": 768000
         },
         {
           "entry": "LICENSE-LLVM-OpenMP",
-          "path": "runtime/llama-0.7.0/LICENSE-LLVM-OpenMP",
+          "path": "runtime/llama-0.9.0/LICENSE-LLVM-OpenMP",
           "sha256": "fdad1758a9e1f9d5a81e18879b3406772115edc92c24bfa36b70c654f325e8e4",
           "size": 19741
         },
         {
           "entry": "llama-batched-bench-impl.dll",
-          "path": "runtime/llama-0.7.0/llama-batched-bench-impl.dll",
-          "sha256": "86dd3cc19af625bd826f7919767883a7e78481e012fb141e5393677235518190",
+          "path": "runtime/llama-0.9.0/llama-batched-bench-impl.dll",
+          "sha256": "c6ebea5727fa9389ffa863831f594d0f8e12be52078b72ff3ddf96846d56e8e0",
           "size": 61952
         },
         {
           "entry": "llama-bench-impl.dll",
-          "path": "runtime/llama-0.7.0/llama-bench-impl.dll",
-          "sha256": "e4ff088cb9f50568366c281684b3ad4c69e9ddea3be6deb4a0a4fb63a6bf0650",
+          "path": "runtime/llama-0.9.0/llama-bench-impl.dll",
+          "sha256": "da476f661ea0f7c1944528b2a41e746e61ff5b31830b6493be76ab8efd72f0cc",
           "size": 404480
         },
         {
           "entry": "llama-cli-impl.dll",
-          "path": "runtime/llama-0.7.0/llama-cli-impl.dll",
-          "sha256": "8a50d8db8599970726f824f50d5d0a4570d2ff602a39940e09362d23f2c7fca5",
-          "size": 3319296
+          "path": "runtime/llama-0.9.0/llama-cli-impl.dll",
+          "sha256": "d717cbcf8165393d29fda98282018c777de028306f407bc5894eb05f3788474b",
+          "size": 3375104
         },
         {
           "entry": "llama-common.dll",
-          "path": "runtime/llama-0.7.0/llama-common.dll",
-          "sha256": "9adf40bc08e99005699d6397bcacb72c3aced68c9db01f13b5bd31c6abc7b2b5",
-          "size": 8037376
+          "path": "runtime/llama-0.9.0/llama-common.dll",
+          "sha256": "0898e517843e4478b5178621dc878552b4d40a4d47d7b6f1775e7897f4e2344e",
+          "size": 8359936
         },
         {
           "entry": "llama-completion-impl.dll",
-          "path": "runtime/llama-0.7.0/llama-completion-impl.dll",
-          "sha256": "e10c6bba8275b289e3121aa3ab2820b8583d744109dfc5d546e7220328a4ee1d",
-          "size": 140800
+          "path": "runtime/llama-0.9.0/llama-completion-impl.dll",
+          "sha256": "e817efece35b0aa03b4527054638d6e576ba1c36df82a33eabfc834fa70bfac4",
+          "size": 138752
         },
         {
           "entry": "llama-fit-params-impl.dll",
-          "path": "runtime/llama-0.7.0/llama-fit-params-impl.dll",
-          "sha256": "a08d9a6fc98cd0a340bb80703e7a43a1bca4b362eb6f5bc3d235993b38b69d89",
-          "size": 43008
+          "path": "runtime/llama-0.9.0/llama-fit-params-impl.dll",
+          "sha256": "563c26491a23411f36fff5ba862a3d8adf1d9c71e432bc64bd50dc705bb88da3",
+          "size": 43520
         },
         {
           "entry": "llama-perplexity-impl.dll",
-          "path": "runtime/llama-0.7.0/llama-perplexity-impl.dll",
-          "sha256": "4ade93257c26e936770f5ad9e65de400efb73dbe3abcba9244c9756378b4de07",
-          "size": 197632
+          "path": "runtime/llama-0.9.0/llama-perplexity-impl.dll",
+          "sha256": "07f127d8dc44b0c47b0502bb2f370a1d93c24a8fae88e82a69e8de6e47a677b3",
+          "size": 198144
         },
         {
           "entry": "llama-quantize-impl.dll",
-          "path": "runtime/llama-0.7.0/llama-quantize-impl.dll",
-          "sha256": "c792c25b55fada62323f50d9e68da797dc92e52b4f79601708fa203533586f86",
+          "path": "runtime/llama-0.9.0/llama-quantize-impl.dll",
+          "sha256": "df915f459101d6c36362298721537b4a28312d985a47a1422ca26868afedda44",
           "size": 137216
         },
         {
           "entry": "llama-server-impl.dll",
-          "path": "runtime/llama-0.7.0/llama-server-impl.dll",
-          "sha256": "24b1249ddd19e3ba3551804707dbe2f3c154c007542899ea8b16d69a94ab6597",
-          "size": 9259520
+          "path": "runtime/llama-0.9.0/llama-server-impl.dll",
+          "sha256": "c5d306bdcad1c4011f18a1c01ae2fcdca48a197af0d421c2931ace2cfb487fc6",
+          "size": 10098688
         },
         {
           "entry": "llama-server.exe",
-          "path": "runtime/llama-0.7.0/llama-server.exe",
-          "sha256": "6a4635aeb35656153d4bfeeddf761d24ed84aada9c9108d580737cbed465141b",
-          "size": 9216,
+          "path": "runtime/llama-0.9.0/llama-server.exe",
+          "sha256": "00d50686815af38249d0218c91558fbd0e9093ac8c074bac86196907f4305e31",
+          "size": 9728,
           "executable": true
         },
         {
           "entry": "llama.dll",
-          "path": "runtime/llama-0.7.0/llama.dll",
-          "sha256": "aacb073c9c0d30090dd3e56f49772545452ccc4fd311efbfdb7d1bba7bbb0bda",
-          "size": 3541504
+          "path": "runtime/llama-0.9.0/llama.dll",
+          "sha256": "211b91d86e67c49f12eb97992b45ae4c2fc797d6edab48637835a877c808890e",
+          "size": 3834880
         },
         {
           "entry": "mtmd.dll",
-          "path": "runtime/llama-0.7.0/mtmd.dll",
-          "sha256": "bd4a9dac32ba8b14cf95da3361495380ac556b34f48434ebe477ffef23f40bd1",
-          "size": 1847808
+          "path": "runtime/llama-0.9.0/mtmd.dll",
+          "sha256": "74a3cace50f6c545cc66e4dc05e2aecf465f146ea1b4000376cd9834598a3e14",
+          "size": 2482176
         }
       ]
     },
@@ -1003,14 +1043,14 @@
       "group": "application",
       "platform": "windows-amd64",
       "url": "embedded:engine/windows-amd64.gz",
-      "sha256": "759abea7e203db938df50aa5610a9162ba70c714c5fbc739bfa23087b0b6079c",
-      "size": 2289508,
+      "sha256": "d9ca289be14cec3527f5bdb5618e1e47b4dad098cd5a42a66c6db4b848a0fed1",
+      "size": 2316164,
       "format": "gzip",
       "files": [
         {
           "path": "bin/manga-translator-server.exe",
-          "sha256": "f556b7522e390adb79f90dd7dfb858f97cfaebbaafbbf30c11f754a88f174fee",
-          "size": 7478501,
+          "sha256": "e5da26b51ad8e2ebd441c693459207ff7c2ed0d072b697584aff42f85b3114f8",
+          "size": 7356075,
           "executable": true
         }
       ]
@@ -1274,593 +1314,635 @@
     },
     {
       "id": "llama-vulkan-linux-arm64",
-      "name": "llama.cpp 0.7.0 · Vulkan",
+      "name": "llama.cpp 0.9.0 · Vulkan",
       "group": "runtime",
       "platform": "linux-arm64",
-      "url": "https://github.com/ggml-org/llama.cpp/releases/download/b11669/llama-b11669-bin-ubuntu-vulkan-arm64.tar.gz",
-      "sha256": "d283522e479c0d532e3a04d715dd852ffb2d95925caa6d41ef2ba53a65e46a51",
-      "size": 24187561,
+      "url": "https://github.com/ggml-org/llama.cpp/releases/download/b12110/llama-b12110-bin-ubuntu-vulkan-arm64.tar.gz",
+      "sha256": "1c68bf23d35230cc607e3d30f8d447d21fef500d9fa8d65e15520dfa3619ad73",
+      "size": 29168359,
       "format": "tgz",
       "files": [
         {
-          "entry": "llama-b11669/libggml.so.0.27.0",
-          "path": "runtime/llama-vulkan-0.7.0/libggml.so.0",
+          "entry": "llama-b12110/libggml-cpu-armv8.2_3.so",
+          "path": "runtime/llama-vulkan-0.9.0/libggml-cpu-armv8.2_3.so",
+          "sha256": "02639d1498da8974df9e7daad3261daa85264cf2c56437287bc61f17677de715",
+          "size": 1005392
+        },
+        {
+          "entry": "llama-b12110/libggml-cpu-armv9.2_1.so",
+          "path": "runtime/llama-vulkan-0.9.0/libggml-cpu-armv9.2_1.so",
+          "sha256": "0ef8eed64ac2cb8bcb70f1f3fd4c77d26b0607f01e39da5e52149e6d99f12667",
+          "size": 1071320
+        },
+        {
+          "entry": "llama-b12110/libggml-base.so.0.29.0",
+          "path": "runtime/llama-vulkan-0.9.0/libggml-base.so.0",
+          "sha256": "58ac4abb227bf2083dde001289f8e376a39edbf72f67264ec596bab2953ba6c7",
+          "size": 870808
+        },
+        {
+          "entry": "llama-b12110/libggml.so.0.29.0",
+          "path": "runtime/llama-vulkan-0.9.0/libggml.so.0",
           "sha256": "6be1305cdda55f0001e87fae600f1148b2f0b9c8b3f98f60c33b4fdfe3cfaf64",
           "size": 77528
         },
         {
-          "entry": "llama-b11669/llama-server",
-          "path": "runtime/llama-vulkan-0.7.0/llama-server",
-          "sha256": "b319c96bfd668ea1825600415275beaffcf14e76edb303bce521a818b0b00aa5",
+          "entry": "llama-b12110/libmtmd.so.0.9.0",
+          "path": "runtime/llama-vulkan-0.9.0/libmtmd.so.0",
+          "sha256": "4bf8be764c92dac5e5d5cd4a24484607774b4961553821358903a2a5389d3bca",
+          "size": 2403680
+        },
+        {
+          "entry": "llama-b12110/llama-server",
+          "path": "runtime/llama-vulkan-0.9.0/llama-server",
+          "sha256": "4eafcc5400649f84beefbdc396f55286f4808df894104a7bb7885888cd462b63",
           "size": 72448,
           "executable": true
         },
         {
-          "entry": "llama-b11669/libggml-cpu-armv9.2_2.so",
-          "path": "runtime/llama-vulkan-0.7.0/libggml-cpu-armv9.2_2.so",
-          "sha256": "826288cba28f27c9a32b600c9fb93452ac0f2caad1ea56617ac8005eec75bd41",
-          "size": 1069816
+          "entry": "llama-b12110/libggml-cpu-armv8.2_2.so",
+          "path": "runtime/llama-vulkan-0.9.0/libggml-cpu-armv8.2_2.so",
+          "sha256": "8d7be0dc91dc749d02aacf3690ef91d076b480717dc3656a4f08024c12528e3f",
+          "size": 1070424
         },
         {
-          "entry": "llama-b11669/libggml-rpc.so",
-          "path": "runtime/llama-vulkan-0.7.0/libggml-rpc.so",
-          "sha256": "1f38aba8b9f512daefd3cb746d9b6183ce70fa92df013dafa160970b14fe1011",
-          "size": 337272
+          "entry": "llama-b12110/libllama-common.so.0.9.0",
+          "path": "runtime/llama-vulkan-0.9.0/libllama-common.so.0",
+          "sha256": "dfa38eec9c202758d683cdd2f908bb7267ab2a204488040bfae34d1be8aea62f",
+          "size": 5929752
         },
         {
-          "entry": "llama-b11669/libggml-cpu-armv8.0_1.so",
-          "path": "runtime/llama-vulkan-0.7.0/libggml-cpu-armv8.0_1.so",
-          "sha256": "801f370ba5d872cfa6aaa5a2cce696153cc51b94d31cfcef53f258c2c0fc87ad",
-          "size": 1002088
+          "entry": "llama-b12110/libggml-cpu-armv8.0_1.so",
+          "path": "runtime/llama-vulkan-0.9.0/libggml-cpu-armv8.0_1.so",
+          "sha256": "193dbae76ff608aa2822d45afe89569a00d46665188352b206ded6f0936f1631",
+          "size": 1003496
         },
         {
-          "entry": "llama-b11669/libmtmd.so.0.7.0",
-          "path": "runtime/llama-vulkan-0.7.0/libmtmd.so.0",
-          "sha256": "9c8dd28c13166f934e7d96714c4670b8519929079bc8bacf91b2bf05c5186ac9",
-          "size": 1893920
+          "entry": "llama-b12110/libllama.so.0.9.0",
+          "path": "runtime/llama-vulkan-0.9.0/libllama.so.0",
+          "sha256": "72a17735f5090d1761c492feb0fef9aac325d59c9f2f6a4458017a7fe1751170",
+          "size": 5165200
         },
         {
-          "entry": "llama-b11669/libggml-cpu-armv9.2_1.so",
-          "path": "runtime/llama-vulkan-0.7.0/libggml-cpu-armv9.2_1.so",
-          "sha256": "c5bb9e856d207bc55d3a4ebeaac19d4d6d8e150f18059800d4e80834c551e888",
-          "size": 1069816
-        },
-        {
-          "entry": "llama-b11669/libggml-cpu-armv8.2_1.so",
-          "path": "runtime/llama-vulkan-0.7.0/libggml-cpu-armv8.2_1.so",
-          "sha256": "547f1fe937e31c192a47e16488a318978646b9b05009bed3f72db47bf5a713a0",
-          "size": 1068992
-        },
-        {
-          "entry": "llama-b11669/LICENSE",
-          "path": "runtime/llama-vulkan-0.7.0/LICENSE",
+          "entry": "llama-b12110/LICENSE",
+          "path": "runtime/llama-vulkan-0.9.0/LICENSE",
           "sha256": "94f29bbed6a22c35b992c5c6ebf0e7c92f13b836b90f36f461c9cf2f0f1d010d",
           "size": 1078
         },
         {
-          "entry": "llama-b11669/libggml-cpu-armv8.2_2.so",
-          "path": "runtime/llama-vulkan-0.7.0/libggml-cpu-armv8.2_2.so",
-          "sha256": "4ba86d67010d29da42b61fd21bac405652d641b28ca0470f41d7361dfb6d9f90",
-          "size": 1068992
+          "entry": "llama-b12110/libggml-rpc.so",
+          "path": "runtime/llama-vulkan-0.9.0/libggml-rpc.so",
+          "sha256": "649bf693701b946de70e9ae6e7fbdae92e8a1a05cf4e456b77f82d3becbf8a6c",
+          "size": 337792
         },
         {
-          "entry": "llama-b11669/libggml-cpu-armv8.2_3.so",
-          "path": "runtime/llama-vulkan-0.7.0/libggml-cpu-armv8.2_3.so",
-          "sha256": "63ecf98e196a06e58e976256f5c839144054a48e5f5f2689b9b86949f15c2017",
-          "size": 1003936
+          "entry": "llama-b12110/libggml-cpu-armv8.6_1.so",
+          "path": "runtime/llama-vulkan-0.9.0/libggml-cpu-armv8.6_1.so",
+          "sha256": "d5ad40b8085792cdc6ae7b2b6e4b68e0051d832f21b4b9efb9188b9a3b38f1fe",
+          "size": 1071304
         },
         {
-          "entry": "llama-b11669/libllama-common.so.0.7.0",
-          "path": "runtime/llama-vulkan-0.7.0/libllama-common.so.0",
-          "sha256": "50d0b0b9ccccc1d270c3dc06a5ed8cdd57af4c71900d5e44543a5e6f4c48723f",
-          "size": 5693232
+          "entry": "llama-b12110/libggml-cpu-armv8.2_1.so",
+          "path": "runtime/llama-vulkan-0.9.0/libggml-cpu-armv8.2_1.so",
+          "sha256": "44953a3fdca5e82ae2a95bdc28fa7ad96cdc0a5199127a5e7757cd1f7a4e4eb4",
+          "size": 1070424
         },
         {
-          "entry": "llama-b11669/libggml-cpu-armv8.6_1.so",
-          "path": "runtime/llama-vulkan-0.7.0/libggml-cpu-armv8.6_1.so",
-          "sha256": "8cd090f0ea7c6f8176facf48e183f8402aa4c40a04764aa828b5879a8a182628",
-          "size": 1069720
+          "entry": "llama-b12110/libggml-cpu-armv8.6_2.so",
+          "path": "runtime/llama-vulkan-0.9.0/libggml-cpu-armv8.6_2.so",
+          "sha256": "0fe5868f18db0dfa1dd0907baba25f64cc51beb0b5bc27bcb10b84f1dece1d97",
+          "size": 1071280
         },
         {
-          "entry": "llama-b11669/libggml-base.so.0.27.0",
-          "path": "runtime/llama-vulkan-0.7.0/libggml-base.so.0",
-          "sha256": "094d810465713b5b7bad2718c4bd884312e6cb3bdae7cfa13e8ff4f958d59bf1",
-          "size": 802072
+          "entry": "llama-b12110/libggml-cpu-armv9.2_2.so",
+          "path": "runtime/llama-vulkan-0.9.0/libggml-cpu-armv9.2_2.so",
+          "sha256": "54d5e4a2b70d55f610832cabd71f78d131f4850cfd6ba3d8354dd30a4c732222",
+          "size": 1071320
         },
         {
-          "entry": "llama-b11669/libllama-server-impl.so",
-          "path": "runtime/llama-vulkan-0.7.0/libllama-server-impl.so",
-          "sha256": "cc3a8ff2ca7a2840424634d66367a30323f73fb1228a7c623871874f4c1d1964",
-          "size": 6891304
+          "entry": "llama-b12110/libllama-server-impl.so",
+          "path": "runtime/llama-vulkan-0.9.0/libllama-server-impl.so",
+          "sha256": "91843bbd33d886b97d76566d747c3f03aff4639fb4db3b6e710dec35e1d926b6",
+          "size": 7484472
         },
         {
-          "entry": "llama-b11669/libllama.so.0.7.0",
-          "path": "runtime/llama-vulkan-0.7.0/libllama.so.0",
-          "sha256": "d5568269dbc18479cc7361e2ee516a99b57bfaab4c01e58bc20d22726f6ee6fa",
-          "size": 4801520
-        },
-        {
-          "entry": "llama-b11669/libggml-cpu-armv8.6_2.so",
-          "path": "runtime/llama-vulkan-0.7.0/libggml-cpu-armv8.6_2.so",
-          "sha256": "eea821102b3e571eb3ef41a835e2cf8e7f986fac7f694908e441d5c1803ce332",
-          "size": 1069720
-        },
-        {
-          "entry": "llama-b11669/libggml-vulkan.so",
-          "path": "runtime/llama-vulkan-0.7.0/libggml-vulkan.so",
-          "sha256": "f1430b97d758bcc606ed3356a7d4565db149aae23161456e76eac9837fd1b667",
-          "size": 32812768
+          "entry": "llama-b12110/libggml-vulkan.so",
+          "path": "runtime/llama-vulkan-0.9.0/libggml-vulkan.so",
+          "sha256": "539b582bc34004c91957aba43322e60f2f414369f9076689cd866dfa77dc75a0",
+          "size": 33341800
         }
       ]
     },
     {
       "id": "llama-vulkan-linux-amd64",
-      "name": "llama.cpp 0.7.0 · Vulkan",
+      "name": "llama.cpp 0.9.0 · Vulkan",
       "group": "runtime",
       "platform": "linux-amd64",
-      "url": "https://github.com/ggml-org/llama.cpp/releases/download/b11669/llama-b11669-bin-ubuntu-vulkan-x64.tar.gz",
-      "sha256": "e8709e5ba6c1b093dea7f3de57f4aba842f9a188fba6b465782d65d6fcfa4d9f",
-      "size": 30497889,
+      "url": "https://github.com/ggml-org/llama.cpp/releases/download/b12110/llama-b12110-bin-ubuntu-vulkan-x64.tar.gz",
+      "sha256": "a5d741940956ec62e8783aee7e5a4c7c761af867d6f027c3277a51e1a3ac59b0",
+      "size": 35858360,
       "format": "tgz",
       "files": [
         {
-          "entry": "llama-b11669/libggml-cpu-cooperlake.so",
-          "path": "runtime/llama-vulkan-0.7.0/libggml-cpu-cooperlake.so",
-          "sha256": "b8dd831324fcc7e872ed66f840ead7f3cf7c571904db9b61574fb19ce00a935e",
-          "size": 1573640
+          "entry": "llama-b12110/libggml-cpu-cannonlake.so",
+          "path": "runtime/llama-vulkan-0.9.0/libggml-cpu-cannonlake.so",
+          "sha256": "bed0bdb27b4f46f06fc267412ba4dfad02bc23789005e686c49340155ddab29c",
+          "size": 1583408
         },
         {
-          "entry": "llama-b11669/LICENSE",
-          "path": "runtime/llama-vulkan-0.7.0/LICENSE",
-          "sha256": "94f29bbed6a22c35b992c5c6ebf0e7c92f13b836b90f36f461c9cf2f0f1d010d",
-          "size": 1078
+          "entry": "llama-b12110/libllama.so.0.9.0",
+          "path": "runtime/llama-vulkan-0.9.0/libllama.so.0",
+          "sha256": "5b67c7baa2461844f1baca027ad6b46edacfee1334d374e3e3c57c6430105b7b",
+          "size": 5455704
         },
         {
-          "entry": "llama-b11669/libllama-server-impl.so",
-          "path": "runtime/llama-vulkan-0.7.0/libllama-server-impl.so",
-          "sha256": "9119be58c6ffa251c824cdf51677215735d6f4bdab131b17e7e549ff4e1ddcf1",
-          "size": 7533552
+          "entry": "llama-b12110/libggml-cpu-alderlake.so",
+          "path": "runtime/llama-vulkan-0.9.0/libggml-cpu-alderlake.so",
+          "sha256": "ef0c2d96efb4cb9d20c20b0f5af8659a39cc1ef9c1a3911a9fd42e5e23e694ac",
+          "size": 1438128
         },
         {
-          "entry": "llama-b11669/libggml-cpu-piledriver.so",
-          "path": "runtime/llama-vulkan-0.7.0/libggml-cpu-piledriver.so",
-          "sha256": "c8fec8f0f12d6a1a222c35d265618c582eacc3fd933a76dbd65c587114ed65f0",
-          "size": 1347848
+          "entry": "llama-b12110/libggml-cpu-zen4.so",
+          "path": "runtime/llama-vulkan-0.9.0/libggml-cpu-zen4.so",
+          "sha256": "f537440e3e928ff4d252c7863924a8af890883b1ccbc487cf96cd98a1d556eee",
+          "size": 1599568
         },
         {
-          "entry": "llama-b11669/libggml-cpu-zen4.so",
-          "path": "runtime/llama-vulkan-0.7.0/libggml-cpu-zen4.so",
-          "sha256": "ccb8fff995e04e532dc535eba4d9a84cccd5acd7612326db14710d302f4a8e2f",
-          "size": 1573640
+          "entry": "llama-b12110/libggml-cpu-skylakex.so",
+          "path": "runtime/llama-vulkan-0.9.0/libggml-cpu-skylakex.so",
+          "sha256": "b3c5b47510cfc76549b72d75bc36d2551f971313580809c884b2a2e712b4d150",
+          "size": 1583408
         },
         {
-          "entry": "llama-b11669/libllama.so.0.7.0",
-          "path": "runtime/llama-vulkan-0.7.0/libllama.so.0",
-          "sha256": "522213ae6b6019ba8d2673e9254990c52f0a1a5fb047c75bfb93be1b34fad839",
-          "size": 5095048
+          "entry": "llama-b12110/libggml-vulkan.so",
+          "path": "runtime/llama-vulkan-0.9.0/libggml-vulkan.so",
+          "sha256": "9c775957fc4436711764ae88cb94c58093dda79f8d7acdb5b5d36a5b47251ca3",
+          "size": 41196176
         },
         {
-          "entry": "llama-b11669/llama-server",
-          "path": "runtime/llama-vulkan-0.7.0/llama-server",
-          "sha256": "3f2b53013c2eb596c8aca87e4740240a41f95bcebf72e61084d6d5ba0db761cc",
-          "size": 17864,
-          "executable": true
+          "entry": "llama-b12110/libggml-cpu-icelake.so",
+          "path": "runtime/llama-vulkan-0.9.0/libggml-cpu-icelake.so",
+          "sha256": "7e28dd0cfa7275651fc8887b19d4aef9c0ff15c2e7fcf0c7558031f8cdfbe377",
+          "size": 1599496
         },
         {
-          "entry": "llama-b11669/libggml-rpc.so",
-          "path": "runtime/llama-vulkan-0.7.0/libggml-rpc.so",
-          "sha256": "e28139e2d982fb057b88d243e5b2e9d72c52f8b98ae910b1cf751240ef1f9803",
-          "size": 319776
+          "entry": "llama-b12110/libllama-common.so.0.9.0",
+          "path": "runtime/llama-vulkan-0.9.0/libllama-common.so.0",
+          "sha256": "7453bbe828d4782723e8fd5026f669c0dee5915d845d48dd07d01fe84b116217",
+          "size": 6768888
         },
         {
-          "entry": "llama-b11669/libggml-base.so.0.27.0",
-          "path": "runtime/llama-vulkan-0.7.0/libggml-base.so.0",
-          "sha256": "2c6ac9a8ae7c1455382c50587fe7d275e0607dfdaec4dcdb18689f31f6174c65",
-          "size": 897792
+          "entry": "llama-b12110/libmtmd.so.0.9.0",
+          "path": "runtime/llama-vulkan-0.9.0/libmtmd.so.0",
+          "sha256": "bdc694a619533c33686b4ab4fdac15058876b430407c4da208c0cc23f99a7ec4",
+          "size": 2486256
         },
         {
-          "entry": "llama-b11669/libggml-cpu-alderlake.so",
-          "path": "runtime/llama-vulkan-0.7.0/libggml-cpu-alderlake.so",
-          "sha256": "703dc62b89d2a6d700b8d276b3b4ae994caa3a315588b6038b4511549c4a308b",
-          "size": 1416296
+          "entry": "llama-b12110/libggml-cpu-cascadelake.so",
+          "path": "runtime/llama-vulkan-0.9.0/libggml-cpu-cascadelake.so",
+          "sha256": "cda9c09fd8ddea587927ed8beceea3730d2db29b25a551f7d74301a389975a09",
+          "size": 1599496
         },
         {
-          "entry": "llama-b11669/libggml-cpu-sse42.so",
-          "path": "runtime/llama-vulkan-0.7.0/libggml-cpu-sse42.so",
-          "sha256": "81d37cdf3002c8f8f9d44e90fff3d058c4952782aaec1d97bcb375c4db10c659",
-          "size": 954536
+          "entry": "llama-b12110/libggml-cpu-haswell.so",
+          "path": "runtime/llama-vulkan-0.9.0/libggml-cpu-haswell.so",
+          "sha256": "bdbfb31ba054ec76f02297874feed48731887d493d12d8141de6d8412339623e",
+          "size": 1438128
         },
         {
-          "entry": "llama-b11669/libggml-cpu-haswell.so",
-          "path": "runtime/llama-vulkan-0.7.0/libggml-cpu-haswell.so",
-          "sha256": "aec8dcc1487baeac0914aa3f6ba747beb868b61cd398e10c40c39addd2f80b64",
-          "size": 1416296
+          "entry": "llama-b12110/libggml-base.so.0.29.0",
+          "path": "runtime/llama-vulkan-0.9.0/libggml-base.so.0",
+          "sha256": "ad3e476d5eac14820b7db79c4233b0fafa1d6609aa31a0848c919eba586aa9b9",
+          "size": 937856
         },
         {
-          "entry": "llama-b11669/libmtmd.so.0.7.0",
-          "path": "runtime/llama-vulkan-0.7.0/libmtmd.so.0",
-          "sha256": "5dc23ec9996bacb9d2791e06848cce30e33901d131a0c61f9cf2b821a587b17e",
-          "size": 1938632
-        },
-        {
-          "entry": "llama-b11669/libggml-cpu-cannonlake.so",
-          "path": "runtime/llama-vulkan-0.7.0/libggml-cpu-cannonlake.so",
-          "sha256": "b194dc5db78e21796342e573643006bcbd5ac3618b9ccbd08537bae0755c6972",
-          "size": 1565672
-        },
-        {
-          "entry": "llama-b11669/libggml-cpu-sapphirerapids.so",
-          "path": "runtime/llama-vulkan-0.7.0/libggml-cpu-sapphirerapids.so",
-          "sha256": "8a5d42ed076b212839c656d1e20731fb17b57b9f7ada0197680c735d70f15de2",
-          "size": 1839968
-        },
-        {
-          "entry": "llama-b11669/libllama-common.so.0.7.0",
-          "path": "runtime/llama-vulkan-0.7.0/libllama-common.so.0",
-          "sha256": "462f7e9ce1c4c537533f1d4530b37201452599d90128c3c602507b315934e795",
-          "size": 6499104
-        },
-        {
-          "entry": "llama-b11669/libggml-cpu-cascadelake.so",
-          "path": "runtime/llama-vulkan-0.7.0/libggml-cpu-cascadelake.so",
-          "sha256": "47b94135ee53c347bf90461ea7f9c3a055fa19b9462ff220c90f4cfdfdf79a5c",
-          "size": 1577664
-        },
-        {
-          "entry": "llama-b11669/libggml-cpu-sandybridge.so",
-          "path": "runtime/llama-vulkan-0.7.0/libggml-cpu-sandybridge.so",
-          "sha256": "03a91516104c443a739804eef17c2d02bc6fe428b5399813c7e97e2282d29007",
-          "size": 1350944
-        },
-        {
-          "entry": "llama-b11669/libggml-cpu-ivybridge.so",
-          "path": "runtime/llama-vulkan-0.7.0/libggml-cpu-ivybridge.so",
-          "sha256": "d2f79bcea05ed9fcf1b9e25bfaa9725655265cb7d7e0df79ffc9e996d1298820",
-          "size": 1351944
-        },
-        {
-          "entry": "llama-b11669/libggml.so.0.27.0",
-          "path": "runtime/llama-vulkan-0.7.0/libggml.so.0",
+          "entry": "llama-b12110/libggml.so.0.29.0",
+          "path": "runtime/llama-vulkan-0.9.0/libggml.so.0",
           "sha256": "8643a58bb37af6fb153e2ea98b48efa227855725ee51c05f4ca76b9867956463",
           "size": 51040
         },
         {
-          "entry": "llama-b11669/libggml-cpu-skylakex.so",
-          "path": "runtime/llama-vulkan-0.7.0/libggml-cpu-skylakex.so",
-          "sha256": "b34c8498cfb5368fd968699df833f956adb35432118074b45c962454ca229515",
-          "size": 1565672
+          "entry": "llama-b12110/libggml-cpu-ivybridge.so",
+          "path": "runtime/llama-vulkan-0.9.0/libggml-cpu-ivybridge.so",
+          "sha256": "fd7b1a685d6d483b1129c42617a05aa5a55efd987614efa3c5c09a46bdac34a2",
+          "size": 1373752
         },
         {
-          "entry": "llama-b11669/libggml-cpu-icelake.so",
-          "path": "runtime/llama-vulkan-0.7.0/libggml-cpu-icelake.so",
-          "sha256": "eb79f0f5193557c52480cac8c85deb0f0e6793dd1cbd05793752071e5be10205",
-          "size": 1577664
+          "entry": "llama-b12110/libggml-cpu-sandybridge.so",
+          "path": "runtime/llama-vulkan-0.9.0/libggml-cpu-sandybridge.so",
+          "sha256": "68e333609ffe51a66a07d8fe914c190d60c3f983a0dc2b6390d12f86c8b68ec6",
+          "size": 1372800
         },
         {
-          "entry": "llama-b11669/libggml-vulkan.so",
-          "path": "runtime/llama-vulkan-0.7.0/libggml-vulkan.so",
-          "sha256": "fc574140b19625f6c549e7cba76dbe555d89b07cdfb50a4f65c500fe08d378b2",
-          "size": 40670576
+          "entry": "llama-b12110/libllama-server-impl.so",
+          "path": "runtime/llama-vulkan-0.9.0/libllama-server-impl.so",
+          "sha256": "c88998d7402755b125e223f65b9a50b3e24ba1fe415a3e6fa74c02ffc71ea926",
+          "size": 8281496
         },
         {
-          "entry": "llama-b11669/libggml-cpu-x64.so",
-          "path": "runtime/llama-vulkan-0.7.0/libggml-cpu-x64.so",
-          "sha256": "2d1e8194f441ed4263bb28834cf44801a5e5e0a2592732fab5a2adc76b83290f",
-          "size": 950536
+          "entry": "llama-b12110/libggml-cpu-sapphirerapids.so",
+          "path": "runtime/llama-vulkan-0.9.0/libggml-cpu-sapphirerapids.so",
+          "sha256": "2db1fbc9324979df8c1e08161b53b311d252c76c8d834cea2e055269b91f1660",
+          "size": 1865872
+        },
+        {
+          "entry": "llama-b12110/libggml-cpu-piledriver.so",
+          "path": "runtime/llama-vulkan-0.9.0/libggml-cpu-piledriver.so",
+          "sha256": "ae9c07b8b8e3ba77deb700e1d5b37835bf79c62d5e71e06fe3cdd9a438940e1a",
+          "size": 1369656
+        },
+        {
+          "entry": "llama-b12110/libggml-cpu-x64.so",
+          "path": "runtime/llama-vulkan-0.9.0/libggml-cpu-x64.so",
+          "sha256": "81fc5986e76acd220b826582549ddfa29f0523541a76c209cd3d5eeb787e3e11",
+          "size": 976464
+        },
+        {
+          "entry": "llama-b12110/libggml-cpu-cooperlake.so",
+          "path": "runtime/llama-vulkan-0.9.0/libggml-cpu-cooperlake.so",
+          "sha256": "c3aa8670be6f5be0dc3451073d93849cfb6bfd7833a1ac75039cbbb78be2e3dc",
+          "size": 1599568
+        },
+        {
+          "entry": "llama-b12110/libggml-rpc.so",
+          "path": "runtime/llama-vulkan-0.9.0/libggml-rpc.so",
+          "sha256": "9b57a90c61ed498087fcb39c4e6519309eaedea2391ee4d87e5f693499d830f0",
+          "size": 328816
+        },
+        {
+          "entry": "llama-b12110/libggml-cpu-sse42.so",
+          "path": "runtime/llama-vulkan-0.9.0/libggml-cpu-sse42.so",
+          "sha256": "7b5f33881eab4b5e30ad2e0515eb9c2cfa4036debeaceb1bc2aa760b92c98607",
+          "size": 980440
+        },
+        {
+          "entry": "llama-b12110/llama-server",
+          "path": "runtime/llama-vulkan-0.9.0/llama-server",
+          "sha256": "eaf9c1c664cc0ae1f4dea4b171bb91aac8409fcfea0574c9b6bcc93792ce2400",
+          "size": 17864,
+          "executable": true
+        },
+        {
+          "entry": "llama-b12110/LICENSE",
+          "path": "runtime/llama-vulkan-0.9.0/LICENSE",
+          "sha256": "94f29bbed6a22c35b992c5c6ebf0e7c92f13b836b90f36f461c9cf2f0f1d010d",
+          "size": 1078
         }
       ]
     },
     {
       "id": "llama-vulkan-windows-amd64",
-      "name": "llama.cpp 0.7.0 · Vulkan",
+      "name": "llama.cpp 0.9.0 · Vulkan",
       "group": "runtime",
       "platform": "windows-amd64",
-      "url": "https://github.com/ggml-org/llama.cpp/releases/download/b11669/llama-b11669-bin-win-vulkan-x64.zip",
-      "sha256": "2c07574e7bde71321cb785282b20cc821e951132149eeceeea32ddebdbf0598e",
-      "size": 32182350,
+      "url": "https://github.com/ggml-org/llama.cpp/releases/download/b12110/llama-b12110-bin-win-vulkan-x64.zip",
+      "sha256": "9732a5e48887ca54d0bfe4af4324dc85fd56cd8cda19b52df3542fa6ebe6874f",
+      "size": 37661146,
       "format": "zip",
       "files": [
         {
           "entry": "ggml-vulkan.dll",
-          "path": "runtime/llama-vulkan-0.7.0/ggml-vulkan.dll",
-          "sha256": "17fe2fbe2534cd8e29e5190b99a95719b3e0614f7054bca4507d6ee50fca69f2",
-          "size": 41529856
-        },
-        {
-          "entry": "ggml-base.dll",
-          "path": "runtime/llama-vulkan-0.7.0/ggml-base.dll",
-          "sha256": "0a259689ea3c105a8122159eb97fb53733f2531fadd3e9739689961cdab27600",
-          "size": 803840
-        },
-        {
-          "entry": "LICENSE-LLVM-OpenMP",
-          "path": "runtime/llama-vulkan-0.7.0/LICENSE-LLVM-OpenMP",
-          "sha256": "fdad1758a9e1f9d5a81e18879b3406772115edc92c24bfa36b70c654f325e8e4",
-          "size": 19741
-        },
-        {
-          "entry": "mtmd.dll",
-          "path": "runtime/llama-vulkan-0.7.0/mtmd.dll",
-          "sha256": "bd4a9dac32ba8b14cf95da3361495380ac556b34f48434ebe477ffef23f40bd1",
-          "size": 1847808
-        },
-        {
-          "entry": "ggml-cpu-sapphirerapids.dll",
-          "path": "runtime/llama-vulkan-0.7.0/ggml-cpu-sapphirerapids.dll",
-          "sha256": "83af3cacf3bf32b98626791358f950da4b45a22af85bde63afe537fe51e60848",
-          "size": 1869824
-        },
-        {
-          "entry": "ggml-rpc.dll",
-          "path": "runtime/llama-vulkan-0.7.0/ggml-rpc.dll",
-          "sha256": "b52bd8eddb79ebd1dc0b832b34483bef23d44a34c6d5639301d92cb971f874a4",
-          "size": 231424
-        },
-        {
-          "entry": "ggml-cpu-piledriver.dll",
-          "path": "runtime/llama-vulkan-0.7.0/ggml-cpu-piledriver.dll",
-          "sha256": "bb5215c806397adf56e986f52aa0c75b04b3b5b33203a722f647254eae2b94b2",
-          "size": 1294336
-        },
-        {
-          "entry": "ggml-cpu-cannonlake.dll",
-          "path": "runtime/llama-vulkan-0.7.0/ggml-cpu-cannonlake.dll",
-          "sha256": "fef636daea23b26f935cf5983be9a29b79f0541cd148b9d64a32bc9ea0cec704",
-          "size": 1598976
-        },
-        {
-          "entry": "ggml-cpu-skylakex.dll",
-          "path": "runtime/llama-vulkan-0.7.0/ggml-cpu-skylakex.dll",
-          "sha256": "20722299dc5e4703056ff95b7ef329c223390ab87469c822721c1e67e4cc2a24",
-          "size": 1592320
-        },
-        {
-          "entry": "ggml-cpu-sse42.dll",
-          "path": "runtime/llama-vulkan-0.7.0/ggml-cpu-sse42.dll",
-          "sha256": "1c0fc615b6d97a79e58f33e8a7fb4e8de1834ad0f3f0e00e8943a4d416ddd242",
-          "size": 916992
-        },
-        {
-          "entry": "ggml-cpu-haswell.dll",
-          "path": "runtime/llama-vulkan-0.7.0/ggml-cpu-haswell.dll",
-          "sha256": "d33deb9bf3dd25427404f0f94a13c6b3da92b9b57b794199a9f354c3a327efb6",
-          "size": 1425408
-        },
-        {
-          "entry": "llama-common.dll",
-          "path": "runtime/llama-vulkan-0.7.0/llama-common.dll",
-          "sha256": "9adf40bc08e99005699d6397bcacb72c3aced68c9db01f13b5bd31c6abc7b2b5",
-          "size": 8037376
+          "path": "runtime/llama-vulkan-0.9.0/ggml-vulkan.dll",
+          "sha256": "e863e7556e10eeea6888894755552a917ab919004882bdf89d2d684d2b54fc8c",
+          "size": 41988608
         },
         {
           "entry": "libomp.dll",
-          "path": "runtime/llama-vulkan-0.7.0/libomp.dll",
+          "path": "runtime/llama-vulkan-0.9.0/libomp.dll",
           "sha256": "a12116ba72d1d6820407cf30be23da04ce79d6bb8a71a5ee71759c5a1faa6f1c",
           "size": 768000
         },
         {
           "entry": "llama-server-impl.dll",
-          "path": "runtime/llama-vulkan-0.7.0/llama-server-impl.dll",
-          "sha256": "24b1249ddd19e3ba3551804707dbe2f3c154c007542899ea8b16d69a94ab6597",
-          "size": 9259520
+          "path": "runtime/llama-vulkan-0.9.0/llama-server-impl.dll",
+          "sha256": "c5d306bdcad1c4011f18a1c01ae2fcdca48a197af0d421c2931ace2cfb487fc6",
+          "size": 10098688
         },
         {
-          "entry": "ggml-cpu-alderlake.dll",
-          "path": "runtime/llama-vulkan-0.7.0/ggml-cpu-alderlake.dll",
-          "sha256": "98b3bd12a84e848f57686f6d5f0969654ec79cda0c7636498933ea1063d14aa6",
-          "size": 1420288
-        },
-        {
-          "entry": "ggml-cpu-sandybridge.dll",
-          "path": "runtime/llama-vulkan-0.7.0/ggml-cpu-sandybridge.dll",
-          "sha256": "55d5659b45afcbe7a1d7611ab1914d2888476fc3024933e4b82122cdc58d6fd5",
-          "size": 1291264
-        },
-        {
-          "entry": "ggml.dll",
-          "path": "runtime/llama-vulkan-0.7.0/ggml.dll",
-          "sha256": "2649a5d914934188cccbe2c58e4642d2d4408bcda0f7068d58390686bd7ea62f",
-          "size": 78848
-        },
-        {
-          "entry": "ggml-cpu-zen4.dll",
-          "path": "runtime/llama-vulkan-0.7.0/ggml-cpu-zen4.dll",
-          "sha256": "83ae254f6204670e9011e11db84786122567bde2fab07354e7c4827c18589ee1",
-          "size": 1600000
-        },
-        {
-          "entry": "ggml-cpu-cascadelake.dll",
-          "path": "runtime/llama-vulkan-0.7.0/ggml-cpu-cascadelake.dll",
-          "sha256": "b32ee94fa0a366886cd03be48f80f1d8c1bbb338d71fc734a263753ec46aa8fd",
-          "size": 1583616
-        },
-        {
-          "entry": "llama.dll",
-          "path": "runtime/llama-vulkan-0.7.0/llama.dll",
-          "sha256": "aacb073c9c0d30090dd3e56f49772545452ccc4fd311efbfdb7d1bba7bbb0bda",
-          "size": 3541504
-        },
-        {
-          "entry": "llama-server.exe",
-          "path": "runtime/llama-vulkan-0.7.0/llama-server.exe",
-          "sha256": "6a4635aeb35656153d4bfeeddf761d24ed84aada9c9108d580737cbed465141b",
-          "size": 9216,
-          "executable": true
-        },
-        {
-          "entry": "ggml-cpu-x64.dll",
-          "path": "runtime/llama-vulkan-0.7.0/ggml-cpu-x64.dll",
-          "sha256": "7c9df996db7fe98510571524e3e62dd267a4034350185014814418dbad3c25ea",
-          "size": 909824
+          "entry": "llama-common.dll",
+          "path": "runtime/llama-vulkan-0.9.0/llama-common.dll",
+          "sha256": "0898e517843e4478b5178621dc878552b4d40a4d47d7b6f1775e7897f4e2344e",
+          "size": 8359936
         },
         {
           "entry": "ggml-cpu-cooperlake.dll",
-          "path": "runtime/llama-vulkan-0.7.0/ggml-cpu-cooperlake.dll",
-          "sha256": "e67357a558e71b834360b6f6d62abc6b9fe19930f6f7dd21ee0339e7b144306e",
-          "size": 1593344
+          "path": "runtime/llama-vulkan-0.9.0/ggml-cpu-cooperlake.dll",
+          "sha256": "737f0e96f23ca7d66c8dc55eace36ebbfd47770a9a228c804ffff5bf66f933a8",
+          "size": 1621504
+        },
+        {
+          "entry": "llama-bench-impl.dll",
+          "path": "runtime/llama-vulkan-0.9.0/llama-bench-impl.dll",
+          "sha256": "da476f661ea0f7c1944528b2a41e746e61ff5b31830b6493be76ab8efd72f0cc",
+          "size": 404480
+        },
+        {
+          "entry": "ggml-cpu-sse42.dll",
+          "path": "runtime/llama-vulkan-0.9.0/ggml-cpu-sse42.dll",
+          "sha256": "1e1700e6b6eef26b6abb0bc68669b6ee9fdad2b8d00058e491cb5160eb54afc2",
+          "size": 944128
+        },
+        {
+          "entry": "ggml-cpu-zen4.dll",
+          "path": "runtime/llama-vulkan-0.9.0/ggml-cpu-zen4.dll",
+          "sha256": "b5c1eec79e83878303acfa774f1275d9e025493b2c23f2a01af09fe985cdc21a",
+          "size": 1627648
+        },
+        {
+          "entry": "llama-quantize-impl.dll",
+          "path": "runtime/llama-vulkan-0.9.0/llama-quantize-impl.dll",
+          "sha256": "df915f459101d6c36362298721537b4a28312d985a47a1422ca26868afedda44",
+          "size": 137216
+        },
+        {
+          "entry": "llama-perplexity-impl.dll",
+          "path": "runtime/llama-vulkan-0.9.0/llama-perplexity-impl.dll",
+          "sha256": "07f127d8dc44b0c47b0502bb2f370a1d93c24a8fae88e82a69e8de6e47a677b3",
+          "size": 198144
+        },
+        {
+          "entry": "ggml-cpu-haswell.dll",
+          "path": "runtime/llama-vulkan-0.9.0/ggml-cpu-haswell.dll",
+          "sha256": "85d9ffd6f84fd0ec01586420b935ac4d5a5c9a1ab76b533eb3ddc060c1fe2869",
+          "size": 1447424
+        },
+        {
+          "entry": "ggml-cpu-sandybridge.dll",
+          "path": "runtime/llama-vulkan-0.9.0/ggml-cpu-sandybridge.dll",
+          "sha256": "5359624dee5670cb299c08f4a49347f7a6f4d0df35ed4c0a91164e4d771b3e23",
+          "size": 1319424
+        },
+        {
+          "entry": "llama-fit-params-impl.dll",
+          "path": "runtime/llama-vulkan-0.9.0/llama-fit-params-impl.dll",
+          "sha256": "563c26491a23411f36fff5ba862a3d8adf1d9c71e432bc64bd50dc705bb88da3",
+          "size": 43520
+        },
+        {
+          "entry": "LICENSE-LLVM-OpenMP",
+          "path": "runtime/llama-vulkan-0.9.0/LICENSE-LLVM-OpenMP",
+          "sha256": "fdad1758a9e1f9d5a81e18879b3406772115edc92c24bfa36b70c654f325e8e4",
+          "size": 19741
+        },
+        {
+          "entry": "ggml-base.dll",
+          "path": "runtime/llama-vulkan-0.9.0/ggml-base.dll",
+          "sha256": "3a0399fa51102a86824255beda9d021ea7e8cd2bd8ca448a43a9a80aa4829290",
+          "size": 832512
+        },
+        {
+          "entry": "llama-server.exe",
+          "path": "runtime/llama-vulkan-0.9.0/llama-server.exe",
+          "sha256": "00d50686815af38249d0218c91558fbd0e9093ac8c074bac86196907f4305e31",
+          "size": 9728,
+          "executable": true
         },
         {
           "entry": "ggml-cpu-ivybridge.dll",
-          "path": "runtime/llama-vulkan-0.7.0/ggml-cpu-ivybridge.dll",
-          "sha256": "d674c12b3f40d657b0989801699560e68247dbe9509823651b055ac3816ba37c",
-          "size": 1301504
+          "path": "runtime/llama-vulkan-0.9.0/ggml-cpu-ivybridge.dll",
+          "sha256": "39752b7667cb34b3bbd06178fac83803f6089771d43873a9c81015d2a98c280b",
+          "size": 1328640
+        },
+        {
+          "entry": "ggml-cpu-cascadelake.dll",
+          "path": "runtime/llama-vulkan-0.9.0/ggml-cpu-cascadelake.dll",
+          "sha256": "74d79278bd20143d3e7deeb2b5c033555f9d621016a7152b5190a2fcbf30265c",
+          "size": 1611776
+        },
+        {
+          "entry": "llama.dll",
+          "path": "runtime/llama-vulkan-0.9.0/llama.dll",
+          "sha256": "211b91d86e67c49f12eb97992b45ae4c2fc797d6edab48637835a877c808890e",
+          "size": 3834880
+        },
+        {
+          "entry": "ggml.dll",
+          "path": "runtime/llama-vulkan-0.9.0/ggml.dll",
+          "sha256": "06dfdff8b7b834c757ec5b5411abfc0f732604fb595eaaffbdc6da563523e8a1",
+          "size": 78848
+        },
+        {
+          "entry": "ggml-cpu-piledriver.dll",
+          "path": "runtime/llama-vulkan-0.9.0/ggml-cpu-piledriver.dll",
+          "sha256": "65bef2ae4f69256d9aff053a6fff1abdbd33acdbc51ede863d8bc5bd43c53ee8",
+          "size": 1321472
+        },
+        {
+          "entry": "mtmd.dll",
+          "path": "runtime/llama-vulkan-0.9.0/mtmd.dll",
+          "sha256": "74a3cace50f6c545cc66e4dc05e2aecf465f146ea1b4000376cd9834598a3e14",
+          "size": 2482176
+        },
+        {
+          "entry": "llama-cli-impl.dll",
+          "path": "runtime/llama-vulkan-0.9.0/llama-cli-impl.dll",
+          "sha256": "d717cbcf8165393d29fda98282018c777de028306f407bc5894eb05f3788474b",
+          "size": 3375104
+        },
+        {
+          "entry": "llama-completion-impl.dll",
+          "path": "runtime/llama-vulkan-0.9.0/llama-completion-impl.dll",
+          "sha256": "e817efece35b0aa03b4527054638d6e576ba1c36df82a33eabfc834fa70bfac4",
+          "size": 138752
         },
         {
           "entry": "ggml-cpu-icelake.dll",
-          "path": "runtime/llama-vulkan-0.7.0/ggml-cpu-icelake.dll",
-          "sha256": "41abb00a64bbf099c137cdb3b9547c7eb90bcd9c1d7b83238cbf10a74f97addd",
-          "size": 1590272
+          "path": "runtime/llama-vulkan-0.9.0/ggml-cpu-icelake.dll",
+          "sha256": "41ca727e74b171983ea9afe0250553706c09225c10a8c6ad72a619f9189279a8",
+          "size": 1618432
+        },
+        {
+          "entry": "ggml-rpc.dll",
+          "path": "runtime/llama-vulkan-0.9.0/ggml-rpc.dll",
+          "sha256": "6f7508cdb895ba2d5cba72ade374ba04a3bf408da0c8f0203ac9de9ec5993ebf",
+          "size": 236032
+        },
+        {
+          "entry": "ggml-cpu-cannonlake.dll",
+          "path": "runtime/llama-vulkan-0.9.0/ggml-cpu-cannonlake.dll",
+          "sha256": "1451909b84c223739247088a0e03db0f89bcd83461f2af43f53d794727afddcd",
+          "size": 1638400
+        },
+        {
+          "entry": "ggml-cpu-sapphirerapids.dll",
+          "path": "runtime/llama-vulkan-0.9.0/ggml-cpu-sapphirerapids.dll",
+          "sha256": "a7a395d0e49f182240c9a2ed1d623398911506bdae418baf161354541aa06a89",
+          "size": 1897472
+        },
+        {
+          "entry": "ggml-cpu-skylakex.dll",
+          "path": "runtime/llama-vulkan-0.9.0/ggml-cpu-skylakex.dll",
+          "sha256": "6bd53dc5731c5b9e4d3fbf98a9dc5b3ce76d357be9a579bc6c8cedac035462e8",
+          "size": 1631744
+        },
+        {
+          "entry": "llama-batched-bench-impl.dll",
+          "path": "runtime/llama-vulkan-0.9.0/llama-batched-bench-impl.dll",
+          "sha256": "c6ebea5727fa9389ffa863831f594d0f8e12be52078b72ff3ddf96846d56e8e0",
+          "size": 61952
+        },
+        {
+          "entry": "ggml-cpu-alderlake.dll",
+          "path": "runtime/llama-vulkan-0.9.0/ggml-cpu-alderlake.dll",
+          "sha256": "1de7a0d14d70bd741f2e4cdfa959176fee26680d6fbc78c717c0bd19e20b6233",
+          "size": 1442816
+        },
+        {
+          "entry": "ggml-cpu-x64.dll",
+          "path": "runtime/llama-vulkan-0.9.0/ggml-cpu-x64.dll",
+          "sha256": "81877c8787f9d5680b990f4cf5f8b89ba5b02ee5064b36abfd53d9d2ffb50916",
+          "size": 936448
         }
       ]
     },
     {
       "id": "llama-linux-amd64",
-      "name": "llama.cpp 0.7.0",
+      "name": "llama.cpp 0.9.0",
       "group": "runtime",
       "platform": "linux-amd64",
-      "url": "https://github.com/ggml-org/llama.cpp/releases/download/b11669/llama-b11669-bin-ubuntu-x64.tar.gz",
-      "sha256": "cf07c1c112d709bd67e522017471de57ed0ec8bea031d732c5422351c07f65ac",
-      "size": 17851611,
+      "url": "https://github.com/ggml-org/llama.cpp/releases/download/b12110/llama-b12110-bin-ubuntu-x64.tar.gz",
+      "sha256": "368227edcc229be5f9bed16a2223d79b5e41d0ac2e19bcf5825e82291c060e55",
+      "size": 23051958,
       "format": "tgz",
       "files": [
         {
-          "entry": "llama-b11669/libggml-cpu-cooperlake.so",
-          "path": "runtime/llama-0.7.0/libggml-cpu-cooperlake.so",
-          "sha256": "b8dd831324fcc7e872ed66f840ead7f3cf7c571904db9b61574fb19ce00a935e",
-          "size": 1573640
+          "entry": "llama-b12110/libggml-cpu-cannonlake.so",
+          "path": "runtime/llama-0.9.0/libggml-cpu-cannonlake.so",
+          "sha256": "bed0bdb27b4f46f06fc267412ba4dfad02bc23789005e686c49340155ddab29c",
+          "size": 1583408
         },
         {
-          "entry": "llama-b11669/LICENSE",
-          "path": "runtime/llama-0.7.0/LICENSE",
-          "sha256": "94f29bbed6a22c35b992c5c6ebf0e7c92f13b836b90f36f461c9cf2f0f1d010d",
-          "size": 1078
+          "entry": "llama-b12110/libllama.so.0.9.0",
+          "path": "runtime/llama-0.9.0/libllama.so.0",
+          "sha256": "5b67c7baa2461844f1baca027ad6b46edacfee1334d374e3e3c57c6430105b7b",
+          "size": 5455704
         },
         {
-          "entry": "llama-b11669/libllama-server-impl.so",
-          "path": "runtime/llama-0.7.0/libllama-server-impl.so",
-          "sha256": "9119be58c6ffa251c824cdf51677215735d6f4bdab131b17e7e549ff4e1ddcf1",
-          "size": 7533552
+          "entry": "llama-b12110/libggml-cpu-alderlake.so",
+          "path": "runtime/llama-0.9.0/libggml-cpu-alderlake.so",
+          "sha256": "ef0c2d96efb4cb9d20c20b0f5af8659a39cc1ef9c1a3911a9fd42e5e23e694ac",
+          "size": 1438128
         },
         {
-          "entry": "llama-b11669/libggml-cpu-piledriver.so",
-          "path": "runtime/llama-0.7.0/libggml-cpu-piledriver.so",
-          "sha256": "c8fec8f0f12d6a1a222c35d265618c582eacc3fd933a76dbd65c587114ed65f0",
-          "size": 1347848
+          "entry": "llama-b12110/libggml-cpu-zen4.so",
+          "path": "runtime/llama-0.9.0/libggml-cpu-zen4.so",
+          "sha256": "f537440e3e928ff4d252c7863924a8af890883b1ccbc487cf96cd98a1d556eee",
+          "size": 1599568
         },
         {
-          "entry": "llama-b11669/libggml-cpu-zen4.so",
-          "path": "runtime/llama-0.7.0/libggml-cpu-zen4.so",
-          "sha256": "ccb8fff995e04e532dc535eba4d9a84cccd5acd7612326db14710d302f4a8e2f",
-          "size": 1573640
+          "entry": "llama-b12110/libggml-cpu-skylakex.so",
+          "path": "runtime/llama-0.9.0/libggml-cpu-skylakex.so",
+          "sha256": "b3c5b47510cfc76549b72d75bc36d2551f971313580809c884b2a2e712b4d150",
+          "size": 1583408
         },
         {
-          "entry": "llama-b11669/libllama.so.0.7.0",
-          "path": "runtime/llama-0.7.0/libllama.so.0",
-          "sha256": "522213ae6b6019ba8d2673e9254990c52f0a1a5fb047c75bfb93be1b34fad839",
-          "size": 5095048
+          "entry": "llama-b12110/libggml-cpu-icelake.so",
+          "path": "runtime/llama-0.9.0/libggml-cpu-icelake.so",
+          "sha256": "7e28dd0cfa7275651fc8887b19d4aef9c0ff15c2e7fcf0c7558031f8cdfbe377",
+          "size": 1599496
         },
         {
-          "entry": "llama-b11669/llama-server",
-          "path": "runtime/llama-0.7.0/llama-server",
-          "sha256": "3f2b53013c2eb596c8aca87e4740240a41f95bcebf72e61084d6d5ba0db761cc",
-          "size": 17864,
-          "executable": true
+          "entry": "llama-b12110/libllama-common.so.0.9.0",
+          "path": "runtime/llama-0.9.0/libllama-common.so.0",
+          "sha256": "7453bbe828d4782723e8fd5026f669c0dee5915d845d48dd07d01fe84b116217",
+          "size": 6768888
         },
         {
-          "entry": "llama-b11669/libggml-rpc.so",
-          "path": "runtime/llama-0.7.0/libggml-rpc.so",
-          "sha256": "e28139e2d982fb057b88d243e5b2e9d72c52f8b98ae910b1cf751240ef1f9803",
-          "size": 319776
+          "entry": "llama-b12110/libmtmd.so.0.9.0",
+          "path": "runtime/llama-0.9.0/libmtmd.so.0",
+          "sha256": "bdc694a619533c33686b4ab4fdac15058876b430407c4da208c0cc23f99a7ec4",
+          "size": 2486256
         },
         {
-          "entry": "llama-b11669/libggml-base.so.0.27.0",
-          "path": "runtime/llama-0.7.0/libggml-base.so.0",
-          "sha256": "2c6ac9a8ae7c1455382c50587fe7d275e0607dfdaec4dcdb18689f31f6174c65",
-          "size": 897792
+          "entry": "llama-b12110/libggml-cpu-cascadelake.so",
+          "path": "runtime/llama-0.9.0/libggml-cpu-cascadelake.so",
+          "sha256": "cda9c09fd8ddea587927ed8beceea3730d2db29b25a551f7d74301a389975a09",
+          "size": 1599496
         },
         {
-          "entry": "llama-b11669/libggml-cpu-alderlake.so",
-          "path": "runtime/llama-0.7.0/libggml-cpu-alderlake.so",
-          "sha256": "703dc62b89d2a6d700b8d276b3b4ae994caa3a315588b6038b4511549c4a308b",
-          "size": 1416296
+          "entry": "llama-b12110/libggml-cpu-haswell.so",
+          "path": "runtime/llama-0.9.0/libggml-cpu-haswell.so",
+          "sha256": "bdbfb31ba054ec76f02297874feed48731887d493d12d8141de6d8412339623e",
+          "size": 1438128
         },
         {
-          "entry": "llama-b11669/libggml-cpu-sse42.so",
-          "path": "runtime/llama-0.7.0/libggml-cpu-sse42.so",
-          "sha256": "81d37cdf3002c8f8f9d44e90fff3d058c4952782aaec1d97bcb375c4db10c659",
-          "size": 954536
+          "entry": "llama-b12110/libggml-base.so.0.29.0",
+          "path": "runtime/llama-0.9.0/libggml-base.so.0",
+          "sha256": "ad3e476d5eac14820b7db79c4233b0fafa1d6609aa31a0848c919eba586aa9b9",
+          "size": 937856
         },
         {
-          "entry": "llama-b11669/libggml-cpu-haswell.so",
-          "path": "runtime/llama-0.7.0/libggml-cpu-haswell.so",
-          "sha256": "aec8dcc1487baeac0914aa3f6ba747beb868b61cd398e10c40c39addd2f80b64",
-          "size": 1416296
-        },
-        {
-          "entry": "llama-b11669/libmtmd.so.0.7.0",
-          "path": "runtime/llama-0.7.0/libmtmd.so.0",
-          "sha256": "5dc23ec9996bacb9d2791e06848cce30e33901d131a0c61f9cf2b821a587b17e",
-          "size": 1938632
-        },
-        {
-          "entry": "llama-b11669/libggml-cpu-cannonlake.so",
-          "path": "runtime/llama-0.7.0/libggml-cpu-cannonlake.so",
-          "sha256": "b194dc5db78e21796342e573643006bcbd5ac3618b9ccbd08537bae0755c6972",
-          "size": 1565672
-        },
-        {
-          "entry": "llama-b11669/libggml-cpu-sapphirerapids.so",
-          "path": "runtime/llama-0.7.0/libggml-cpu-sapphirerapids.so",
-          "sha256": "8a5d42ed076b212839c656d1e20731fb17b57b9f7ada0197680c735d70f15de2",
-          "size": 1839968
-        },
-        {
-          "entry": "llama-b11669/libllama-common.so.0.7.0",
-          "path": "runtime/llama-0.7.0/libllama-common.so.0",
-          "sha256": "462f7e9ce1c4c537533f1d4530b37201452599d90128c3c602507b315934e795",
-          "size": 6499104
-        },
-        {
-          "entry": "llama-b11669/libggml-cpu-cascadelake.so",
-          "path": "runtime/llama-0.7.0/libggml-cpu-cascadelake.so",
-          "sha256": "47b94135ee53c347bf90461ea7f9c3a055fa19b9462ff220c90f4cfdfdf79a5c",
-          "size": 1577664
-        },
-        {
-          "entry": "llama-b11669/libggml-cpu-sandybridge.so",
-          "path": "runtime/llama-0.7.0/libggml-cpu-sandybridge.so",
-          "sha256": "03a91516104c443a739804eef17c2d02bc6fe428b5399813c7e97e2282d29007",
-          "size": 1350944
-        },
-        {
-          "entry": "llama-b11669/libggml-cpu-ivybridge.so",
-          "path": "runtime/llama-0.7.0/libggml-cpu-ivybridge.so",
-          "sha256": "d2f79bcea05ed9fcf1b9e25bfaa9725655265cb7d7e0df79ffc9e996d1298820",
-          "size": 1351944
-        },
-        {
-          "entry": "llama-b11669/libggml.so.0.27.0",
-          "path": "runtime/llama-0.7.0/libggml.so.0",
+          "entry": "llama-b12110/libggml.so.0.29.0",
+          "path": "runtime/llama-0.9.0/libggml.so.0",
           "sha256": "8643a58bb37af6fb153e2ea98b48efa227855725ee51c05f4ca76b9867956463",
           "size": 51040
         },
         {
-          "entry": "llama-b11669/libggml-cpu-skylakex.so",
-          "path": "runtime/llama-0.7.0/libggml-cpu-skylakex.so",
-          "sha256": "b34c8498cfb5368fd968699df833f956adb35432118074b45c962454ca229515",
-          "size": 1565672
+          "entry": "llama-b12110/libggml-cpu-ivybridge.so",
+          "path": "runtime/llama-0.9.0/libggml-cpu-ivybridge.so",
+          "sha256": "fd7b1a685d6d483b1129c42617a05aa5a55efd987614efa3c5c09a46bdac34a2",
+          "size": 1373752
         },
         {
-          "entry": "llama-b11669/libggml-cpu-icelake.so",
-          "path": "runtime/llama-0.7.0/libggml-cpu-icelake.so",
-          "sha256": "eb79f0f5193557c52480cac8c85deb0f0e6793dd1cbd05793752071e5be10205",
-          "size": 1577664
+          "entry": "llama-b12110/libggml-cpu-sandybridge.so",
+          "path": "runtime/llama-0.9.0/libggml-cpu-sandybridge.so",
+          "sha256": "68e333609ffe51a66a07d8fe914c190d60c3f983a0dc2b6390d12f86c8b68ec6",
+          "size": 1372800
         },
         {
-          "entry": "llama-b11669/libggml-cpu-x64.so",
-          "path": "runtime/llama-0.7.0/libggml-cpu-x64.so",
-          "sha256": "2d1e8194f441ed4263bb28834cf44801a5e5e0a2592732fab5a2adc76b83290f",
-          "size": 950536
+          "entry": "llama-b12110/libllama-server-impl.so",
+          "path": "runtime/llama-0.9.0/libllama-server-impl.so",
+          "sha256": "c88998d7402755b125e223f65b9a50b3e24ba1fe415a3e6fa74c02ffc71ea926",
+          "size": 8281496
+        },
+        {
+          "entry": "llama-b12110/libggml-cpu-sapphirerapids.so",
+          "path": "runtime/llama-0.9.0/libggml-cpu-sapphirerapids.so",
+          "sha256": "2db1fbc9324979df8c1e08161b53b311d252c76c8d834cea2e055269b91f1660",
+          "size": 1865872
+        },
+        {
+          "entry": "llama-b12110/libggml-cpu-piledriver.so",
+          "path": "runtime/llama-0.9.0/libggml-cpu-piledriver.so",
+          "sha256": "ae9c07b8b8e3ba77deb700e1d5b37835bf79c62d5e71e06fe3cdd9a438940e1a",
+          "size": 1369656
+        },
+        {
+          "entry": "llama-b12110/libggml-cpu-x64.so",
+          "path": "runtime/llama-0.9.0/libggml-cpu-x64.so",
+          "sha256": "81fc5986e76acd220b826582549ddfa29f0523541a76c209cd3d5eeb787e3e11",
+          "size": 976464
+        },
+        {
+          "entry": "llama-b12110/libggml-cpu-cooperlake.so",
+          "path": "runtime/llama-0.9.0/libggml-cpu-cooperlake.so",
+          "sha256": "c3aa8670be6f5be0dc3451073d93849cfb6bfd7833a1ac75039cbbb78be2e3dc",
+          "size": 1599568
+        },
+        {
+          "entry": "llama-b12110/libggml-rpc.so",
+          "path": "runtime/llama-0.9.0/libggml-rpc.so",
+          "sha256": "9b57a90c61ed498087fcb39c4e6519309eaedea2391ee4d87e5f693499d830f0",
+          "size": 328816
+        },
+        {
+          "entry": "llama-b12110/libggml-cpu-sse42.so",
+          "path": "runtime/llama-0.9.0/libggml-cpu-sse42.so",
+          "sha256": "7b5f33881eab4b5e30ad2e0515eb9c2cfa4036debeaceb1bc2aa760b92c98607",
+          "size": 980440
+        },
+        {
+          "entry": "llama-b12110/llama-server",
+          "path": "runtime/llama-0.9.0/llama-server",
+          "sha256": "eaf9c1c664cc0ae1f4dea4b171bb91aac8409fcfea0574c9b6bcc93792ce2400",
+          "size": 17864,
+          "executable": true
+        },
+        {
+          "entry": "llama-b12110/LICENSE",
+          "path": "runtime/llama-0.9.0/LICENSE",
+          "sha256": "94f29bbed6a22c35b992c5c6ebf0e7c92f13b836b90f36f461c9cf2f0f1d010d",
+          "size": 1078
         }
       ]
     },
@@ -2253,14 +2335,14 @@
       "group": "application",
       "platform": "linux-amd64",
       "url": "embedded:engine/linux-amd64.gz",
-      "sha256": "0488827764b31d2b258c14c0712e6fcae05c00809dd8153e00506b5273c3e613",
-      "size": 1459603,
+      "sha256": "786b2156511097e1a121582a79498d1dd3b3077275b25831361a181228ae2f4e",
+      "size": 1607802,
       "format": "gzip",
       "files": [
         {
           "path": "bin/manga-translator-server",
-          "sha256": "5681093fd412c9385e39c759bf78dd2e69b04d80fdef1aff546537b1e8860953",
-          "size": 3424752,
+          "sha256": "607b586e1d2f85ee4cd9ac9e10116560210d5ec1bcdd9a2c6bcee91bc61ff183",
+          "size": 3778608,
           "executable": true
         }
       ]
@@ -2647,161 +2729,203 @@
       "name": "llama.cpp CUDA 13.4 (Windows x64)",
       "group": "runtime",
       "platform": "windows-amd64",
-      "url": "https://github.com/ggml-org/llama.cpp/releases/download/b11669/llama-b11669-bin-win-cuda-13.4-x64.zip",
-      "sha256": "3b92d5c064f5032e603e531d3ec8961f3bd6613e5dfad047399a92dec8e95dbc",
-      "size": 154582227,
+      "url": "https://github.com/ggml-org/llama.cpp/releases/download/b12110/llama-b12110-bin-win-cuda-13.4-x64.zip",
+      "sha256": "dc910a969190b5d42e189afd73117f6bbdd8dd8ed6586342c5e0b82cab62c673",
+      "size": 169175655,
       "format": "zip",
       "files": [
         {
+          "entry": "ggml-cuda.dll",
+          "path": "runtime/llama-cuda-0.9.0/ggml-cuda.dll",
+          "sha256": "9ee112d8fca8425e523020393e0efe95c36fcc563eded66b6f1e1546c326f324",
+          "size": 158985728
+        },
+        {
+          "entry": "libomp.dll",
+          "path": "runtime/llama-cuda-0.9.0/libomp.dll",
+          "sha256": "a12116ba72d1d6820407cf30be23da04ce79d6bb8a71a5ee71759c5a1faa6f1c",
+          "size": 768000
+        },
+        {
+          "entry": "llama-server-impl.dll",
+          "path": "runtime/llama-cuda-0.9.0/llama-server-impl.dll",
+          "sha256": "c5d306bdcad1c4011f18a1c01ae2fcdca48a197af0d421c2931ace2cfb487fc6",
+          "size": 10098688
+        },
+        {
+          "entry": "llama-common.dll",
+          "path": "runtime/llama-cuda-0.9.0/llama-common.dll",
+          "sha256": "0898e517843e4478b5178621dc878552b4d40a4d47d7b6f1775e7897f4e2344e",
+          "size": 8359936
+        },
+        {
+          "entry": "ggml-cpu-cooperlake.dll",
+          "path": "runtime/llama-cuda-0.9.0/ggml-cpu-cooperlake.dll",
+          "sha256": "737f0e96f23ca7d66c8dc55eace36ebbfd47770a9a228c804ffff5bf66f933a8",
+          "size": 1621504
+        },
+        {
+          "entry": "llama-bench-impl.dll",
+          "path": "runtime/llama-cuda-0.9.0/llama-bench-impl.dll",
+          "sha256": "da476f661ea0f7c1944528b2a41e746e61ff5b31830b6493be76ab8efd72f0cc",
+          "size": 404480
+        },
+        {
+          "entry": "ggml-cpu-sse42.dll",
+          "path": "runtime/llama-cuda-0.9.0/ggml-cpu-sse42.dll",
+          "sha256": "1e1700e6b6eef26b6abb0bc68669b6ee9fdad2b8d00058e491cb5160eb54afc2",
+          "size": 944128
+        },
+        {
+          "entry": "ggml-cpu-zen4.dll",
+          "path": "runtime/llama-cuda-0.9.0/ggml-cpu-zen4.dll",
+          "sha256": "b5c1eec79e83878303acfa774f1275d9e025493b2c23f2a01af09fe985cdc21a",
+          "size": 1627648
+        },
+        {
+          "entry": "llama-quantize-impl.dll",
+          "path": "runtime/llama-cuda-0.9.0/llama-quantize-impl.dll",
+          "sha256": "df915f459101d6c36362298721537b4a28312d985a47a1422ca26868afedda44",
+          "size": 137216
+        },
+        {
+          "entry": "llama-perplexity-impl.dll",
+          "path": "runtime/llama-cuda-0.9.0/llama-perplexity-impl.dll",
+          "sha256": "07f127d8dc44b0c47b0502bb2f370a1d93c24a8fae88e82a69e8de6e47a677b3",
+          "size": 198144
+        },
+        {
+          "entry": "ggml-cpu-haswell.dll",
+          "path": "runtime/llama-cuda-0.9.0/ggml-cpu-haswell.dll",
+          "sha256": "85d9ffd6f84fd0ec01586420b935ac4d5a5c9a1ab76b533eb3ddc060c1fe2869",
+          "size": 1447424
+        },
+        {
+          "entry": "ggml-cpu-sandybridge.dll",
+          "path": "runtime/llama-cuda-0.9.0/ggml-cpu-sandybridge.dll",
+          "sha256": "5359624dee5670cb299c08f4a49347f7a6f4d0df35ed4c0a91164e4d771b3e23",
+          "size": 1319424
+        },
+        {
+          "entry": "llama-fit-params-impl.dll",
+          "path": "runtime/llama-cuda-0.9.0/llama-fit-params-impl.dll",
+          "sha256": "563c26491a23411f36fff5ba862a3d8adf1d9c71e432bc64bd50dc705bb88da3",
+          "size": 43520
+        },
+        {
           "entry": "LICENSE-LLVM-OpenMP",
-          "path": "runtime/llama-cuda-0.7.0/LICENSE-LLVM-OpenMP",
+          "path": "runtime/llama-cuda-0.9.0/LICENSE-LLVM-OpenMP",
           "sha256": "fdad1758a9e1f9d5a81e18879b3406772115edc92c24bfa36b70c654f325e8e4",
           "size": 19741
         },
         {
           "entry": "ggml-base.dll",
-          "path": "runtime/llama-cuda-0.7.0/ggml-base.dll",
-          "sha256": "0a259689ea3c105a8122159eb97fb53733f2531fadd3e9739689961cdab27600",
-          "size": 803840
-        },
-        {
-          "entry": "ggml-cpu-alderlake.dll",
-          "path": "runtime/llama-cuda-0.7.0/ggml-cpu-alderlake.dll",
-          "sha256": "98b3bd12a84e848f57686f6d5f0969654ec79cda0c7636498933ea1063d14aa6",
-          "size": 1420288
-        },
-        {
-          "entry": "ggml-cpu-cannonlake.dll",
-          "path": "runtime/llama-cuda-0.7.0/ggml-cpu-cannonlake.dll",
-          "sha256": "fef636daea23b26f935cf5983be9a29b79f0541cd148b9d64a32bc9ea0cec704",
-          "size": 1598976
-        },
-        {
-          "entry": "ggml-cpu-cascadelake.dll",
-          "path": "runtime/llama-cuda-0.7.0/ggml-cpu-cascadelake.dll",
-          "sha256": "b32ee94fa0a366886cd03be48f80f1d8c1bbb338d71fc734a263753ec46aa8fd",
-          "size": 1583616
-        },
-        {
-          "entry": "ggml-cpu-cooperlake.dll",
-          "path": "runtime/llama-cuda-0.7.0/ggml-cpu-cooperlake.dll",
-          "sha256": "e67357a558e71b834360b6f6d62abc6b9fe19930f6f7dd21ee0339e7b144306e",
-          "size": 1593344
-        },
-        {
-          "entry": "ggml-cpu-haswell.dll",
-          "path": "runtime/llama-cuda-0.7.0/ggml-cpu-haswell.dll",
-          "sha256": "d33deb9bf3dd25427404f0f94a13c6b3da92b9b57b794199a9f354c3a327efb6",
-          "size": 1425408
-        },
-        {
-          "entry": "ggml-cpu-icelake.dll",
-          "path": "runtime/llama-cuda-0.7.0/ggml-cpu-icelake.dll",
-          "sha256": "41abb00a64bbf099c137cdb3b9547c7eb90bcd9c1d7b83238cbf10a74f97addd",
-          "size": 1590272
-        },
-        {
-          "entry": "ggml-cpu-ivybridge.dll",
-          "path": "runtime/llama-cuda-0.7.0/ggml-cpu-ivybridge.dll",
-          "sha256": "d674c12b3f40d657b0989801699560e68247dbe9509823651b055ac3816ba37c",
-          "size": 1301504
-        },
-        {
-          "entry": "ggml-cpu-piledriver.dll",
-          "path": "runtime/llama-cuda-0.7.0/ggml-cpu-piledriver.dll",
-          "sha256": "bb5215c806397adf56e986f52aa0c75b04b3b5b33203a722f647254eae2b94b2",
-          "size": 1294336
-        },
-        {
-          "entry": "ggml-cpu-sandybridge.dll",
-          "path": "runtime/llama-cuda-0.7.0/ggml-cpu-sandybridge.dll",
-          "sha256": "55d5659b45afcbe7a1d7611ab1914d2888476fc3024933e4b82122cdc58d6fd5",
-          "size": 1291264
-        },
-        {
-          "entry": "ggml-cpu-sapphirerapids.dll",
-          "path": "runtime/llama-cuda-0.7.0/ggml-cpu-sapphirerapids.dll",
-          "sha256": "83af3cacf3bf32b98626791358f950da4b45a22af85bde63afe537fe51e60848",
-          "size": 1869824
-        },
-        {
-          "entry": "ggml-cpu-skylakex.dll",
-          "path": "runtime/llama-cuda-0.7.0/ggml-cpu-skylakex.dll",
-          "sha256": "20722299dc5e4703056ff95b7ef329c223390ab87469c822721c1e67e4cc2a24",
-          "size": 1592320
-        },
-        {
-          "entry": "ggml-cpu-sse42.dll",
-          "path": "runtime/llama-cuda-0.7.0/ggml-cpu-sse42.dll",
-          "sha256": "1c0fc615b6d97a79e58f33e8a7fb4e8de1834ad0f3f0e00e8943a4d416ddd242",
-          "size": 916992
-        },
-        {
-          "entry": "ggml-cpu-x64.dll",
-          "path": "runtime/llama-cuda-0.7.0/ggml-cpu-x64.dll",
-          "sha256": "7c9df996db7fe98510571524e3e62dd267a4034350185014814418dbad3c25ea",
-          "size": 909824
-        },
-        {
-          "entry": "ggml-cpu-zen4.dll",
-          "path": "runtime/llama-cuda-0.7.0/ggml-cpu-zen4.dll",
-          "sha256": "83ae254f6204670e9011e11db84786122567bde2fab07354e7c4827c18589ee1",
-          "size": 1600000
-        },
-        {
-          "entry": "ggml-cuda.dll",
-          "path": "runtime/llama-cuda-0.7.0/ggml-cuda.dll",
-          "sha256": "3e749ce6ec7ae18da1fe002cae5bdf446a123be1d11412f494eb03d5afabcd83",
-          "size": 149247488
-        },
-        {
-          "entry": "ggml-rpc.dll",
-          "path": "runtime/llama-cuda-0.7.0/ggml-rpc.dll",
-          "sha256": "b52bd8eddb79ebd1dc0b832b34483bef23d44a34c6d5639301d92cb971f874a4",
-          "size": 231424
-        },
-        {
-          "entry": "ggml.dll",
-          "path": "runtime/llama-cuda-0.7.0/ggml.dll",
-          "sha256": "2649a5d914934188cccbe2c58e4642d2d4408bcda0f7068d58390686bd7ea62f",
-          "size": 78848
-        },
-        {
-          "entry": "libomp.dll",
-          "path": "runtime/llama-cuda-0.7.0/libomp.dll",
-          "sha256": "a12116ba72d1d6820407cf30be23da04ce79d6bb8a71a5ee71759c5a1faa6f1c",
-          "size": 768000
-        },
-        {
-          "entry": "llama-common.dll",
-          "path": "runtime/llama-cuda-0.7.0/llama-common.dll",
-          "sha256": "9adf40bc08e99005699d6397bcacb72c3aced68c9db01f13b5bd31c6abc7b2b5",
-          "size": 8037376
-        },
-        {
-          "entry": "llama-server-impl.dll",
-          "path": "runtime/llama-cuda-0.7.0/llama-server-impl.dll",
-          "sha256": "24b1249ddd19e3ba3551804707dbe2f3c154c007542899ea8b16d69a94ab6597",
-          "size": 9259520
+          "path": "runtime/llama-cuda-0.9.0/ggml-base.dll",
+          "sha256": "3a0399fa51102a86824255beda9d021ea7e8cd2bd8ca448a43a9a80aa4829290",
+          "size": 832512
         },
         {
           "entry": "llama-server.exe",
-          "path": "runtime/llama-cuda-0.7.0/llama-server.exe",
-          "sha256": "6a4635aeb35656153d4bfeeddf761d24ed84aada9c9108d580737cbed465141b",
-          "size": 9216,
+          "path": "runtime/llama-cuda-0.9.0/llama-server.exe",
+          "sha256": "00d50686815af38249d0218c91558fbd0e9093ac8c074bac86196907f4305e31",
+          "size": 9728,
           "executable": true
         },
         {
+          "entry": "ggml-cpu-ivybridge.dll",
+          "path": "runtime/llama-cuda-0.9.0/ggml-cpu-ivybridge.dll",
+          "sha256": "39752b7667cb34b3bbd06178fac83803f6089771d43873a9c81015d2a98c280b",
+          "size": 1328640
+        },
+        {
+          "entry": "ggml-cpu-cascadelake.dll",
+          "path": "runtime/llama-cuda-0.9.0/ggml-cpu-cascadelake.dll",
+          "sha256": "74d79278bd20143d3e7deeb2b5c033555f9d621016a7152b5190a2fcbf30265c",
+          "size": 1611776
+        },
+        {
           "entry": "llama.dll",
-          "path": "runtime/llama-cuda-0.7.0/llama.dll",
-          "sha256": "aacb073c9c0d30090dd3e56f49772545452ccc4fd311efbfdb7d1bba7bbb0bda",
-          "size": 3541504
+          "path": "runtime/llama-cuda-0.9.0/llama.dll",
+          "sha256": "211b91d86e67c49f12eb97992b45ae4c2fc797d6edab48637835a877c808890e",
+          "size": 3834880
+        },
+        {
+          "entry": "ggml.dll",
+          "path": "runtime/llama-cuda-0.9.0/ggml.dll",
+          "sha256": "06dfdff8b7b834c757ec5b5411abfc0f732604fb595eaaffbdc6da563523e8a1",
+          "size": 78848
+        },
+        {
+          "entry": "ggml-cpu-piledriver.dll",
+          "path": "runtime/llama-cuda-0.9.0/ggml-cpu-piledriver.dll",
+          "sha256": "65bef2ae4f69256d9aff053a6fff1abdbd33acdbc51ede863d8bc5bd43c53ee8",
+          "size": 1321472
         },
         {
           "entry": "mtmd.dll",
-          "path": "runtime/llama-cuda-0.7.0/mtmd.dll",
-          "sha256": "bd4a9dac32ba8b14cf95da3361495380ac556b34f48434ebe477ffef23f40bd1",
-          "size": 1847808
+          "path": "runtime/llama-cuda-0.9.0/mtmd.dll",
+          "sha256": "74a3cace50f6c545cc66e4dc05e2aecf465f146ea1b4000376cd9834598a3e14",
+          "size": 2482176
+        },
+        {
+          "entry": "llama-cli-impl.dll",
+          "path": "runtime/llama-cuda-0.9.0/llama-cli-impl.dll",
+          "sha256": "d717cbcf8165393d29fda98282018c777de028306f407bc5894eb05f3788474b",
+          "size": 3375104
+        },
+        {
+          "entry": "llama-completion-impl.dll",
+          "path": "runtime/llama-cuda-0.9.0/llama-completion-impl.dll",
+          "sha256": "e817efece35b0aa03b4527054638d6e576ba1c36df82a33eabfc834fa70bfac4",
+          "size": 138752
+        },
+        {
+          "entry": "ggml-cpu-icelake.dll",
+          "path": "runtime/llama-cuda-0.9.0/ggml-cpu-icelake.dll",
+          "sha256": "41ca727e74b171983ea9afe0250553706c09225c10a8c6ad72a619f9189279a8",
+          "size": 1618432
+        },
+        {
+          "entry": "ggml-rpc.dll",
+          "path": "runtime/llama-cuda-0.9.0/ggml-rpc.dll",
+          "sha256": "6f7508cdb895ba2d5cba72ade374ba04a3bf408da0c8f0203ac9de9ec5993ebf",
+          "size": 236032
+        },
+        {
+          "entry": "ggml-cpu-cannonlake.dll",
+          "path": "runtime/llama-cuda-0.9.0/ggml-cpu-cannonlake.dll",
+          "sha256": "1451909b84c223739247088a0e03db0f89bcd83461f2af43f53d794727afddcd",
+          "size": 1638400
+        },
+        {
+          "entry": "ggml-cpu-sapphirerapids.dll",
+          "path": "runtime/llama-cuda-0.9.0/ggml-cpu-sapphirerapids.dll",
+          "sha256": "a7a395d0e49f182240c9a2ed1d623398911506bdae418baf161354541aa06a89",
+          "size": 1897472
+        },
+        {
+          "entry": "ggml-cpu-skylakex.dll",
+          "path": "runtime/llama-cuda-0.9.0/ggml-cpu-skylakex.dll",
+          "sha256": "6bd53dc5731c5b9e4d3fbf98a9dc5b3ce76d357be9a579bc6c8cedac035462e8",
+          "size": 1631744
+        },
+        {
+          "entry": "llama-batched-bench-impl.dll",
+          "path": "runtime/llama-cuda-0.9.0/llama-batched-bench-impl.dll",
+          "sha256": "c6ebea5727fa9389ffa863831f594d0f8e12be52078b72ff3ddf96846d56e8e0",
+          "size": 61952
+        },
+        {
+          "entry": "ggml-cpu-alderlake.dll",
+          "path": "runtime/llama-cuda-0.9.0/ggml-cpu-alderlake.dll",
+          "sha256": "1de7a0d14d70bd741f2e4cdfa959176fee26680d6fbc78c717c0bd19e20b6233",
+          "size": 1442816
+        },
+        {
+          "entry": "ggml-cpu-x64.dll",
+          "path": "runtime/llama-cuda-0.9.0/ggml-cpu-x64.dll",
+          "sha256": "81877c8787f9d5680b990f4cf5f8b89ba5b02ee5064b36abfd53d9d2ffb50916",
+          "size": 936448
         }
       ]
     },
@@ -2810,26 +2934,26 @@
       "name": "CUDA 13.4 libraries for llama.cpp",
       "group": "runtime",
       "platform": "windows-amd64",
-      "url": "https://github.com/ggml-org/llama.cpp/releases/download/b11669/cudart-llama-bin-win-cuda-13.4-x64.zip",
+      "url": "https://github.com/ggml-org/llama.cpp/releases/download/b12110/cudart-llama-bin-win-cuda-13.4-x64.zip",
       "sha256": "738f8c251ac22b70c3ae6f83a10cf222725df0395246a2cf58f32bdb85fbe668",
       "size": 423535356,
       "format": "zip",
       "files": [
         {
           "entry": "cublas64_13.dll",
-          "path": "runtime/llama-cuda-0.7.0/cublas64_13.dll",
+          "path": "runtime/llama-cuda-0.9.0/cublas64_13.dll",
           "sha256": "1119dbca0a808e0c8850bb4221e330daf0b5ddb348d62d37b6ac533854723df9",
           "size": 54942320
         },
         {
           "entry": "cublasLt64_13.dll",
-          "path": "runtime/llama-cuda-0.7.0/cublasLt64_13.dll",
+          "path": "runtime/llama-cuda-0.9.0/cublasLt64_13.dll",
           "sha256": "0f5bc315fef706b5626248ebd74e8a48a9e82fa2f0cad38330f5f70984913107",
           "size": 492752496
         },
         {
           "entry": "cudart64_13.dll",
-          "path": "runtime/llama-cuda-0.7.0/cudart64_13.dll",
+          "path": "runtime/llama-cuda-0.9.0/cudart64_13.dll",
           "sha256": "05bfafcb97bd53b0089568a96e1e5bd6921637bd0853ff7f5342bd31a6a16890",
           "size": 551024
         }
@@ -4363,6 +4487,344 @@
           "path": "models/manga-lama/anime_manga_lama.pt",
           "sha256": "95d4bf7eb2f13729351ac0a0693c9b9b469b264fc1542ca3fa551b59b464a160",
           "size": 204190262
+        }
+      ]
+    },
+    {
+      "id": "llama-cuda-linux-amd64",
+      "name": "llama.cpp 0.9.0 · CUDA",
+      "group": "runtime",
+      "platform": "linux-amd64",
+      "url": "https://github.com/ggml-org/llama.cpp/releases/download/b12110/llama-b12110-bin-ubuntu-cuda-13.4-x64.tar.gz",
+      "sha256": "2afd2ca540da119570b1dac36b5a2c862bb03a3b789c46661dfa55e600f5b19b",
+      "size": 168275993,
+      "format": "tgz",
+      "files": [
+        {
+          "entry": "llama-b12110/libggml-cpu-alderlake.so",
+          "path": "runtime/llama-cuda-0.9.0/libggml-cpu-alderlake.so",
+          "sha256": "44cf5e2bfbf4eb4220b9559f43540b6f73541468c01e3d629cb91ace2ce39853",
+          "size": 1428296
+        },
+        {
+          "entry": "llama-b12110/LICENSE",
+          "path": "runtime/llama-cuda-0.9.0/LICENSE",
+          "sha256": "94f29bbed6a22c35b992c5c6ebf0e7c92f13b836b90f36f461c9cf2f0f1d010d",
+          "size": 1078
+        },
+        {
+          "entry": "llama-b12110/libmtmd.so.0.9.0",
+          "path": "runtime/llama-cuda-0.9.0/libmtmd.so.0",
+          "sha256": "1fe29b7e6b9b410dc524c4396d4e407f14400ce7ed49bdc32c0e8469f97e3fb3",
+          "size": 2600088
+        },
+        {
+          "entry": "llama-b12110/libggml-cpu-cannonlake.so",
+          "path": "runtime/llama-cuda-0.9.0/libggml-cpu-cannonlake.so",
+          "sha256": "0d2b47370e7562d4ca3be08c68372831d8d10009b42e5397cc365841f950a72e",
+          "size": 1606344
+        },
+        {
+          "entry": "llama-b12110/libggml-cpu-skylakex.so",
+          "path": "runtime/llama-cuda-0.9.0/libggml-cpu-skylakex.so",
+          "sha256": "49fc642cdf93594bc3c1cd0cd602ca0dbc6e39e01e025bc7e7645f85a144d9d6",
+          "size": 1606344
+        },
+        {
+          "entry": "llama-b12110/libggml-cpu-zen4.so",
+          "path": "runtime/llama-cuda-0.9.0/libggml-cpu-zen4.so",
+          "sha256": "d5efe334368282fc576326d6fc88a8ec9c8635c3dbe24aa392f73c2d524a99e0",
+          "size": 1618504
+        },
+        {
+          "entry": "llama-b12110/libllama-server-impl.so",
+          "path": "runtime/llama-cuda-0.9.0/libllama-server-impl.so",
+          "sha256": "11d5130d5181c9f7f94314e9baf69292cb83fdf4def3d9b84d868a63483bc9f2",
+          "size": 8066896
+        },
+        {
+          "entry": "llama-b12110/libllama.so.0.9.0",
+          "path": "runtime/llama-cuda-0.9.0/libllama.so.0",
+          "sha256": "1bee4801d3ee27efe6ab55a7dab14d030f35b443b5a85708492e29c33e5332c6",
+          "size": 5575384
+        },
+        {
+          "entry": "llama-b12110/libggml-cpu-sandybridge.so",
+          "path": "runtime/llama-cuda-0.9.0/libggml-cpu-sandybridge.so",
+          "sha256": "5a7ce11c0b9d3af2624969155ee8c4c874917c9a8d94e147af9b722086ff4948",
+          "size": 1354776
+        },
+        {
+          "entry": "llama-b12110/libggml.so.0.29.0",
+          "path": "runtime/llama-cuda-0.9.0/libggml.so.0",
+          "sha256": "207cfc7c4b4b957a0e6f330cd2678290eae05508da23d8ed59b4b7fc0a828390",
+          "size": 55960
+        },
+        {
+          "entry": "llama-b12110/libggml-cpu-sse42.so",
+          "path": "runtime/llama-cuda-0.9.0/libggml-cpu-sse42.so",
+          "sha256": "53befeb7e226f89be81365ba03b79a13be6ab8a66eeb8bd0b2cef54d6c2e9bab",
+          "size": 1027952
+        },
+        {
+          "entry": "llama-b12110/libggml-cpu-ivybridge.so",
+          "path": "runtime/llama-cuda-0.9.0/libggml-cpu-ivybridge.so",
+          "sha256": "7ccd7de68d0b5d826643efac5b91923378814deb18ca89cea5fd3a5413966ec3",
+          "size": 1351632
+        },
+        {
+          "entry": "llama-b12110/libggml-rpc.so",
+          "path": "runtime/llama-cuda-0.9.0/libggml-rpc.so",
+          "sha256": "ed864aa3ab6cf33a35f358daba03a2f8a8d897b31ecf28f4263cf227fc97eb60",
+          "size": 328344
+        },
+        {
+          "entry": "llama-b12110/libggml-base.so.0.29.0",
+          "path": "runtime/llama-cuda-0.9.0/libggml-base.so.0",
+          "sha256": "e548003bf6fbf54a9dd580bd1bf72fc606d000e1a732de49ee33dc691af62293",
+          "size": 970568
+        },
+        {
+          "entry": "llama-b12110/libggml-cpu-x64.so",
+          "path": "runtime/llama-cuda-0.9.0/libggml-cpu-x64.so",
+          "sha256": "bee5c6ac149f78ead54826a36d5648c04b991ae838322cad11e2a424f8d34717",
+          "size": 1019880
+        },
+        {
+          "entry": "llama-b12110/libggml-cpu-cooperlake.so",
+          "path": "runtime/llama-cuda-0.9.0/libggml-cpu-cooperlake.so",
+          "sha256": "70d413caef3b419a713a547f06baaa44d210854059172ff31743425f02be728e",
+          "size": 1618504
+        },
+        {
+          "entry": "llama-b12110/libggml-cpu-haswell.so",
+          "path": "runtime/llama-cuda-0.9.0/libggml-cpu-haswell.so",
+          "sha256": "ace3021e79a31b98ce58a99f4dcd4f932573dc2451c117d9e7e9d42227705907",
+          "size": 1428296
+        },
+        {
+          "entry": "llama-b12110/libggml-cuda.so",
+          "path": "runtime/llama-cuda-0.9.0/libggml-cuda.so",
+          "sha256": "b04b89b5b3ba15b090347541ff1dcecd2f041a24ea3c5f59de99eb56c02647d9",
+          "size": 174355024
+        },
+        {
+          "entry": "llama-b12110/libggml-cpu-icelake.so",
+          "path": "runtime/llama-cuda-0.9.0/libggml-cpu-icelake.so",
+          "sha256": "6c98627c465f9d9f0bd0ecc7e4dac676fb6d66ac1d5389f78013ae85c33f546b",
+          "size": 1618336
+        },
+        {
+          "entry": "llama-b12110/libggml-cpu-sapphirerapids.so",
+          "path": "runtime/llama-cuda-0.9.0/libggml-cpu-sapphirerapids.so",
+          "sha256": "6cb0ea370da0dd9e3a4fcae4b07ee97a4a9e51d66ad7c090bc6850a1313d4e47",
+          "size": 1860224
+        },
+        {
+          "entry": "llama-b12110/libllama-common.so.0.9.0",
+          "path": "runtime/llama-cuda-0.9.0/libllama-common.so.0",
+          "sha256": "65a76a07077f0b0d36d96ea135950bee01f393ef1be9714187965a1ebd4de4ea",
+          "size": 6658576
+        },
+        {
+          "entry": "llama-b12110/libggml-cpu-piledriver.so",
+          "path": "runtime/llama-cuda-0.9.0/libggml-cpu-piledriver.so",
+          "sha256": "623f76f9330062538130fa563d6d7b2c0abc18ec3dccfcd1a99cddead7492ab1",
+          "size": 1351632
+        },
+        {
+          "entry": "llama-b12110/llama-server",
+          "path": "runtime/llama-cuda-0.9.0/llama-server",
+          "sha256": "831e456e593724d6f7ef5017446c3cd382dee54709ebecf3abba888b5030ca45",
+          "size": 17888,
+          "executable": true
+        },
+        {
+          "entry": "llama-b12110/libggml-cpu-cascadelake.so",
+          "path": "runtime/llama-cuda-0.9.0/libggml-cpu-cascadelake.so",
+          "sha256": "90aaa71e4fc72bf7dd5dbb31712fe2ec232548783379aed6cd7f74ef2c5648fd",
+          "size": 1618336
+        }
+      ]
+    },
+    {
+      "id": "llama-cudart-linux-amd64",
+      "name": "CUDA 13.4 runtime · llama.cpp",
+      "group": "runtime",
+      "platform": "linux-amd64",
+      "url": "https://github.com/ggml-org/llama.cpp/releases/download/b12110/cudart-llama-b12110-bin-ubuntu-cuda-13.4-x64.tar.gz",
+      "sha256": "9b1110161943882ec85c8e9ae641075ee8c962a50f8f1e36534ee65ea1e56ed9",
+      "size": 440232657,
+      "format": "tgz",
+      "files": [
+        {
+          "entry": "cudart-llama-b12110-bin-ubuntu-cuda-13.4-x64/libcublasLt.so.13",
+          "path": "runtime/llama-cuda-0.9.0/libcublasLt.so.13",
+          "sha256": "39c97a2e9497a71076356efec398eb9f946e81bce843e6979c82dfac61e64157",
+          "size": 544944760
+        },
+        {
+          "entry": "cudart-llama-b12110-bin-ubuntu-cuda-13.4-x64/libcublas.so.13",
+          "path": "runtime/llama-cuda-0.9.0/libcublas.so.13",
+          "sha256": "c1f021ca3a67ee793b518bfe2e77b87ad4b4ed1a0e8362e5a11b4186ebe82ea3",
+          "size": 57619096
+        },
+        {
+          "entry": "cudart-llama-b12110-bin-ubuntu-cuda-13.4-x64/libcudart.so.13",
+          "path": "runtime/llama-cuda-0.9.0/libcudart.so.13",
+          "sha256": "a77eeb711d350a7791a45a07f37cd3b2ae61c71da4db1bf50cc8bd45d33b5b72",
+          "size": 798496
+        }
+      ]
+    },
+    {
+      "id": "llama-cuda-linux-arm64",
+      "name": "llama.cpp 0.9.0 · CUDA",
+      "group": "runtime",
+      "platform": "linux-arm64",
+      "url": "https://github.com/ggml-org/llama.cpp/releases/download/b12110/llama-b12110-bin-ubuntu-cuda-13.4-arm64.tar.gz",
+      "sha256": "77b300bfc55955e5b6ae82cdb44fe4af8306f82d06309364b1e4e4a5c33242d6",
+      "size": 163315223,
+      "format": "tgz",
+      "files": [
+        {
+          "entry": "llama-b12110/libggml-cpu-armv8.2_3.so",
+          "path": "runtime/llama-cuda-0.9.0/libggml-cpu-armv8.2_3.so",
+          "sha256": "207a6974510ce513a279383db105cba73145255f9d4a4742fdac0f6b83842689",
+          "size": 1005392
+        },
+        {
+          "entry": "llama-b12110/libggml-cpu-armv9.2_1.so",
+          "path": "runtime/llama-cuda-0.9.0/libggml-cpu-armv9.2_1.so",
+          "sha256": "08a532699e5cf7545ebb57278bcc73c0a86089c57680cd189e8ddf2b8b7e0e08",
+          "size": 1071320
+        },
+        {
+          "entry": "llama-b12110/libggml-base.so.0.29.0",
+          "path": "runtime/llama-cuda-0.9.0/libggml-base.so.0",
+          "sha256": "4c1420e8e2a961a56773f2c9fbd04fb0d92a4892f919e96a6e61b41075410ebe",
+          "size": 870808
+        },
+        {
+          "entry": "llama-b12110/libggml.so.0.29.0",
+          "path": "runtime/llama-cuda-0.9.0/libggml.so.0",
+          "sha256": "59564f6f1aa0313cb75fc72a5bd2bf962b7e23f69a993998ff612281664b45f0",
+          "size": 77528
+        },
+        {
+          "entry": "llama-b12110/libmtmd.so.0.9.0",
+          "path": "runtime/llama-cuda-0.9.0/libmtmd.so.0",
+          "sha256": "d8e6f216cfec914a421b4485fb29b0bccc83853f5f72c99e5bc83dfd7367a35e",
+          "size": 2403680
+        },
+        {
+          "entry": "llama-b12110/llama-server",
+          "path": "runtime/llama-cuda-0.9.0/llama-server",
+          "sha256": "4eafcc5400649f84beefbdc396f55286f4808df894104a7bb7885888cd462b63",
+          "size": 72448,
+          "executable": true
+        },
+        {
+          "entry": "llama-b12110/libggml-cpu-armv8.2_2.so",
+          "path": "runtime/llama-cuda-0.9.0/libggml-cpu-armv8.2_2.so",
+          "sha256": "9ce5b413a759d377ab558db385fc5fc89e0efd96b9f9aa82c7745ead7841e516",
+          "size": 1070424
+        },
+        {
+          "entry": "llama-b12110/libggml-cuda.so",
+          "path": "runtime/llama-cuda-0.9.0/libggml-cuda.so",
+          "sha256": "1b3846b1068e8830bf92a25c292661ffc36a0acfff4c4dbc773a67bc09934f78",
+          "size": 168246752
+        },
+        {
+          "entry": "llama-b12110/libllama-common.so.0.9.0",
+          "path": "runtime/llama-cuda-0.9.0/libllama-common.so.0",
+          "sha256": "28908f86fc734f7afcb70dfa957617d687f366b69f087e36ed81e96531f13941",
+          "size": 5929752
+        },
+        {
+          "entry": "llama-b12110/libggml-cpu-armv8.0_1.so",
+          "path": "runtime/llama-cuda-0.9.0/libggml-cpu-armv8.0_1.so",
+          "sha256": "a103258aa4ad3f993a09983a38be7929a441d43573972dae7f327424693b85a1",
+          "size": 1003496
+        },
+        {
+          "entry": "llama-b12110/libllama.so.0.9.0",
+          "path": "runtime/llama-cuda-0.9.0/libllama.so.0",
+          "sha256": "9071656396be090d635b55005273c4622747a5b2712dfad9f6cc8013101cccaf",
+          "size": 5165200
+        },
+        {
+          "entry": "llama-b12110/LICENSE",
+          "path": "runtime/llama-cuda-0.9.0/LICENSE",
+          "sha256": "94f29bbed6a22c35b992c5c6ebf0e7c92f13b836b90f36f461c9cf2f0f1d010d",
+          "size": 1078
+        },
+        {
+          "entry": "llama-b12110/libggml-rpc.so",
+          "path": "runtime/llama-cuda-0.9.0/libggml-rpc.so",
+          "sha256": "bf77c6faad951cad3ea21ea44dd55cae51529b687bdbf1a6684e5cd3f2f09866",
+          "size": 337792
+        },
+        {
+          "entry": "llama-b12110/libggml-cpu-armv8.6_1.so",
+          "path": "runtime/llama-cuda-0.9.0/libggml-cpu-armv8.6_1.so",
+          "sha256": "bbc104d957e4f7725408ecea61d5727f09176b5dd24f3ceba9c9d115d5bbebd3",
+          "size": 1071304
+        },
+        {
+          "entry": "llama-b12110/libggml-cpu-armv8.2_1.so",
+          "path": "runtime/llama-cuda-0.9.0/libggml-cpu-armv8.2_1.so",
+          "sha256": "8c259040ab56651c3bb713995e75c41089c3f2bc96e94975288639013190b0c4",
+          "size": 1070424
+        },
+        {
+          "entry": "llama-b12110/libggml-cpu-armv8.6_2.so",
+          "path": "runtime/llama-cuda-0.9.0/libggml-cpu-armv8.6_2.so",
+          "sha256": "59ca8cf93bfeebbe8aba526da5f2f32eb864f4da0fcdfef6173dc61c15c01c88",
+          "size": 1071280
+        },
+        {
+          "entry": "llama-b12110/libggml-cpu-armv9.2_2.so",
+          "path": "runtime/llama-cuda-0.9.0/libggml-cpu-armv9.2_2.so",
+          "sha256": "36a15fceab1b2b9f06f7d1e3846287701e532e47cf344444af9e8dcea34f0aea",
+          "size": 1071320
+        },
+        {
+          "entry": "llama-b12110/libllama-server-impl.so",
+          "path": "runtime/llama-cuda-0.9.0/libllama-server-impl.so",
+          "sha256": "ebd4e4e8f0f6625bccb51fc4430e48209115bb1cb4f59cf3f952d95b67bd91a9",
+          "size": 7484472
+        }
+      ]
+    },
+    {
+      "id": "llama-cudart-linux-arm64",
+      "name": "CUDA 13.4 runtime · llama.cpp",
+      "group": "runtime",
+      "platform": "linux-arm64",
+      "url": "https://github.com/ggml-org/llama.cpp/releases/download/b12110/cudart-llama-b12110-bin-ubuntu-cuda-13.4-arm64.tar.gz",
+      "sha256": "75aae17d1e44a7516ea1e593141acde379cdd287c58b93015b37d254df05c78a",
+      "size": 552521396,
+      "format": "tgz",
+      "files": [
+        {
+          "entry": "cudart-llama-b12110-bin-ubuntu-cuda-13.4-arm64/libcublas.so.13",
+          "path": "runtime/llama-cuda-0.9.0/libcublas.so.13",
+          "sha256": "b980ad831a0af1a5700f3c1a9318de218594c08e41ab18e87b6922d53eedee18",
+          "size": 71958056
+        },
+        {
+          "entry": "cudart-llama-b12110-bin-ubuntu-cuda-13.4-arm64/libcublasLt.so.13",
+          "path": "runtime/llama-cuda-0.9.0/libcublasLt.so.13",
+          "sha256": "cf7b68ed38f66f068f3155a624a1ba3c01ddfb7a67b71ba918aa9f0e41e85648",
+          "size": 646050008
+        },
+        {
+          "entry": "cudart-llama-b12110-bin-ubuntu-cuda-13.4-arm64/libcudart.so.13",
+          "path": "runtime/llama-cuda-0.9.0/libcudart.so.13",
+          "sha256": "7d65c7bf558e433024a8cad1e3b84330b6bb660e2d737d0c69dd6e580b9d8dec",
+          "size": 793872
         }
       ]
     }

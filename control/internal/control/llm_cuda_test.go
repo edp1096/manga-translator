@@ -1,10 +1,77 @@
 package control
 
 import (
+	"context"
+	"os"
+	"path/filepath"
 	"reflect"
+	"runtime"
 	"strings"
 	"testing"
 )
+
+// Exercise the real installer against pinned upstream archives when supplied.
+func TestLinuxCUDAArchives(t *testing.T) {
+	cache := os.Getenv("MANGA_TEST_LINUX_CUDA_ARCHIVES")
+	if cache == "" {
+		t.Skip("set MANGA_TEST_LINUX_CUDA_ARCHIVES to downloaded release archives")
+	}
+	platform := "linux-" + runtime.GOARCH
+	c, err := loadCatalog(catalogFS(t, releaseCatalog(t)), platform)
+	if err != nil {
+		t.Fatal(err)
+	}
+	m := &Manager{catalog: c, platform: platform}
+	r := m.runtimeByID("llama-cuda")
+	if r == nil {
+		t.Fatal("missing CUDA runtime")
+	}
+	root := t.TempDir()
+	for _, a := range m.runtimeArtifacts(*r) {
+		file := filepath.Join(cache, a.SHA256)
+		if got, err := hashFile(file); err != nil || got != a.SHA256 {
+			t.Fatal(a.ID, got, err)
+		}
+		if err := installArtifact(context.Background(), root, a, file, nil); err != nil {
+			t.Fatal(a.ID, err)
+		}
+		for _, f := range a.Files {
+			if got, err := hashFile(filepath.Join(root, filepath.FromSlash(f.Path))); err != nil || got != f.SHA256 {
+				t.Fatal(f.Path, got, err)
+			}
+		}
+	}
+}
+
+func TestLinuxCUDAPresets(t *testing.T) {
+	zero := 0
+	memory := uint64(128 << 30)
+	for _, platform := range []string{"linux-amd64", "linux-arm64"} {
+		c, err := loadCatalog(catalogFS(t, releaseCatalog(t)), platform)
+		if err != nil {
+			t.Fatal(err)
+		}
+		m := &Manager{catalog: c, platform: platform}
+		for _, tc := range []struct {
+			vendor     string
+			cc, driver int
+			want       string
+		}{
+			{"10de", 121, 13040, "cuda"}, {"10de", 89, 13040, "cuda"},
+			{"10de", 89, 12040, "vulkan"}, {"13b5", 0, 0, "vulkan"}, {"1002", 0, 0, "vulkan"},
+		} {
+			g := GPUInfo{ID: "gpu", Vendor: tc.vendor, CUDAComputeCapability: tc.cc, CUDADriverVersion: tc.driver, MemoryTotal: &memory, VulkanIndex: &zero}
+			if tc.vendor == "10de" {
+				g.CUDAIndex = &zero
+			}
+			for _, p := range m.executionProfilesFor(HardwareInfo{GPUs: []GPUInfo{g}}) {
+				if p.ID != "cpu" && p.Settings.LLMExecution != tc.want {
+					t.Fatal(platform, tc, p)
+				}
+			}
+		}
+	}
+}
 
 func TestLLMCUDASelectionAndDependencies(t *testing.T) {
 	for _, platform := range []string{"windows-amd64", "linux-amd64", "linux-arm64"} {
@@ -15,12 +82,6 @@ func TestLLMCUDASelectionAndDependencies(t *testing.T) {
 		m := &Manager{catalog: c, platform: platform}
 		s := Settings{LLMExecution: "cuda", Model: "gemma-e4b", OCR: "hayai-int8", Layout: "koharu-768"}
 		err = m.validateExecution(s)
-		if platform != "windows-amd64" {
-			if err == nil {
-				t.Fatal("unpackaged CUDA runtime accepted", platform)
-			}
-			continue
-		}
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -32,7 +93,7 @@ func TestLLMCUDASelectionAndDependencies(t *testing.T) {
 		for _, a := range m.artifactsForSettings([]string{s.Model}, false, s) {
 			ids[a.ID] = true
 		}
-		if !ids["llama-cuda-windows-amd64"] || !ids["llama-cudart-windows-amd64"] || ids["llama-windows-amd64"] || ids["llama-vulkan-windows-amd64"] {
+		if !ids["llama-cuda-"+platform] || !ids["llama-cudart-"+platform] || ids["llama-"+platform] || ids["llama-vulkan-"+platform] {
 			t.Fatal(ids)
 		}
 	}

@@ -17,7 +17,7 @@ import (
 
 // Only persistent user assets move between releases. Executables, extension
 // code, caches, process locks and logs always belong to the new installation.
-var migrationPaths = []string{"data/library-groups.json", "config", "models", "runtime", "data/api-key", "data/native_api", "data/install-state.json", "data/downloads"}
+var migrationPaths = []string{"data/control-access-token", "data/library-groups.json", "config", "models", "runtime", "data/api-key", "data/native_api", "data/install-state.json", "data/downloads"}
 
 const migrationDir = ".data-import"
 
@@ -167,7 +167,7 @@ func freshMigrationDestination(root string) error {
 	}
 	// The current manager may already have generated credentials and defaults.
 	// All meaningful existing data must be absent rather than silently merged.
-	allowed := map[string]bool{"config/control.json": true, "data/api-key": true, "data/native_api/access-token": true}
+	allowed := map[string]bool{"data/control-access-token": true, "config/control.json": true, "data/api-key": true, "data/native_api/access-token": true}
 	for _, p := range migrationPaths {
 		base := filepath.Join(root, filepath.FromSlash(p))
 		if absent(base) {

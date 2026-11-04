@@ -32,7 +32,11 @@ func Run(dataRoot string, bundle fs.FS, noSetup, noOpen bool) error {
 	if e != nil {
 		return e
 	}
-	listener, e := net.Listen("tcp", fmt.Sprintf("127.0.0.1:%d", ControlPort))
+	network, e := readNetworkConfig(root)
+	if e != nil {
+		return e
+	}
+	listener, e := net.Listen("tcp", net.JoinHostPort(network.Listen, fmt.Sprint(ControlPort)))
 	if e != nil {
 		client := &http.Client{Timeout: time.Second}
 		if response, err := client.Get(fmt.Sprintf("http://127.0.0.1:%d/api/state", ControlPort)); err == nil {
@@ -76,6 +80,7 @@ func Run(dataRoot string, bundle fs.FS, noSetup, noOpen bool) error {
 		return e
 	}
 	defer m.Close()
+	m.announceConnection()
 	if !noSetup {
 		if e = m.StartInstalled(); e != nil {
 			m.setError(e)

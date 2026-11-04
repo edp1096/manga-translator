@@ -1,5 +1,5 @@
-const defaults = {server:'http://127.0.0.1:8793',token:'',target:'Korean',selector:'',captureFallback:true,displayMode:'auto',outsideTextMode:'tooltip',lightweightDisplay:false,forceTooltipRestoration:false,fontPolicy:{}};
-importScripts('fonts.js','panel_scope.js','readers.js','names.js','job_cache.js','library.js');
+const defaults = {server:'http://127.0.0.1:8793',token:'',managementServer:'',target:'Korean',selector:'',captureFallback:true,displayMode:'auto',outsideTextMode:'tooltip',lightweightDisplay:false,forceTooltipRestoration:false,fontPolicy:{}};
+importScripts('server-addresses.js','fonts.js','panel_scope.js','readers.js','names.js','job_cache.js','library.js');
 async function settings(){return {...defaults,...await chrome.storage.local.get(Object.keys(defaults))};}
 async function api(path, options={}) {
   const s=await settings();
@@ -171,12 +171,21 @@ chrome.runtime.onMessage.addListener((msg,sender,respond)=>{
   })().then(value=>respond({ok:true,value}),error=>respond({ok:false,error:String(error.message||error)}));
   return true;
 });
-// Only the local control app may request pairing. The access token stays in the
+// Only the configured management origin may request pairing. The access token stays in the
 // extension; it is never returned to the management page.
 chrome.runtime.onMessageExternal.addListener((msg,sender,respond)=>{
  let origin;try{origin=new URL(sender.url).origin;}catch{return false;}
- if(!['http://127.0.0.1:8794','http://localhost:8794'].includes(origin))return false;
  (async()=>{
+  if(!MangaServers.allowed(origin,await settings())){
+   if(msg.type==='control-status')return {installed:true,connected:false,configurationRequired:true};
+   if(msg.type!=='control-pair'||typeof msg.code!=='string'||!/^[a-f0-9]{64}$/.test(msg.code))throw Error('설정에 등록되지 않은 관리 서버입니다.');
+   if(!['http:','https:'].includes(new URL(origin).protocol))throw Error('잘못된 관리 서버 주소');
+   const old=(await chrome.storage.session.get('pendingServerConnection')).pendingServerConnection;
+   if(old&&Date.now()-old.created<10000)throw Error('열린 확장 연결 화면에서 확인하세요.');
+   const nonce=crypto.randomUUID();await chrome.storage.session.set({pendingServerConnection:{nonce,origin,code:msg.code,created:Date.now()}});
+   await chrome.tabs.create({url:chrome.runtime.getURL('connect.html')+'?request='+encodeURIComponent(nonce)});
+   return {installed:true,connected:false,pending:true};
+  }
   if(msg.type==='control-read'){
    const u=new URL(msg.url);if(!['http:','https:'].includes(u.protocol)||u.username||u.password)throw Error('잘못된 회차 주소');
    const tab=await chrome.tabs.create({url:'about:blank'});await chrome.storage.session.set({['libraryTarget:'+tab.id]:{url:MangaReaders.pageIdentity(u.href),target:msg.target}});await chrome.tabs.update(tab.id,{url:u.href});return true;
@@ -189,13 +198,13 @@ chrome.runtime.onMessageExternal.addListener((msg,sender,respond)=>{
   }
   if(msg.type==='control-pair'){
    if(typeof msg.code!=='string'||!/^[a-f0-9]{64}$/.test(msg.code))throw Error('연결 코드가 올바르지 않습니다.');
-   const response=await fetch('http://127.0.0.1:8794/api/extension/pair',{method:'POST',headers:{'Content-Type':'application/json','X-Manga-Extension':chrome.runtime.id},body:JSON.stringify({code:msg.code}),signal:AbortSignal.timeout(10000)});
+   const response=await fetch(origin+'/api/extension/pair',{method:'POST',headers:{'Content-Type':'application/json','X-Manga-Extension':chrome.runtime.id},body:JSON.stringify({code:msg.code}),signal:AbortSignal.timeout(10000)});
    const data=await response.json();if(!response.ok)throw Error(data.error||'관리 앱에 연결하지 못했습니다.');
-   if(data.server!=='http://127.0.0.1:8793'||typeof data.token!=='string'||data.token.length<32)throw Error('관리 앱의 연결 정보가 올바르지 않습니다.');
-   await chrome.storage.local.set({server:data.server,token:data.token});
+   if(MangaServers.origin(data.managementServer||origin)!==origin||!MangaServers.sameOrigin(MangaServers.origin(data.server),MangaServers.origin((await settings()).server))||typeof data.token!=='string'||data.token.length<32)throw Error('관리 앱의 연결 정보가 올바르지 않습니다.');
+   await chrome.storage.local.set({server:data.server,managementServer:origin,token:data.token});
   }else if(msg.type!=='control-status')throw Error('지원하지 않는 관리 요청입니다.');
   const s=await settings();let connected=false,error='';
-  try{if(s.server!=='http://127.0.0.1:8793')throw Error('다른 API에 연결되어 있습니다.');if(!s.token)throw Error('API 연결 설정이 필요합니다.');await api('/api/ping');connected=true;}catch(e){error=e.message;}
+  try{if(!MangaServers.allowed(origin,s))throw Error('다른 관리 서버에 연결되어 있습니다.');if(!s.token)throw Error('API 연결 설정이 필요합니다.');await api('/api/ping');connected=true;}catch(e){error=e.message;}
   return {installed:true,version:chrome.runtime.getManifest().version,server:s.server,connected,error};
  })().then(value=>respond({ok:true,value}),e=>respond({ok:false,error:e.message}));
  return true;
@@ -204,7 +213,7 @@ chrome.runtime.onMessageExternal.addListener((msg,sender,respond)=>{
 // Reapply stored results on completed navigation; no panel is opened automatically.
 chrome.tabs.onUpdated.addListener((tabId,change,tab)=>{
  if(change.status!=='complete'||!/^https?:/.test(tab.url||'')||/^http:\/\/(localhost|127\.0\.0\.1):8794/.test(tab.url||''))return;
- (async()=>{if(!await MangaLibrary.known(tab.url,tabId))return;const saved=await MangaLibrary.restore(tab.url,tabId);if(!saved.length)return;const current=await chrome.tabs.get(tabId);if(current.url!==tab.url)return;
+ (async()=>{if(MangaServers.allowed(tab.url,await settings()))return;if(!await MangaLibrary.known(tab.url,tabId))return;const saved=await MangaLibrary.restore(tab.url,tabId);if(!saved.length)return;const current=await chrome.tabs.get(tabId);if(current.url!==tab.url)return;
  await chrome.scripting.executeScript({target:{tabId,frameIds:[0]},files:['polygon.js','fonts.js','rotation.js','render.js','readers.js','names.js','content.js']});
  await chrome.tabs.sendMessage(tabId,{type:'control',action:'scan'});
  })().catch(error=>console.debug('저장 번역 불러오기:',error.message));

@@ -96,6 +96,9 @@ type managedProcess struct {
 	resource processResource
 }
 type Manager struct {
+	network       NetworkConfig
+	devicesMu     sync.Mutex
+	pairDevices   map[string]string
 	update        UpdateState
 	updateRelease *updateRelease
 	updatePending bool
@@ -142,6 +145,11 @@ func NewManager(root string, bundle fs.FS, logger *log.Logger) (*Manager, error)
 	}
 	ctx, cancel := context.WithCancel(context.Background())
 	m := &Manager{root: absolute, platform: currentPlatform(), bundle: bundle, catalog: c, downloader: NewDownloader(), prerequisites: ensurePrerequisites, receipts: map[string]Receipt{}, processes: map[string]*managedProcess{}, services: map[string]ServiceState{}, pairCodes: map[string]time.Time{}, settings: Settings{AutoStart: false, Threads: detectedCPU().RecommendedThreads, ThreadsAuto: true}, phase: "idle", logger: logger, ctx: ctx, shutdown: cancel}
+	m.network, e = readNetworkConfig(absolute)
+	if e != nil {
+		cancel()
+		return nil, e
+	}
 	legacySettings := false
 	if raw, e := os.ReadFile(filepath.Join(absolute, "config", "control.json")); e == nil {
 		var fields map[string]json.RawMessage
@@ -233,7 +241,7 @@ func randomSecret() (string, error) {
 	return hex.EncodeToString(b), nil
 }
 func (m *Manager) ensureCredentials() error {
-	for _, rel := range []string{"data/api-key", "data/native_api/access-token"} {
+	for _, rel := range []string{"data/api-key", "data/native_api/access-token", "data/control-access-token"} {
 		p := filepath.Join(m.root, filepath.FromSlash(rel))
 		if data, e := os.ReadFile(p); e == nil {
 			if len(strings.TrimSpace(string(data))) < 32 {
@@ -572,7 +580,7 @@ func (m *Manager) writeNativeConfig() error {
 	if err := m.validateExecution(settings); err != nil {
 		return err
 	}
-	cfg := map[string]any{"host": "127.0.0.1", "port": VisionPort, "data_dir": "data/native_api", "layout_model": m.selectedPath("layout"), "ocr_dir": m.selectedPath("ocr"), "ocr_backend": m.selectedOCRBackend(), "threads": threads, "llm_host": "127.0.0.1", "llm_port": LLMPort, "llm_model": modelID, "llm_key_file": "data/api-key"}
+	cfg := map[string]any{"host": m.listenHost(), "port": VisionPort, "data_dir": "data/native_api", "layout_model": m.selectedPath("layout"), "ocr_dir": m.selectedPath("ocr"), "ocr_backend": m.selectedOCRBackend(), "threads": threads, "llm_host": "127.0.0.1", "llm_port": LLMPort, "llm_model": modelID, "llm_key_file": "data/api-key"}
 	cfg["llm_execution"] = execution(settings.LLMExecution)
 	cfg["layout_execution"] = execution(settings.LayoutExecution)
 	cfg["ocr_execution"] = execution(settings.OCRExecution)
@@ -1089,6 +1097,7 @@ func (m *Manager) PairCode() (string, error) {
 	for k, t := range m.pairCodes {
 		if time.Now().After(t) {
 			delete(m.pairCodes, k)
+			delete(m.pairDevices, k)
 		}
 	}
 	m.pairCodes[code] = time.Now().Add(2 * time.Minute)
@@ -1097,12 +1106,19 @@ func (m *Manager) PairCode() (string, error) {
 func (m *Manager) Pair(code string) (map[string]string, error) {
 	m.mu.Lock()
 	expiry, ok := m.pairCodes[code]
+	deviceID := m.pairDevices[code]
+	delete(m.pairDevices, code)
 	delete(m.pairCodes, code)
 	m.mu.Unlock()
 	if !ok || time.Now().After(expiry) {
 		return nil, fmt.Errorf("연결 코드가 만료됐습니다. 관리 화면에서 다시 연결하세요")
 	}
 	token, e := os.ReadFile(filepath.Join(m.root, "data", "native_api", "access-token"))
+	if deviceID != "" {
+		var value string
+		value, e = m.deviceToken(deviceID)
+		token = []byte(value)
+	}
 	if e != nil {
 		return nil, e
 	}

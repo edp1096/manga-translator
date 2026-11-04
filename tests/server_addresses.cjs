@@ -1,0 +1,10 @@
+const vm=require('vm'),fs=require('fs'),assert=require('assert/strict');const box={URL};vm.createContext(box);vm.runInContext(fs.readFileSync(require('path').join(__dirname,'../extension/server-addresses.js'),'utf8'),box);const s=box.MangaServers;
+assert.equal(s.management({server:'http://192.168.100.61:8793'}),'http://192.168.100.61:8794');
+assert.equal(s.management({server:'http://server:8793',managementServer:'https://manage.example:9443'}),'https://manage.example:9443');
+assert(s.allowed('http://192.168.100.61:8794/page',{server:'http://192.168.100.61:8793'}));
+assert(!s.allowed('http://192.168.100.61:8793',{server:'http://192.168.100.61:8793'}));
+assert(!s.allowed('http://127.0.0.1:8794',{server:'http://192.168.100.61:8793'}));
+assert(s.allowed('http://localhost:8794',{server:'http://127.0.0.1:8793'}));
+for(const value of ['javascript:alert(1)','http://user:pass@host:8793','http://host:8793/a','http://host:8793?token=bad'])assert.throws(()=>s.origin(value));
+assert(s.sameOrigin('http://localhost:8793','http://127.0.0.1:8793'));assert(!s.sameOrigin('http://localhost:8794','http://127.0.0.1:8793'));
+console.log('PASS management derivation, explicit ports, configured-origin isolation, local alias, invalid URL rejection');

@@ -18,6 +18,7 @@ import (
 func (m *Manager) Handler() http.Handler {
 	mux := http.NewServeMux()
 	m.libraryRoutes(mux)
+	m.deviceRoutes(mux)
 	mux.HandleFunc("GET /api/jobs/data", func(w http.ResponseWriter, r *http.Request) {
 		offset, _ := strconv.Atoi(r.URL.Query().Get("offset"))
 		limit, _ := strconv.Atoi(r.URL.Query().Get("limit"))
@@ -227,6 +228,14 @@ func (m *Manager) Handler() http.Handler {
 			action(w, e)
 			return
 		}
+		if device, ok := m.deviceForCookie(r); ok {
+			m.mu.Lock()
+			if m.pairDevices == nil {
+				m.pairDevices = map[string]string{}
+			}
+			m.pairDevices[code] = device.ID
+			m.mu.Unlock()
+		}
 		respond(w, map[string]string{"code": code}, 200)
 	})
 	mux.HandleFunc("POST /api/open/extension", func(w http.ResponseWriter, r *http.Request) {
@@ -267,6 +276,9 @@ func (m *Manager) Handler() http.Handler {
 			respond(w, map[string]string{"error": e.Error()}, 400)
 			return
 		}
+		host, _, _ := net.SplitHostPort(r.Host)
+		result["server"] = "http://" + net.JoinHostPort(host, fmt.Sprint(VisionPort))
+		result["managementServer"] = "http://" + r.Host
 		respond(w, result, 200)
 	}
 	mux.HandleFunc("POST /api/extension/pair", pairHandler)
@@ -330,7 +342,7 @@ func (m *Manager) Handler() http.Handler {
 	})
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		host, port, e := net.SplitHostPort(r.Host)
-		if e != nil || (host != "127.0.0.1" && host != "localhost") || port != fmt.Sprint(ControlPort) {
+		if e != nil || !m.allowedControlHost(host) || port != fmt.Sprint(ControlPort) {
 			respond(w, map[string]string{"error": "잘못된 Host"}, 403)
 			return
 		}
@@ -338,6 +350,9 @@ func (m *Manager) Handler() http.Handler {
 		w.Header().Set("X-Content-Type-Options", "nosniff")
 		w.Header().Set("Referrer-Policy", "no-referrer")
 		w.Header().Set("Content-Security-Policy", "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; object-src 'none'; frame-ancestors 'none'; base-uri 'none'")
+		if !m.controlAccess(w, r) {
+			return
+		}
 		if r.URL.Path != "/api/extension/pair" && !strings.HasPrefix(r.URL.Path, "/api/library/presentation/") && r.Method != "GET" && r.Method != "HEAD" {
 			if r.Header.Get("Origin") != "http://"+r.Host || r.Header.Get("X-Manga-Control") != "1" {
 				respond(w, map[string]string{"error": "관리 화면에서 요청하세요"}, 403)

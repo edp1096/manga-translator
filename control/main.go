@@ -11,6 +11,8 @@ import (
 )
 
 func main() {
+	connectionCode := flag.Bool("connection-code", false, "print a fresh one-use browser connection code from the running server")
+	listen := flag.String("listen", "", "persist API and management bind address: 127.0.0.1 (default) or 0.0.0.0 (server)")
 	root := flag.String("root", "", "absolute application data directory (default: executable directory)")
 	printRoot := flag.Bool("print-root", false, "print the resolved data directory without creating files")
 	noSetup := flag.Bool("no-auto-setup", false, "do not start installed APIs automatically (downloads are always explicit)")
@@ -42,6 +44,13 @@ func main() {
 		return
 	}
 	resolvedRoot, e := control.ResolveRoot(*root)
+	if e == nil && *connectionCode {
+		if err := control.PrintConnectionCode(resolvedRoot); err != nil {
+			fmt.Fprintln(os.Stderr, err)
+			os.Exit(1)
+		}
+		return
+	}
 	if e == nil && *printRoot {
 		fmt.Println(resolvedRoot)
 		return
@@ -52,6 +61,9 @@ func main() {
 		if resumed && e == nil {
 			return
 		}
+	}
+	if e == nil && *listen != "" {
+		e = control.ConfigureListen(resolvedRoot, *listen)
 	}
 	var bundle fs.FS
 	if e == nil {

@@ -15,6 +15,7 @@
   }
   async function mount(tab,toggle=false){
     if(!eligible(tab))return;
+    if(globalThis.MangaServers&&MangaServers.allowed(tab.url,await settings()))return;
     assets ||= Promise.all(['panel.html','ui.css'].map(file=>fetch(chrome.runtime.getURL(file)).then(response=>{
       if(!response.ok)throw Error('패널 파일을 읽을 수 없습니다.');return response.text();
     }))).catch(error=>{assets=undefined;throw error;});

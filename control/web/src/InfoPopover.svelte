@@ -1,6 +1,6 @@
 <script>
  let {title, children} = $props();
- const id = 'info-' + crypto.randomUUID();
+ const id = $props.id();
  let button, popup, open = $state(false);
  function position(){
   if(!popup?.matches(':popover-open')||!button)return;

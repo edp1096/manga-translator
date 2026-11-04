@@ -1,8 +1,8 @@
-Runtime release pins (2026-10-26)
+Runtime release pins (llama.cpp updated 2026-11-04)
 
-llama.cpp: 0.7.0. The official v0.7.0 release's nightly-tag.txt selects b11669.
-  https://github.com/ggml-org/llama.cpp/releases/tag/v0.7.0
-  https://github.com/ggml-org/llama.cpp/releases/download/v0.7.0/nightly-tag.txt
+llama.cpp: 0.9.0. The official v0.9.0 release's nightly-tag.txt selects b12110.
+  https://github.com/ggml-org/llama.cpp/releases/tag/v0.9.0
+  https://github.com/ggml-org/llama.cpp/releases/download/v0.9.0/nightly-tag.txt
 ONNX Runtime: 1.31.0, official latest stable core release checked on this date.
   https://github.com/microsoft/onnxruntime/releases/tag/v1.31.0
 LiteRT: 2.3.1, latest official prebuilt Linux ARM64 / Windows x64 runtime listed
@@ -52,8 +52,12 @@ an old runtime against a new application's pin. Upstream breaking CLI/API/ABI
 changes still require compatibility testing; path independence cannot guarantee
 compatibility with arbitrary future releases.
 
-0.3.8 GPU variants
-- llama-vulkan: official b11669 builds for Linux ARM64, Linux x64, Windows x64.
+GPU variants
+- llama / llama-vulkan / llama-cuda: official b12110 CPU, Vulkan and CUDA builds
+  for Linux ARM64, Linux x64 and Windows x64. CUDA 13.4 dependencies come from
+  the matching GitHub release. No local compilation or Python runtime is needed.
+- Linux prebuilt compatibility must be tested on the target distribution; the
+  CUDA release imports GLIBC_2.38 (tested on Ubuntu 24.04).
 - ort-cuda: 1.31.0 Linux x64 CUDA 12 archive; Linux ARM64 CUDA 13 native libraries
   extracted from the official onnxruntime-gpu wheel. No Python module is installed
   or executed. NVIDIA native dependency wheels are treated as verified ZIP archives.
@@ -65,5 +69,5 @@ compatibility with arbitrary future releases.
 - Do not register archive symlink entries as outputs. Map real, hashed SO members
   to their required SONAME filenames. Windows ZIP backslashes are normalized
   before traversal validation and matching; installed paths remain canonical.
-- Optional archive installation tests use MANGA_RUNTIME_ARCHIVES and never fetch
+- Optional archive installation tests use MANGA_TEST_LLAMA_ARCHIVES and never fetch
   unpinned releases. Required runtime deletion and shared-file protection are tested.

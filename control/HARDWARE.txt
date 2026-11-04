@@ -45,8 +45,8 @@ synthetic homogeneous 4-core and SMT topologies, Windows processor records and
 manual settings. Windows cross-compilation is checked; Windows device probing
 has not yet been verified on a physical Windows host.
 
-Windows LLM CUDA support (2026-10-28):
-The packaged llama.cpp b11669 CUDA 13.4 runtime is selected independently from
+LLM CUDA support (updated 2026-11-04):
+The packaged llama.cpp b12110 CUDA 13.4 runtime is selected independently from
 OCR/layout. cuDriverGetVersion and cuDeviceGetAttribute provide driver capability
 and compute capability directly; no external hardware utility is executed.
 GPU presets retain their IDs and resolve translation to CUDA on supported NVIDIA
@@ -56,5 +56,6 @@ Manual CUDA requests never silently fall back to CPU or Vulkan. CUDA_VISIBLE_DEV
 maps the selected CUDA ordinal into llama's CUDA0 device. CUDA DLLs are app-local;
 no Python runtime or CUDA Toolkit installation is required.
 Physical Windows verification: RTX 4070 SUPER, CC 8.9, CUDA driver API 13.4.
-Linux retains its currently packaged CPU/Vulkan LLM choices; a CUDA LLM package
-has not been added for Linux in this Windows-first change.
+Linux x64 and ARM64 also provide official CPU/Vulkan/CUDA 0.9.0 runtimes.
+Verified CUDA translation on Spark GB10 and Linux x64 (WSL RTX 4070 SUPER).
+CPU/Vulkan choices remain available; Mali/AMD/Intel are never assigned CUDA.
