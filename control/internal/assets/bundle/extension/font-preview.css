@@ -1,0 +1,22 @@
+.font-preview{width:100%;min-width:0;order:3;margin:0 0 12px}
+.font-preview-sample{padding:10px 12px;background:#f6f8fa;border:1px solid #dce2e8;border-radius:6px;line-height:1.5!important;overflow-wrap:anywhere;max-height:110px;overflow:auto;color:#19232f}
+.font-preview summary{cursor:pointer;font-size:13px;color:#125c69;padding:6px 0}
+.font-preview-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:6px;max-height:320px;overflow:auto;padding:2px}
+.font-preview-grid button{display:block;text-align:left;background:white;color:#19232f;border:1px solid #ccd5dd;margin:0;padding:8px;min-width:0}
+.font-preview-grid button[aria-pressed=true]{border:2px solid #125c69;background:#edf7f8;padding:7px}
+.font-preview-grid button:focus-visible{outline:2px solid #125c69;outline-offset:1px}
+.font-preview-grid small,.font-preview-grid span{display:block;overflow-wrap:anywhere}
+.font-preview-grid small{font:12px/1.5 system-ui,sans-serif;margin-bottom:4px}
+
+.font-policy-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:12px 0 18px}
+.font-policy-row label{margin:0}
+.font-policy-choice{display:flex;align-items:center;gap:10px;flex:1;min-width:0;white-space:nowrap;font-size:13px}
+.font-policy-choice select{flex:1;min-width:0;width:auto}
+.font-policy-bold{white-space:nowrap;font-size:13px}
+.font-policy-row .font-preview{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px 10px;margin:0}
+.font-policy-row .font-preview>small{display:none}
+.font-policy-row .font-preview-sample{grid-column:1;grid-row:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:6px 10px;max-height:none}
+.font-policy-row .font-preview details{display:contents}
+.font-policy-row .font-preview summary{grid-column:2;grid-row:1;align-self:center;font-size:12px}
+.font-policy-row .font-preview-grid{grid-column:1/-1}
+.font-policy-row .font-preview details:not([open]) .font-preview-grid{display:none}

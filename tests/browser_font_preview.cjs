@@ -1,0 +1,26 @@
+const fs=require('node:fs'),path=require('node:path'),assert=require('node:assert/strict');
+const {chromium}=require(process.env.MANGA_PLAYWRIGHT||'playwright');
+(async()=>{fs.mkdirSync('research/font-preview-2026-11-04',{recursive:true});const browser=await chromium.launch({channel:process.env.MANGA_BROWSER_CHANNEL||'chromium',headless:true});try{
+ const page=await browser.newPage({viewport:{width:1200,height:1000}});const errors=[];page.on('pageerror',e=>errors.push(e.message));
+ await page.route('https://preview.test/**',route=>{const name=new URL(route.request().url()).pathname.slice(1);return route.fulfill({body:fs.readFileSync(path.join(__dirname,'../extension',name)),contentType:name.endsWith('.js')?'text/javascript':name.endsWith('.css')?'text/css':name.endsWith('.woff')?'font/woff':'text/html;charset=utf-8'});});
+ await page.addInitScript(()=>{window.saved={server:'http://127.0.0.1:8793',target:'Korean',fontPolicy:{}};const job='11111111-1111-4111-8111-111111111111';window.chrome={storage:{onChanged:{addListener(){}},local:{set:async s=>Object.assign(saved,s),get:async()=>({['edit:'+job]:{result:{width:200,height:200,target:'Korean',regions:[{id:1,type:'text',mode:'replace',text:'原文',translation:'안녕, 반가워!',bbox:[20,20,180,180],box:[20,20,180,180],fontSize:24}]}}})}},runtime:{sendMessage:async m=>{
+ if(m.type==='settings')return {ok:true,value:saved};
+ if(m.type==='font'){const bytes=new Uint8Array(await(await fetch('fonts/'+m.id+'.woff')).arrayBuffer());let s='';for(let i=0;i<bytes.length;i+=8192)s+=String.fromCharCode(...bytes.subarray(i,i+8192));return {ok:true,value:'data:font/woff;base64,'+btoa(s)};}
+ if(m.type==='asset'){const c=document.createElement('canvas');c.width=c.height=200;const x=c.getContext('2d');x.fillStyle='white';x.fillRect(0,0,200,200);return {ok:true,value:c.toDataURL()};}
+ if(m.type==='applyEdit'){window.applied=m;return {ok:true,value:true};}return {ok:false,error:'Unsupported '+m.type};}}};});
+ await page.goto('https://preview.test/options.html');await page.waitForFunction(()=>document.querySelector('.font-preview-sample').style.fontFamily.includes('MangaSchool_dialogue'));
+ await page.selectOption('#font-dialogue','serif');await page.check('#bold-dialogue');await page.waitForFunction(()=>{const s=document.querySelector('.font-preview-sample').style;return s.fontFamily.includes('MangaSchool_serif')&&s.fontWeight==='700';});
+ await page.locator('.font-preview summary').first().click();await page.waitForFunction(()=>document.querySelectorAll('.font-preview-grid button').length===9);
+ assert.equal(await page.evaluate(()=>[...document.fonts].filter(f=>f.status==='loaded').length),9);
+ const expected=['바른돋움','바른바탕','산뜻바탕','날개','민들레홀씨','돌담','여행','투호','소나기'];
+ assert.deepEqual(await page.locator('.font-preview-grid button small').allTextContents(),expected);assert.equal(await page.locator('.font-preview-heading, optgroup').count(),0);assert.deepEqual(await page.locator('#font-dialogue option:not([value=auto]):not([value=default])').allTextContents(),expected.map(n=>'학교안심 '+n));
+ await page.locator('.font-preview-grid button').filter({has:page.locator('small',{hasText:'민들레홀씨'})}).click();assert.equal(await page.locator('#font-dialogue').inputValue(),'handwritten');
+ await page.locator('form > button').click();assert.equal(await page.evaluate(()=>saved.fontPolicy.dialogue.font),'handwritten');
+ await page.screenshot({path:'research/font-preview-2026-11-04/settings.png',fullPage:true});
+ await page.goto('https://preview.test/editor.html?job=11111111-1111-4111-8111-111111111111');await page.waitForFunction(()=>document.querySelector('#status').textContent==='1개 영역');
+ await page.selectOption('#font-family','shower');await page.selectOption('#font-weight','700');await page.waitForFunction(()=>{const s=document.querySelector('.font-preview-sample').style;return s.fontFamily.includes('MangaSchool_shower')&&s.fontWeight==='700';});assert.equal(await page.locator('.font-preview-sample').textContent(),'안녕, 반가워!');
+ await page.locator('.font-preview summary').click();await page.waitForFunction(()=>document.querySelectorAll('.font-preview-grid button').length===9);assert.deepEqual(await page.locator('.font-preview-grid button small').allTextContents(),expected);assert.deepEqual(await page.locator('#font-family option:not([value=auto]):not([value=default])').allTextContents(),expected.map(n=>'학교안심 '+n));await page.locator('.font-preview-grid button').filter({has:page.locator('small',{hasText:'산뜻바탕'})}).click();await page.waitForFunction(()=>result.regions[0].fontChoice==='serif');
+ await page.screenshot({path:'research/font-preview-2026-11-04/editor.png',fullPage:true});
+ await page.evaluate(async()=>{lightweightDisplay=true;await draw();});await page.waitForFunction(()=>document.querySelector('.font-preview small').textContent.includes('경량 처리'));assert(!(await page.locator('.font-preview-sample').evaluate(e=>e.style.fontFamily)).includes('MangaSchool'));
+ assert.deepEqual(errors,[]);console.log('PASS settings/editor real nine fonts, bold, click-to-select, save, actual translation preview, lightweight');
+ }finally{await browser.close();}})().catch(e=>{console.error(e);process.exitCode=1});

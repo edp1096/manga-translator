@@ -8,12 +8,13 @@ let lightweightDisplay=false;
 let busy=false,bubbleGeometry,displayGeometry,displayMode,outsideTextMode;
 let maskEditing=false,maskTarget,maskPriorOriginal=false;
 const tell=t=>$('status').textContent=t;
+const fontPreview=MangaFontPreview.attach($('font-family'),()=>({region:result?.regions[selected]||{},target:result?.target||'Korean',light:lightweightDisplay}));
 async function draw(){
  const seq=++drawSeq;await globalThis.MangaFonts?.analyze(result,original,displayGeometry,lightweightDisplay);await globalThis.MangaFonts?.ensure(result,lightweightDisplay);if(seq!==drawSeq)return;
  result=MangaRender.presentation(MangaRender.editedBase(result,baseResult),displayMode,displayGeometry,outsideTextMode,restoration,lightweightDisplay,forceTooltipRestoration);
  const canvas=document.createElement('canvas');
  if(showOriginal||maskEditing){canvas.width=result.width;canvas.height=result.height;canvas.getContext('2d').drawImage(await MangaRender.image(original),0,0);}else await MangaRender.render(canvas,result,original,cleaned,restored);
- if(seq!==drawSeq)return;syncEditMode(result.regions[selected]);$('canvas').width=canvas.width;$('canvas').height=canvas.height;$('canvas').getContext('2d',{willReadFrequently:true}).drawImage(canvas,0,0);if(document.activeElement!==$('rotation'))$('rotation').value=result.regions[selected]?MangaRotation.angle(result.regions[selected]):0;handles();
+ if(seq!==drawSeq)return;fontPreview.update();syncEditMode(result.regions[selected]);$('canvas').width=canvas.width;$('canvas').height=canvas.height;$('canvas').getContext('2d',{willReadFrequently:true}).drawImage(canvas,0,0);if(document.activeElement!==$('rotation'))$('rotation').value=result.regions[selected]?MangaRotation.angle(result.regions[selected]):0;handles();
 }
 function refreshRegions(){
  $('regions').replaceChildren();for(const [i,r]of result.regions.entries())$('regions').append(new Option(`${i+1}. ${r.text.slice(0,24)||'새 글상자'}`,String(i)));
@@ -23,7 +24,7 @@ function select(i){selected=i;const r=result.regions[i];
  for(const id of ['source','translation','mode','white-area','font','font-family','font-weight','text-outline','paint-preset','text-color','text-hex','stroke-color','stroke-hex','stroke-width','rotation','rotation-auto','reset','delete','regions'])$(id).disabled=!r||busy||maskEditing;
  for(const id of ['apply','png','project','toggle'])$(id).disabled=busy||maskEditing;
  $('add').disabled=busy||maskEditing||result.regions.length>=150;
- $('regions').value=r?String(i):'';$('source').value=r?.text||'';$('translation').value=r?.translation||'';$('mode').value=maskEditing?'restore':r?.mode||'replace';$('white-area').value=r?.whiteScope||r?.whiteBackground?.kind||'bubble';$('font-family').value=(r?.fontChoice==='friendly'?'dialogue':r?.fontChoice)||'auto';$('font-weight').value=r?.fontWeight===400||r?.fontWeight===700?String(r.fontWeight):'auto';$('font-note').textContent=lightweightDisplay?'경량 모드에서는 기본 글꼴로 표시합니다. 선택은 저장됩니다.':'기본 대사는 바른돋움입니다. 직접 고르면 이 영역에 우선 적용됩니다.';$('font').value=r?.fontSize||24;syncPaint(r);$('rotation').value=r?MangaRotation.angle(r):0;handles();syncEditMode(r);$('mask-edit').disabled=!r||busy||maskEditing;for(const id of ['mask-tool','mask-size','mask-layout-box','mask-box','mask-clear','mask-preview','mask-cancel'])$(id).disabled=busy;
+ $('regions').value=r?String(i):'';$('source').value=r?.text||'';$('translation').value=r?.translation||'';$('mode').value=maskEditing?'restore':r?.mode||'replace';$('white-area').value=r?.whiteScope||r?.whiteBackground?.kind||'bubble';$('font-family').value=(r?.fontChoice==='friendly'?'dialogue':r?.fontChoice)||'auto';$('font-weight').value=r?.fontWeight===400||r?.fontWeight===700?String(r.fontWeight):'auto';$('font-note').textContent=lightweightDisplay?'경량 모드에서는 기본 글꼴로 표시합니다. 선택은 저장됩니다.':'자동은 설정과 원문 형태를 따릅니다. 직접 고르면 이 영역에 우선 적용됩니다.';$('font').value=r?.fontSize||24;syncPaint(r);$('rotation').value=r?MangaRotation.angle(r):0;handles();syncEditMode(r);$('mask-edit').disabled=!r||busy||maskEditing;for(const id of ['mask-tool','mask-size','mask-layout-box','mask-box','mask-clear','mask-preview','mask-cancel'])$(id).disabled=busy;fontPreview.update();
 }
 async function changeDisplay(){
  const region=result?.regions[selected];if(!region||busy)return;

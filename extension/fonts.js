@@ -2,6 +2,12 @@
 (() => {
 if(globalThis.MangaFonts)return;
 const catalog=Object.freeze({dialogue:'바른돋움',reflective:'날개',narration:'바른바탕',shout:'여행',impact:'투호',handwritten:'민들레홀씨',stone:'돌담',shower:'소나기',serif:'산뜻바탕'});
+const groups=Object.freeze([
+ {title:'돋움체',ids:['dialogue']},
+ {title:'바탕체',ids:['narration','serif']},
+ {title:'손글씨체',ids:['reflective','handwritten','stone']},
+ {title:'강조·효과음체',ids:['shout','impact','shower']}
+].map(group=>Object.freeze({...group,ids:Object.freeze(group.ids)})));
 const legacy=size=>`600 ${size}px "Noto Sans CJK KR", "Malgun Gothic", sans-serif`;
 let loader,revision=0;const pending=new Map(),loaded=new Set();
 const roles=Object.freeze({dialogue:'일반 대사',narration:'독백·서술',shout:'강조·외침',impact:'강한 효과음'});
@@ -112,5 +118,5 @@ async function analyze(result,original,geometry,light=false){
  })();analysisTasks.set(result,task);try{return await task;}finally{analysisTasks.delete(result);}
 }
 
-globalThis.MangaFonts={configure,normalizePolicy,defaultPolicy,roles,category,analyze,shapeDescriptor,shapeDistance,sourceKey,catalog,choice,weight,ensure,decorate,css,get revision(){return revision;},setLoader(value){loader=value;}};
+globalThis.MangaFonts={configure,normalizePolicy,defaultPolicy,roles,category,analyze,shapeDescriptor,shapeDistance,sourceKey,catalog,groups,choice,weight,ensure,decorate,css,get revision(){return revision;},setLoader(value){loader=value;}};
 })();
