@@ -10,6 +10,7 @@
 #include "panel_refinement.hpp"
 #include "name_dictionary.hpp"
 #include "llm_batch.hpp"
+#include "manual_recognition.hpp"
 #include "translation_retry.hpp"
 #include "reading_order.hpp"
 #include "translation_output.hpp"
@@ -267,6 +268,21 @@ struct NativePipeline{
   json output={{"source",source},{"translation",translation}};
   for(const char* key:{"familySource","givenSource","familyTranslation","givenTranslation"}){const auto value=name_string(suggestion,key);const auto& full=std::string(key).find("Source")!=std::string::npos?source:translation;require(value.empty()||full.find(value)!=std::string::npos,"Suggested name part changed the approved spelling");output[key]=value;}
   return output;
+ }
+ json recognize_region(const fs::path& folder,const json& input,const std::function<void()>& check_cancel){
+  check_cancel();const auto start=Clock::now();const auto selection=manual_recognition::checked(input);const auto original=load_page(folder/"original.png");const auto selected=manual_recognition::crop(original,selection);
+  const auto metadata=read_json(folder/"request.json");const auto target=metadata.value("target",std::string("Korean"));const auto dictionary=checked_dictionary(input.value("dictionary",metadata.value("dictionary",json::object())),target);
+  const auto temporary=root/"data/cache/region-recognition";fs::create_directories(temporary);struct Cleanup{fs::path folder;~Cleanup(){std::error_code e;fs::remove_all(folder,e);}}cleanup{temporary};
+  const auto file=temporary/"crop.ppm";crop_ppm(file,selected.image,{0,0,selected.image.width,selected.image.height});
+  std::unique_ptr<Engine> engine;const auto modeldir=root/config.at("ocr_dir").get<std::string>();const auto backend=config.value("ocr_backend",std::string("litert"));
+  if(backend=="litert")engine=std::make_unique<LiteEngine>(modeldir,config.value("threads",4),true);
+  else if(backend=="onnx-v2-kv")engine=std::make_unique<OrtKvEngine>(modeldir,config.value("threads",4),false,false,ort_execution(config,"ocr"));
+  else if(backend=="baberu-int4"||backend=="baberu-fp16")engine=std::make_unique<BaberuEngine>(modeldir,backend.substr(7),config.value("threads",4),ort_execution(config,"ocr"));
+  else throw std::runtime_error("Unsupported OCR backend");
+  check_cancel();const auto reading=engine->run(file,256);const auto text=strip(engine->tokenizer.decode(reading.ids));engine.reset();
+  require(reading.stopped,"인식할 글자가 너무 많거나 결과가 잘렸습니다. 영역을 나누어 다시 시도하세요.");require(nonblank(text),"선택한 영역에서 글자를 인식하지 못했습니다.");check_cancel();const auto ocr_ms=ms(start);
+  json warnings=json::array();const json rows=json::array({{{"id",0},{"type",selection.type},{"text",text}}});const auto translated=translate(rows,target,dictionary,&warnings);check_cancel();
+  return {{"text",text},{"translation",translated.at("0")},{"bbox",selected.bounds},{"target",target},{"warnings",warnings},{"preview",name_preview(selected.image,{0,0,selected.image.width,selected.image.height})},{"timings",{{"ocr_ms",ocr_ms},{"total_ms",ms(start)}}}};
  }
  json read_name(const fs::path& folder,int identifier,bool preview_only){
   const auto saved=read_json(folder/"result.json");const auto& regions=saved.at("regions");

@@ -1,0 +1,28 @@
+const fs=require('fs'),path=require('path'),assert=require('assert/strict'),{chromium}=require(process.env.MANGA_PLAYWRIGHT||'playwright');
+(async()=>{const browser=await chromium.launch({channel:process.env.MANGA_BROWSER_CHANNEL||'chromium',headless:true});try{const page=await browser.newPage({viewport:{width:1100,height:900}});await page.route('http://editor.test/**',route=>{const name=new URL(route.request().url()).pathname.slice(1)||'editor.html';route.fulfill({body:fs.readFileSync(path.join(__dirname,'../extension',name)),contentType:name.endsWith('.js')?'application/javascript':name.endsWith('.css')?'text/css':'text/html; charset=utf-8'});});await page.addInitScript(()=>{
+ const job='11111111-1111-4111-8111-111111111111',base={width:100,height:100,regions:[{id:1,type:'text',mode:'tooltip',bbox:[10,10,60,60],box:[10,10,60,60],text:'source',translation:'번역',fontSize:16,color:'#111'}]},geometry={width:100,height:100,bubbles:[]};globalThis.testState={calls:0,saved:{result:base,baseResult:base,geometry,displayMode:'white',outsideTextMode:'restore'},assets:{},fail:false};
+ const png=(w,h,paint)=>{const c=document.createElement('canvas');c.width=w;c.height=h;paint(c.getContext('2d'));return c.toDataURL();};
+ globalThis.chrome={storage:{local:{get:async()=>({['edit:'+job]:structuredClone(testState.saved)})}},runtime:{sendMessage:async msg=>{const t=testState;if(msg.type==='asset'){if(t.assets[msg.name])return{ok:true,value:t.assets[msg.name]};if(['original.png','cleaned.png'].includes(msg.name))return{ok:true,value:png(100,100,c=>{c.fillStyle='#fff';c.fillRect(0,0,100,100);c.fillStyle='#000';c.fillRect(25,25,10,10);})};return{ok:false,error:'missing asset'};}if(msg.type==='manualRestoration'){t.calls++;if(t.fail){t.fail=false;return{ok:false,error:'test failure'};}const mask=msg.mask,b=mask.bounds,w=b[2]-b[0],h=b[3]-b[1],asset='manual-'+t.calls.toString(16).padStart(32,'0')+'.png';t.assets[asset]=png(w,h,c=>{c.fillStyle='#00f';for(let i=0;i<mask.runs.length;i+=2)for(let p=mask.runs[i];p<mask.runs[i]+mask.runs[i+1];p++)c.fillRect(p%w,Math.floor(p/w),1,1);});return{ok:true,value:{version:1,width:100,height:100,asset,mask:{bounds:b,runs:mask.runs,maskPixels:mask.runs.filter((_,i)=>i%2).reduce((a,b)=>a+b,0)}}};}if(msg.type==='apply'){t.saved={...t.saved,result:structuredClone(msg.result),baseResult:structuredClone(msg.result)};return{ok:true,value:t.saved};}throw Error(msg.type);}}};
+ });await page.goto('http://editor.test/editor.html?job=11111111-1111-4111-8111-111111111111');await page.waitForFunction(()=>document.querySelector('#status').textContent==='1개 영역');
+ for(const width of [1400,1100,850]){
+  await page.setViewportSize({width,height:900});await page.evaluate(()=>{document.querySelector('aside').scrollTop=0;window.scrollTo(0,0)});
+  for(const id of ['source','translation','mode','restore-again','recognize-region']){const box=await page.locator('#'+id).boundingBox();assert(box&&box.y+box.height<850,id+' below primary controls at '+width);}
+  assert(await page.locator('#font-family').isHidden());assert(await page.locator('#paint-preset').isHidden());assert(await page.locator('#rotation').isHidden());
+  assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
+  await page.screenshot({path:'research/editor-panel-2026-11-05/panel-'+width+'.png'});
+ }
+ await page.locator('#font-details > summary').click();assert(await page.locator('#font-family').isVisible());await page.selectOption('#font-weight','700');await page.locator('#font-details > summary').click();
+ await page.locator('#color-details summary').click();await page.selectOption('#paint-preset','white-black');await page.locator('#color-details summary').click();
+ await page.locator('#position-details summary').click();await page.fill('#font','80');await page.locator('#position-details summary').click();
+ await page.locator('#editor-help summary').click();assert(await page.locator('.help-body').isVisible());await page.locator('#editor-help summary').click();
+ await page.click('#mask-edit');assert(await page.locator('#manual-tools').evaluate(e=>e.open));await page.click('#mask-box');await page.click('#mask-preview');await page.waitForFunction(()=>!busy&&maskPreviewShowing);assert(await page.locator('#translation').isVisible());assert.equal(await page.locator('#apply').isDisabled(),false);assert(await page.locator('#mask-preview').isVisible());
+ await page.locator('#manual-tools summary').click();assert(await page.locator('#mask-preview').isHidden());assert(await page.locator('#translation').isVisible());await page.click('#mask-edit');assert(await page.locator('#mask-preview').isVisible());
+
+ const foldBefore=await page.evaluate(()=>JSON.stringify(result));
+ for(const position of ['top','bottom']){
+  await page.locator('.panel-fold[data-position='+position+'] [data-panel-fold=expand]').click();assert(await page.evaluate(()=>[...document.querySelectorAll('aside details:not(.editor-help)')].every(e=>e.open)));assert.equal(await page.locator('#editor-help').evaluate(e=>e.open),false);
+  await page.locator('.panel-fold[data-position='+position+'] [data-panel-fold=collapse]').click();assert(await page.evaluate(()=>[...document.querySelectorAll('aside details:not(.editor-help)')].every(e=>!e.open)));
+ }
+ assert.equal(await page.evaluate(()=>JSON.stringify(result)),foldBefore,'Folding must not change edits');
+ console.log('PASS compact primary controls at 1400/1100/850, collapsible fonts/colors/geometry, help, restoration reopen and unlocked preview');
+ }finally{await browser.close();}})().catch(e=>{console.error(e);process.exitCode=1});

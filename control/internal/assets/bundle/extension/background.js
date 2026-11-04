@@ -145,6 +145,16 @@ chrome.runtime.onMessage.addListener((msg,sender,respond)=>{
       }
       case 'status':return (await api(`/api/jobs/${msg.id}`)).json();
       case 'bubbles':try{return await(await MangaLibrary.request('/bubbles/'+msg.id)).json();}catch{return (await api(`/api/jobs/${msg.id}/bubbles`,{method:'POST'})).json();}
+      case 'recognizeRegion':{
+        if(!/^[0-9a-f-]+$/.test(msg.id))throw Error('잘못된 작업 ID입니다.');
+        const saved=(await chrome.storage.local.get('edit:'+msg.id))['edit:'+msg.id];
+        if(!saved)throw Error('편집 화면을 다시 열어 주세요.');
+        const payload={box:msg.box,rotation:msg.rotation,type:msg.regionType};
+        let pageURL=saved.pageURL;
+        if(!pageURL)try{pageURL=(await chrome.tabs.get(saved.tabId)).url;}catch{}
+        if(pageURL){const context=await nameContext(pageURL,saved.result?.target||'Korean');payload.dictionary=MangaNames.dictionary(context.work);}
+        return (await api(`/api/jobs/${msg.id}/recognize-region`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload),timeout:240000})).json();
+      }
       case 'manualRestoration':return (await api(`/api/jobs/${msg.id}/restoration/manual`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(msg.mask),timeout:240000})).json();
       case 'restoration':try{return await(await MangaLibrary.request('/assets/'+msg.id+'/restoration-v1.json')).json();}catch{return (await api(`/api/jobs/${msg.id}/restoration`,{method:'POST',timeout:240000})).json();}
       case 'font':{
@@ -156,7 +166,7 @@ chrome.runtime.onMessage.addListener((msg,sender,respond)=>{
         let response;try{response=await MangaLibrary.request('/assets/'+msg.id+'/'+msg.name);}catch{response=await api(`/api/jobs/${msg.id}/${msg.name}`);}return encoded(await response.blob());
       }
       case 'edit':{
-        await chrome.storage.local.set({['edit:'+msg.id]:{tabId:sender.tab.id,key:msg.key,result:msg.result,baseResult:msg.baseResult,geometry:msg.geometry,restoration:msg.restoration,displayMode:msg.displayMode,outsideTextMode:msg.outsideTextMode,forceTooltipRestoration:msg.forceTooltipRestoration===true,lightweightDisplay:msg.lightweightDisplay===true}});
+        await chrome.storage.local.set({['edit:'+msg.id]:{tabId:sender.tab.id,pageURL:sender.tab.url,key:msg.key,result:msg.result,baseResult:msg.baseResult,geometry:msg.geometry,restoration:msg.restoration,displayMode:msg.displayMode,outsideTextMode:msg.outsideTextMode,forceTooltipRestoration:msg.forceTooltipRestoration===true,lightweightDisplay:msg.lightweightDisplay===true}});
         await chrome.tabs.create({windowId:sender.tab.windowId,url:chrome.runtime.getURL('editor.html')+'?job='+encodeURIComponent(msg.id)});return true;
       }
       case 'apply':{

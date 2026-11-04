@@ -1,0 +1,42 @@
+/* Compact editor controls; all selectors are scoped to this page. */
+#layout{grid-template-columns:minmax(350px,1fr) 360px;gap:16px;padding:16px}
+aside{padding:14px;scrollbar-gutter:stable;overscroll-behavior:contain}
+aside label{margin:8px 0;font-size:13px}
+aside input:not([type=checkbox]),aside select,aside textarea{padding:6px 8px;font-size:14px;min-width:0}
+aside textarea{min-height:0;resize:vertical;line-height:1.5}
+aside button{margin:0;padding:7px 10px;font-size:13px}
+.selection-tools{gap:6px}.selection-tools small{width:auto;flex:1;text-align:right;font-size:12px}
+.region-actions{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0 6px}
+.region-actions #recognize-region{flex:1;white-space:nowrap}
+.editor-modes{margin-top:10px}.editor-modes button{flex:1}
+#edit-mode-note{font-size:12px;line-height:1.45;margin:7px 0;color:#596776}
+.display-row{display:flex;gap:8px;align-items:flex-end;margin:8px 0}
+.display-row label{flex:1;margin:0}.display-row button{margin-bottom:1px;white-space:nowrap}
+.editor-section{border:1px solid #dce2e8;border-radius:7px;margin:8px 0;padding:0 10px}
+.editor-section>summary{cursor:pointer;padding:8px 0;font-size:13px;font-weight:600;user-select:none}
+.editor-section[open]{padding-bottom:8px}
+.editor-section>button{margin:3px 2px}
+#manual-tools:not([hidden]){display:block}
+#manual-tools #mask-controls>button{margin:3px 2px}
+#manual-tools #mask-layout-box,#manual-tools #mask-box{display:block;width:100%;margin:5px 0}
+#font-note{font-size:12px}#font-details .font-preview{margin:6px 0}
+#font-details .font-preview-sample{padding:6px 8px;max-height:74px}
+#recognition-preview{margin:8px 0;padding:8px;border:1px solid #7da6ac;border-radius:7px}
+#recognition-preview button{margin:3px 2px}
+#page-font-settings{margin-top:12px}
+.editor-help{position:relative;flex:none}
+.editor-help>summary{list-style:none;cursor:pointer;width:22px;height:22px;border:1px solid #8a9da3;border-radius:50%;display:flex;align-items:center;justify-content:center;font:italic 600 14px Georgia,serif;color:#125c69}
+.editor-help>summary::-webkit-details-marker{display:none}
+.help-body{position:absolute;right:0;top:28px;z-index:6;width:280px;max-height:360px;overflow:auto;background:white;padding:12px;border:1px solid #ccd5dd;border-radius:8px;box-shadow:0 4px 18px #0002;font-size:12px;line-height:1.5}
+.help-body p,.help-body small{display:block;margin:0 0 9px;font-size:12px}
+header{display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding:8px 16px}
+header h1{margin-right:6px}header button{margin:0;padding:7px 11px;font-size:13px}
+#status{font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;min-width:160px}
+@media(max-width:850px){#layout{grid-template-columns:minmax(240px,1fr) 320px;padding:10px;gap:10px}aside{padding:10px}}
+aside [hidden]{display:none!important}
+#edit-mode-note{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+button:focus-visible,summary:focus-visible{outline:2px solid #258e99;outline-offset:2px}
+
+.panel-fold{display:flex;gap:6px;justify-content:flex-end;margin:0 0 8px}
+.panel-fold button{background:#e8eef1;color:#234;font-size:12px;padding:5px 9px}
+.panel-fold[data-position=bottom]{border-top:1px solid #e0e5e9;padding-top:10px;margin:12px 0 0}

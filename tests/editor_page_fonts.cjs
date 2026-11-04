@@ -14,7 +14,7 @@ const {chromium}=require(process.env.MANGA_PLAYWRIGHT||'playwright');
  assert.deepEqual(await effective(),[['serif',700],['shower',400],['serif',700]]);
  const firstBoxes=await page.evaluate(()=>result.regions.map(r=>r.box));
  await page.locator('.box[data-region="2"]').click({modifiers:['Control']});assert.equal(await page.locator('.box.selected').count(),2);
- await page.selectOption('#font-family','stone');await page.selectOption('#font-weight','400');await page.evaluate(()=>draw());assert.deepEqual(await effective(),[['stone',400],['shower',400],['stone',400]]);
+ await page.locator('#font-details > summary').click();await page.selectOption('#font-family','stone');await page.selectOption('#font-weight','400');await page.evaluate(()=>draw());assert.deepEqual(await effective(),[['stone',400],['shower',400],['stone',400]]);
  assert.deepEqual(await page.evaluate(()=>result.regions.map(r=>r.box)),firstBoxes,'Selection must not move boxes');
  // Ctrl removes one member; then plain + Shift selects the full range.
  await page.locator('.box[data-region="0"]').click({modifiers:['Control']});assert.equal(await page.locator('.box.selected').count(),1);
@@ -24,7 +24,7 @@ const {chromium}=require(process.env.MANGA_PLAYWRIGHT||'playwright');
  await page.selectOption('#font-family','handwritten');await page.evaluate(()=>draw());await page.click('#apply');await page.waitForFunction(()=>document.querySelector('#status').textContent==='원본 페이지에 적용했습니다.');
  const saved=await page.evaluate(()=>JSON.parse(localStorage.getItem('edited')));assert.deepEqual(saved.fontDefaults,{font:'serif',weight:700});assert(saved.regions.every(r=>r.fontChoice==='handwritten'&&!('_pageFontDefaults'in r)));
  await page.reload();await page.waitForFunction(()=>document.querySelector('#status').textContent==='3개 영역');assert.deepEqual(await effective(),[['handwritten',700],['handwritten',700],['handwritten',700]]);
- await page.locator('#select-all').click();await page.selectOption('#font-family','auto');await page.evaluate(()=>draw());
+ await page.locator('#font-details > summary').click();await page.locator('#select-all').click();await page.selectOption('#font-family','auto');await page.evaluate(()=>draw());
  const normal=await page.evaluate(()=>document.querySelector('#canvas').toDataURL());
  await page.evaluate(async()=>{const out=document.createElement('canvas');await MangaRender.render(out,result,original,cleaned);window.exported=out.toDataURL();});assert.equal(await page.evaluate(()=>exported),normal,'Export must use page fonts');
  await page.evaluate(async()=>{lightweightDisplay=true;await draw();});assert((await page.evaluate(()=>result.regions.map(r=>r._fontId))).every(id=>id==='default'));

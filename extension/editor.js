@@ -6,15 +6,18 @@ globalThis.MangaFonts?.setLoader(id=>rpc({type:'font',id}));
 let result,baseResult,original,cleaned,restored,restoration,selected=0,showOriginal=false,drawSeq=0;
 let lightweightDisplay=false;
 const selectedIds=new Set();let selectionAnchor=null;
+let recognitionPending=null;
 let busy=false,bubbleGeometry,displayGeometry,displayMode,outsideTextMode;
+let maskPreviewShowing=false;
 let maskEditing=false,maskTarget,maskPriorOriginal=false;
-const tell=t=>$('status').textContent=t;
+const maskDrawing=()=>maskEditing&&!maskPreviewShowing;
+const tell=t=>{$('status').textContent=t;$('status').title=t;};
 const fontPreview=MangaFontPreview.attach($('font-family'),()=>({region:MangaFonts.withPage(result?.regions[selected]||{},result||{}),target:result?.target||'Korean',fontDefaults:result?.fontDefaults,light:lightweightDisplay}));
 async function draw(){
  const seq=++drawSeq;await globalThis.MangaFonts?.analyze(result,original,displayGeometry,lightweightDisplay);await globalThis.MangaFonts?.ensure(result,lightweightDisplay);if(seq!==drawSeq)return;
  result=MangaRender.presentation(MangaRender.editedBase(result,baseResult),displayMode,displayGeometry,outsideTextMode,restoration,lightweightDisplay,forceTooltipRestoration);
  const canvas=document.createElement('canvas');
- if(showOriginal||maskEditing){canvas.width=result.width;canvas.height=result.height;canvas.getContext('2d').drawImage(await MangaRender.image(original),0,0);}else await MangaRender.render(canvas,result,original,cleaned,restored);
+ if(showOriginal){canvas.width=result.width;canvas.height=result.height;canvas.getContext('2d').drawImage(await MangaRender.image(original),0,0);}else await MangaRender.render(canvas,result,original,cleaned,restored);
  if(seq!==drawSeq)return;fontPreview.update();syncEditMode(result.regions[selected]);$('canvas').width=canvas.width;$('canvas').height=canvas.height;$('canvas').getContext('2d',{willReadFrequently:true}).drawImage(canvas,0,0);if(document.activeElement!==$('rotation'))$('rotation').value=result.regions[selected]?MangaRotation.angle(result.regions[selected]):0;handles();
 }
 function refreshRegions(){
@@ -23,20 +26,23 @@ function refreshRegions(){
 }
 function selectedRegions(){return result?.regions.filter(r=>selectedIds.has(r.id))||[];}
 function syncSelection(){
- const rows=selectedRegions(),locked=busy||maskEditing;
+ const rows=selectedRegions(),locked=busy||maskDrawing();
  $('selection-count').textContent=rows.length>1?`${rows.length}개 선택 · 글꼴·굵기 일괄 적용 (나머지 편집은 현재 영역)`:`${rows.length}개 선택`;
  for(const id of ['select-all','select-single','page-font-family','page-font-weight'])$(id).disabled=locked||!result?.regions.length;
  const defaults=MangaFonts.pageDefaults(result?.fontDefaults);$('page-font-family').value=defaults.font;$('page-font-weight').value=String(defaults.weight);
  if(rows.length>1){const families=new Set(rows.map(r=>r.fontChoice==='friendly'?'dialogue':r.fontChoice||'auto')),weights=new Set(rows.map(r=>r.fontWeight||'auto'));$('font-family').value=families.size===1?[...families][0]:'mixed';$('font-weight').value=weights.size===1?String([...weights][0]):'mixed';}
 }
 function select(i){selected=i;const r=result.regions[i];
+ if(maskEditing&&maskTarget!==r?.id){maskEditing=false;maskTarget=undefined;setMaskPreview(false);$('erase-mask').hidden=true;$('mask-controls').hidden=true;}
+ if(recognitionPending&&recognitionPending.snapshot.id!==r?.id)clearRecognition();
  for(const id of selectedIds)if(!result.regions.some(r=>r.id===id))selectedIds.delete(id);
  if(r&&!selectedIds.has(r.id)){selectedIds.clear();selectedIds.add(r.id);selectionAnchor=r.id;}
 
- for(const id of ['source','translation','mode','white-area','font','font-family','font-weight','text-outline','paint-preset','text-color','text-hex','stroke-color','stroke-hex','stroke-width','rotation','rotation-auto','reset','delete','regions'])$(id).disabled=!r||busy||maskEditing;
- for(const id of ['apply','png','project','toggle'])$(id).disabled=busy||maskEditing;
- $('add').disabled=busy||maskEditing||result.regions.length>=150;
- $('regions').value=r?String(i):'';$('source').value=r?.text||'';$('translation').value=r?.translation||'';$('mode').value=maskEditing?'restore':r?.mode||'replace';$('white-area').value=r?.whiteScope||r?.whiteBackground?.kind||'bubble';$('font-family').value=(r?.fontChoice==='friendly'?'dialogue':r?.fontChoice)||'auto';$('font-weight').value=r?.fontWeight===400||r?.fontWeight===700?String(r.fontWeight):'auto';$('font-note').textContent=lightweightDisplay?'경량 모드에서는 기본 글꼴로 표시합니다. 선택은 저장됩니다.':'자동은 설정과 원문 형태를 따릅니다. 직접 고르면 이 영역에 우선 적용됩니다.';$('font').value=r?.fontSize||24;syncPaint(r);$('rotation').value=r?MangaRotation.angle(r):0;handles();syncEditMode(r);$('mask-edit').disabled=!r||busy||maskEditing;for(const id of ['mask-tool','mask-size','mask-layout-box','mask-box','mask-clear','mask-preview','mask-cancel'])$(id).disabled=busy;syncSelection();fontPreview.update();
+ for(const id of ['recognize-region','source','translation','mode','white-area','font','font-family','font-weight','text-outline','paint-preset','text-color','text-hex','stroke-color','stroke-hex','stroke-width','rotation','rotation-auto','reset','delete','regions'])$(id).disabled=!r||busy||maskDrawing();
+ for(const id of ['apply','png','project','toggle'])$(id).disabled=busy||maskDrawing();
+ $('add').disabled=busy||maskDrawing()||result.regions.length>=150;
+ $('restore-again').disabled=!r||busy||maskDrawing()||!savedRestorationMask(r);
+ $('regions').value=r?String(i):'';$('source').value=r?.text||'';$('translation').value=r?.translation||'';$('mode').value=maskDrawing()?'restore':r?.mode||'replace';$('white-area').value=r?.whiteScope||r?.whiteBackground?.kind||'bubble';$('font-family').value=(r?.fontChoice==='friendly'?'dialogue':r?.fontChoice)||'auto';$('font-weight').value=r?.fontWeight===400||r?.fontWeight===700?String(r.fontWeight):'auto';$('font-note').textContent=lightweightDisplay?'경량 모드에서는 기본 글꼴로 표시합니다. 선택은 저장됩니다.':'자동은 설정과 원문 형태를 따릅니다. 직접 고르면 이 영역에 우선 적용됩니다.';$('font').value=r?.fontSize||24;syncPaint(r);$('rotation').value=r?MangaRotation.angle(r):0;handles();syncEditMode(r);$('mask-edit').disabled=!r||busy||maskDrawing();for(const id of ['mask-tool','mask-size','mask-layout-box','mask-box','mask-clear','mask-preview','mask-cancel'])$(id).disabled=busy;syncSelection();fontPreview.update();
 }
 async function changeDisplay(){
  const region=result?.regions[selected];if(!region||busy)return;
@@ -67,19 +73,19 @@ $('add').onclick=()=>{
  const w=Math.min(result.width,Math.max(24,result.width*.25)),h=Math.min(result.height,Math.max(24,result.height*.12));
  const x=(result.width-w)/2,y=(result.height-h)/2,box=[x,y,x+w,y+h];
  result.regions.push({id:crypto.randomUUID(),manual:true,bbox:[...box],box,text:'',translation:'',mode:'replace',fontSize:24,color:'#111'});
- selected=result.regions.length-1;showOriginal=false;$('toggle').textContent='원본 보기';refreshRegions();draw();$('translation').focus();tell('글상자를 추가했습니다. 번역문을 입력하고 위치를 조정하세요.');
+ selected=result.regions.length-1;showOriginal=false;$('toggle').textContent='원본 보기';refreshRegions();draw();$('translation').focus();tell('글상자를 추가했습니다. 원문에 맞춰 위치와 크기를 조정한 뒤 영역 재인식·번역을 누르세요.');
 };
 $('delete').onclick=()=>{const removed=result?.regions[selected];if(!removed)return;if(!removed.manual){result.preservedRegions||=[];result.preservedRegions.push({bbox:removed.bbox,text:removed.text});}result.regions.splice(selected,1);selected=Math.max(0,Math.min(selected,result.regions.length-1));refreshRegions();draw();tell('선택한 글상자를 삭제했습니다. 페이지에 적용하면 저장됩니다.');};
-document.addEventListener('keydown',e=>{if(!maskEditing&&!busy&&e.key==='Delete'&&!e.target.closest('input,textarea,select,[contenteditable]')){e.preventDefault();$('delete').click();}});
+document.addEventListener('keydown',e=>{if(!maskDrawing()&&!busy&&e.key==='Delete'&&!e.target.closest('input,textarea,select,[contenteditable]')){e.preventDefault();$('delete').click();}});
 function handles(){
- $('handles').replaceChildren();if(showOriginal||maskEditing)return;
+ $('handles').replaceChildren();if(showOriginal||maskDrawing())return;
  result.regions.forEach((r,i)=>{
   const node=document.createElement('div');node.className='box'+(selectedIds.has(r.id)?' selected':'')+(i===selected?' primary':'');node.dataset.region=String(i);
   const place=()=>{const [x1,y1,x2,y2]=r.box;Object.assign(node.style,{left:x1/result.width*100+'%',top:y1/result.height*100+'%',width:(x2-x1)/result.width*100+'%',height:(y2-y1)/result.height*100+'%',transform:`rotate(${MangaRotation.angle(r)}deg)`});};place();
   for(const direction of ['nw','n','ne','e','se','s','sw','w']){const h=document.createElement('span');h.className='resize';h.dataset.handle=direction;h.title='글상자 크기 조절';node.append(h);}
   const turn=document.createElement('span');turn.className='rotate-handle';turn.dataset.handle='rotate';turn.title='글상자 회전';node.append(turn);
   node.onpointerdown=e=>{
-   if(busy||maskEditing)return;e.preventDefault();
+   if(busy||maskDrawing())return;e.preventDefault();
    if(e.ctrlKey||e.metaKey||e.shiftKey){
     if(e.shiftKey){const anchor=result.regions.findIndex(r=>r.id===selectionAnchor),start=anchor<0?selected:anchor;if(!e.ctrlKey&&!e.metaKey)selectedIds.clear();for(let n=Math.min(start,i);n<=Math.max(start,i);n++)selectedIds.add(result.regions[n].id);}
     else{if(selectedIds.has(r.id)&&selectedIds.size>1)selectedIds.delete(r.id);else selectedIds.add(r.id);selectionAnchor=r.id;}
@@ -107,11 +113,11 @@ function handles(){
 $('rotation').onchange=()=>{const r=result?.regions[selected],angle=Number($('rotation').value);if(!r||busy||!Number.isFinite(angle))return;const value=MangaRotation.normalize(angle);r.rotation=value;r.layoutOverride=true;r.displayOverride=true;draw();};
 $('rotation-auto').onclick=()=>{const r=result?.regions[selected];if(!r||busy)return;delete r.rotation;draw();};
 for(const [id,prop]of [['source','text'],['translation','translation'],['font','fontSize']])$(id).oninput=()=>{if(!result?.regions[selected])return;if(id==='font')result.regions[selected].layoutOverride=true;result.regions[selected][prop]=id==='font'?Math.max(8,Math.min(200,Number($(id).value)||24)):$(id).value;draw();};
-$('font-family').onchange=()=>{if(busy||maskEditing)return;const choice=$('font-family').value;if(choice!=='auto'&&choice!=='default'&&!Object.hasOwn(MangaFonts.catalog,choice))return;for(const r of selectedRegions())if(choice==='auto')delete r.fontChoice;else r.fontChoice=choice;draw();};
+$('font-family').onchange=()=>{if(busy||maskDrawing())return;const choice=$('font-family').value;if(choice!=='auto'&&choice!=='default'&&!Object.hasOwn(MangaFonts.catalog,choice))return;for(const r of selectedRegions())if(choice==='auto')delete r.fontChoice;else r.fontChoice=choice;draw();};
 $('mode').onchange=changeDisplay;
 $('white-area').onchange=changeDisplay;
 $('regions').onchange=()=>{selectedIds.clear();select(Number($('regions').value));};
-$('select-all').onclick=()=>{if(busy||maskEditing)return;for(const r of result.regions)selectedIds.add(r.id);select(selected);};
+$('select-all').onclick=()=>{if(busy||maskDrawing())return;for(const r of result.regions)selectedIds.add(r.id);select(selected);};
 $('select-single').onclick=()=>{selectedIds.clear();select(selected);};
 $('reset').onclick=()=>{if(result.regions[selected]){result.regions[selected].layoutOverride=true;result.regions[selected].box=[...result.regions[selected].bbox];draw();}};
 $('toggle').onclick=()=>{showOriginal=!showOriginal;$('toggle').textContent=showOriginal?'번역 보기':'원본 보기';draw();};
@@ -124,7 +130,7 @@ chrome.storage?.onChanged?.addListener((changes,area)=>{if(area==='local'&&chang
 
 setupManualMask();
 
-$('font-weight').onchange=()=>{if(busy||maskEditing)return;const value=$('font-weight').value;if(!['auto','400','700'].includes(value))return;for(const r of selectedRegions())if(value==='auto')delete r.fontWeight;else r.fontWeight=Number(value);draw();};
+$('font-weight').onchange=()=>{if(busy||maskDrawing())return;const value=$('font-weight').value;if(!['auto','400','700'].includes(value))return;for(const r of selectedRegions())if(value==='auto')delete r.fontWeight;else r.fontWeight=Number(value);draw();};
 
 const paintPresets={black:{fill:'#111111',stroke:null,width:3},'black-white':{fill:'#111111',stroke:'#ffffff',width:3},'white-black':{fill:'#ffffff',stroke:'#111111',width:3},'yellow-black':{fill:'#ffdf00',stroke:'#111111',width:3}};
 function syncPaint(r){
@@ -135,7 +141,7 @@ function syncPaint(r){
  $('stroke-width').value=p?.width??3;
  $('text-outline').value=p?(p.stroke?'white':'none'):r?.outlineChoice||'auto';
 }
-function setPaint(p){const r=result?.regions[selected];if(!r||busy||maskEditing)return;if(p)r.textPaint={...p};else delete r.textPaint;delete r.outlineChoice;syncPaint(r);draw();}
+function setPaint(p){const r=result?.regions[selected];if(!r||busy||maskDrawing())return;if(p)r.textPaint={...p};else delete r.textPaint;delete r.outlineChoice;syncPaint(r);draw();}
 function customPaint(){return {fill:$('text-color').value,stroke:$('text-outline').value==='none'?null:$('stroke-color').value,width:Number($('stroke-width').value)};}
 $('paint-preset').onchange=()=>{const key=$('paint-preset').value;setPaint(key==='auto'?null:paintPresets[key]||customPaint());};
 for(const [color,hex]of [['text-color','text-hex'],['stroke-color','stroke-hex']]){
@@ -146,10 +152,11 @@ $('stroke-width').onchange=()=>{const width=Number($('stroke-width').value);if(!
 $('text-outline').onchange=()=>setPaint($('text-outline').value==='auto'?null:customPaint());
 
 function syncEditMode(r){
- $('text-tools').hidden=maskEditing;$('manual-tools').hidden=!maskEditing;
- $('layout-mode').disabled=busy;$('layout-mode').setAttribute('aria-pressed',String(!maskEditing));$('mask-edit').setAttribute('aria-pressed',String(maskEditing));
- $('edit-mode-note').textContent=maskEditing?'빨간 부분이 지워집니다. 미리보기 전 선택은 배치 모드로 돌아가면 취소됩니다.':'상자는 번역문 위치와 크기만 바꿉니다. 이미지 밖으로도 이동할 수 있습니다.';
- $('restoration-compare').hidden=maskEditing||!r?.manualRestoration;
+ $('text-tools').hidden=maskDrawing();$('manual-tools').hidden=!maskEditing;
+ $('layout-mode').disabled=busy;$('layout-mode').setAttribute('aria-pressed',String(!maskDrawing()));$('mask-edit').setAttribute('aria-pressed',String(maskDrawing()));
+ $('edit-mode-note').textContent=maskEditing?(maskPreviewShowing?'복원 완료 · 편집 및 페이지 적용 가능':'빨간 영역을 선택하고 복원 미리보기를 누르세요.'):'드래그로 이동 · 손잡이로 크기·각도 조절';
+ $('edit-mode-note').title=$('edit-mode-note').textContent;
+ $('restoration-compare').hidden=!r?.manualRestoration;
  for(const id of ['compare-before','compare-after'])$(id).disabled=busy;
  $('compare-before').setAttribute('aria-pressed',String(showOriginal));$('compare-after').setAttribute('aria-pressed',String(!showOriginal));
 }
@@ -159,8 +166,39 @@ $('compare-after').onclick=()=>{showOriginal=false;$('toggle').textContent='원�
 
 for(const group of MangaFonts.groups)for(const id of group.ids)$('page-font-family').append(new Option('학교안심 '+MangaFonts.catalog[id],id));
 for(const id of ['page-font-family','page-font-weight'])$(id).onchange=()=>{
- if(!result||busy||maskEditing)return;
+ if(!result||busy||maskDrawing())return;
  const defaults=MangaFonts.pageDefaults({font:$('page-font-family').value,weight:$('page-font-weight').value==='auto'?'auto':Number($('page-font-weight').value)});
  if(defaults.font==='auto'&&defaults.weight==='auto')delete result.fontDefaults;else result.fontDefaults=defaults;
  draw();
+};
+
+function clearRecognition(){recognitionPending=null;$('recognition-preview').hidden=true;$('recognition-image').removeAttribute('src');}
+$('recognition-cancel').onclick=clearRecognition;
+$('recognize-region').onclick=async()=>{
+ const region=result?.regions[selected];if(!region||busy||maskDrawing())return;
+ clearRecognition();const snapshot=MangaRecognition.snapshot(region,MangaRotation.angle(region));
+ busy=true;select(selected);tell('선택한 원본 영역을 재인식하고 번역하는 중…');
+ try{
+  const response=await rpc({type:'recognizeRegion',id:job,box:snapshot.box,rotation:snapshot.rotation,regionType:region.type==='effect'?'effect':'text'});
+  MangaRecognition.validate(response);
+  recognitionPending={snapshot,response};$('recognition-source').value=response.text;$('recognition-translation').value=response.translation;
+  $('recognition-image').src=response.preview;$('recognition-note').textContent=(response.warnings||[]).map(w=>typeof w==='string'?w:JSON.stringify(w)).join(' · ');
+  $('recognition-preview').hidden=false;tell('인식 원문과 번역을 확인하고 반영하세요. 기존 편집 내용은 아직 바뀌지 않았습니다.');
+ }catch(e){tell(e.message);}finally{busy=false;select(selected);}
+};
+$('recognition-accept').onclick=async()=>{
+ if(!recognitionPending||busy||maskDrawing())return;
+ try{
+  const {snapshot,response}=recognitionPending;const index=result.regions.findIndex(r=>r.id===snapshot.id);
+  if(index<0)throw Error('대상 글상자가 삭제되었습니다. 다시 인식하세요.');
+  result.regions[index]=MangaRecognition.accept(result.regions[index],snapshot,response,MangaRotation.angle(result.regions[index]));
+  selected=index;clearRecognition();refreshRegions();await draw();tell('글상자에 반영했습니다. 이미지 복원은 별도로 실행하고, 페이지에 적용하여 저장하세요.');
+ }catch(e){tell(e.message);}
+};
+
+for(const button of document.querySelectorAll('[data-panel-fold]'))button.onclick=()=>{
+ const open=button.dataset.panelFold==='expand',panel=button.closest('aside');
+ for(const section of panel.querySelectorAll('details:not(.editor-help)'))section.open=open;
+ if(!open)panel.scrollTop=0;
+ else if(button.closest('.panel-fold').dataset.position==='bottom')button.scrollIntoView({block:'nearest'});
 };
