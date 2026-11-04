@@ -914,11 +914,20 @@ function forcePlan(result,r){
  c.width=c.height=0;if(count<w*h*.5||runs.length>200000)return null;
  return {row,mask:{width:result.width,height:result.height,bounds:b,runs},key:forceKey(r,result)};
 }
-function forcePresentation(result){return {...result,regions:result.regions.map(r=>{
+// Outside captions use their detected text extent for placement. The sparse
+// erasure mask and its light-interior rectangle do not define text capacity.
+function forcedTextBox(result,region,saved,geometry){
+ if(!geometry||geometry.width!==result.width||geometry.height!==result.height||!Array.isArray(geometry.bubbles)||!validBox(region.bbox,result))return saved.box;
+ // Even a partial balloon overlap retains the established interior constraint.
+ if(geometry.bubbles.some(b=>!validBox(b.bbox,result)||intersection(b.bbox,region.bbox)>0))return saved.box;
+ const plan=forcePlan(result,{...region,sourceInkBounds:undefined});
+ return plan?.row.box||saved.box;
+}
+function forcePresentation(result,geometry){return {...result,regions:result.regions.map(r=>{
  if(!forceCandidate(r))return r;const saved=result.forcedRestorations?.[r.id];if(!saved||saved.key!==forceKey(r,result))return r;
- const b=saved.box;if(!Array.isArray(b)||b.length!==4||!b.every(Number.isFinite)||b[0]<0||b[1]<0||b[2]>result.width||b[3]>result.height||b[2]<=b[0]||b[3]<=b[1])return r;
+ const b=forcedTextBox(result,r,saved,geometry);if(!Array.isArray(b)||b.length!==4||!b.every(Number.isFinite)||b[0]<0||b[1]<0||b[2]>result.width||b[3]>result.height||b[2]<=b[0]||b[3]<=b[1])return r;
  if([...result.regions,...(result.preservedRegions||[])].some(q=>q.id!==r.id&&[q.bbox,q.box].filter(Array.isArray).some(v=>Math.min(b[2],v[2])>Math.max(b[0],v[0])&&Math.min(b[3],v[3])>Math.max(b[1],v[1]))))return r;
- const row={...r,box:saved.box,mode:'restore',layoutOverride:true,displayOverride:true,rotation:0};if(!textLayout(row))return r;
+ const row={...r,box:b,mode:'restore',layoutOverride:true,displayOverride:true,rotation:0};if(!textLayout(row))return r;
  return {...row,manualRestoration:saved.ref,automaticForced:true};
 })};}
 async function forceRestore(result,job,request,current,progress,geometry){
@@ -977,7 +986,7 @@ function presentation(result,mode,geometry,outsideMode='tooltip',restoration,lig
   displayed={...displayed,regions:displayed.regions.map((r,i)=>r.mode==='tooltip'&&bubbleRestorationCandidate(shown.regions[i],shown,geometry)&&restored.regions[i].mode==='restore'?restored.regions[i]:r)};
  }
  if(mode==='white'&&!lightweight)displayed=sourceWhitePresentation(displayed);
- if(force&&!lightweight)displayed=forcePresentation(displayed);
+ if(force&&!lightweight)displayed=forcePresentation(displayed,geometry);
  displayed={...displayed,regions:displayed.regions.map((r,i)=>({...r,_sourceColor:result.regions[i]?._sourceColor||result.regions[i]?.color}))};
  return globalThis.MangaRotation?MangaRotation.apply(displayed,textLayout,lightweight):displayed;
  }finally{presentationMeasures=previousMeasures;presentationWraps=previousWraps;presentationSegments=previousSegments;}
@@ -985,7 +994,7 @@ function presentation(result,mode,geometry,outsideMode='tooltip',restoration,lig
 function editedBase(result,base){
  const clean={...result};delete clean._fontLight;delete clean._rotationPrepared;
  return {...clean,regions:result.regions.map(region=>{
-  const restored={...region};delete restored._sourceColor;delete restored._paintStyle;delete restored._fontId;delete restored._fontLight;delete restored._rotation;delete restored.automaticRotation;
+  const restored={...region};delete restored._sourceColor;delete restored._paintStyle;delete restored._pageFontDefaults;delete restored._fontId;delete restored._fontLight;delete restored._rotation;delete restored.automaticRotation;
   const prior=base?.regions.find(candidate=>candidate.id===region.id);
   if(region.automaticForced&&prior){for(const k of ["mode","manualRestoration","whiteBackground","whiteScope","layoutOverride","displayOverride","box","rotation"])if(Object.hasOwn(prior,k))restored[k]=prior[k];else delete restored[k];delete restored.automaticForced;}
   if(!prior)return restored;

@@ -1,12 +1,12 @@
 /* Packaged, unmodified KERIS school-safe fonts; see fonts/LICENSE.txt. */
 (() => {
 if(globalThis.MangaFonts)return;
-const catalog=Object.freeze({dialogue:'바른돋움',reflective:'날개',narration:'바른바탕',shout:'여행',impact:'투호',handwritten:'민들레홀씨',stone:'돌담',shower:'소나기',serif:'산뜻바탕'});
+const catalog=Object.freeze({dialogue:'바른돋움',reflective:'날개',narration:'바른바탕',shout:'여행',impact:'투호',handwritten:'민들레홀씨',stone:'돌담',shower:'소나기',serif:'산뜻바탕',kimdaegeon:'솔뫼 김대건'});
 const groups=Object.freeze([
  {title:'돋움체',ids:['dialogue']},
  {title:'바탕체',ids:['narration','serif']},
  {title:'손글씨체',ids:['reflective','handwritten','stone']},
- {title:'강조·효과음체',ids:['shout','impact','shower']}
+ {title:'강조·효과음체',ids:['shout','impact','kimdaegeon','shower']}
 ].map(group=>Object.freeze({...group,ids:Object.freeze(group.ids)})));
 const legacy=size=>`600 ${size}px "Noto Sans CJK KR", "Malgun Gothic", sans-serif`;
 let loader,revision=0;const pending=new Map(),loaded=new Set();
@@ -22,17 +22,21 @@ function category(region){
  if(role==='shout'&&short&&!effect)return 'shout';
  return 'dialogue';
 }
+const defaultChoice=role=>role==='narration'?'reflective':role;
+function pageDefaults(value){return {font:value?.font==='default'||Object.hasOwn(catalog,value?.font)?value.font:'auto',weight:[400,700].includes(value?.weight)?value.weight:'auto'};}
+function withPage(region,result){return {...region,_pageFontDefaults:pageDefaults(result.fontDefaults)};}
 function choice(region,target,light=false){
  if(light)return 'default';
  if(region.fontChoice==='friendly')return 'dialogue';
  if(region.fontChoice==='default'||Object.hasOwn(catalog,region.fontChoice))return region.fontChoice;
+ const page=pageDefaults(region._pageFontDefaults);if(page.font!=='auto')return page.font;
  if(target!=='Korean')return 'default';
  const role=category(region);if(policy[role].font!=='auto')return policy[role].font;
  const source=region.sourceTypography;if(source?.version===1&&source.key===sourceKey(region)&&Object.hasOwn(catalog,source.choice))return source.choice;
- return role;
+ return defaultChoice(role);
 }
 async function ensure(result,light=result._fontLight===true){
- const ids=new Set(result.regions.map(r=>choice(r,result.target,light)));
+ const ids=new Set(result.regions.map(r=>choice(withPage(r,result),result.target,light)));
  await Promise.all([...ids].filter(id=>id!=='default').map(id=>{
   if(!pending.has(id))pending.set(id,(async()=>{
    try{
@@ -45,17 +49,18 @@ async function ensure(result,light=result._fontLight===true){
   return pending.get(id);
  }));
 }
-function decorate(result,light=result._fontLight===true){return {...result,_fontLight:light,regions:result.regions.map(r=>({...r,_fontId:choice(r,result.target,light),_fontLight:light}))};}
+function decorate(result,light=result._fontLight===true){return {...result,_fontLight:light,regions:result.regions.map(r=>({...withPage(r,result),_fontId:choice(withPage(r,result),result.target,light),_fontLight:light}))};}
 function weight(region){
  if(region?._fontLight)return 400;
  if(region?.fontWeight===400||region?.fontWeight===700)return region.fontWeight;
+ const page=pageDefaults(region?._pageFontDefaults);if(page.weight!=='auto')return page.weight;
  // Reuse semantic classification; punctuation alone does not make speech bold.
  return policy[category(region)].bold?700:400;
 }
 function css(size,region){const id=region?._fontId;return loaded.has(id)?`${weight(region)} ${size}px "MangaSchool_${id}", "Noto Sans CJK KR", "Malgun Gothic", sans-serif`:!region?._fontLight?`${weight(region)} ${size}px "Noto Sans CJK KR", "Malgun Gothic", sans-serif`:legacy(size);}
 // Source-image shape matching is conservative: ambiguity retains the existing
 // typography policy. This is not a semantic guess from the translated sentence.
-const sourceKey=r=>JSON.stringify([2,r.text,r.bbox,r.fontStyle?.role,r.type]);
+const sourceKey=r=>JSON.stringify([3,r.text,r.bbox,r.fontStyle?.role,r.type]);
 function sourceEligible(r){
  if(policy[category(r)].font!=='auto'||r.manual||r.fontChoice&&r.fontChoice!=='auto'||r.ocrTruncated||r.truncated||!r.text||!Array.isArray(r.bbox))return false;
  return r.type==='text'&&category(r)==='narration'||r.type==='effect'&&category(r)==='impact';
@@ -91,11 +96,11 @@ function templateShapes(text,aspect,ids){
 const sourceInside=(r,result,geometry)=>r.type==='text'&&!!geometry?.bubbles?.some(bg=>globalThis.MangaRender?.coverage(bg,result,r.bbox)>=.9);
 const analysisTasks=new WeakMap();
 async function analyze(result,original,geometry,light=false){
- if(light||result.target!=='Korean'||!original)return false;
+ if(light||result.target!=='Korean'||!original||pageDefaults(result.fontDefaults).font!=='auto')return false;
  const candidates=result.regions.filter(r=>sourceEligible(r)&&(r.sourceTypography?.key!==sourceKey(r)||r.sourceTypography.inside!==sourceInside(r,result,geometry)));if(!candidates.length)return false;
  if(analysisTasks.has(result))return analysisTasks.get(result);
  const task=(async()=>{
-  const ids=[...new Set(candidates.flatMap(r=>r.type==='effect'?['impact','shower']:['dialogue','narration','reflective','handwritten','stone']))];
+  const ids=[...new Set(candidates.flatMap(r=>r.type==='effect'?['impact','kimdaegeon','shower']:['dialogue','narration','reflective','handwritten','stone']))];
   await ensure({target:'Korean',regions:ids.map(fontChoice=>({fontChoice}))});if(ids.some(id=>!loaded.has(id)))return false;
   const im=new Image();im.src=original;await im.decode();if(im.width!==result.width||im.height!==result.height)return false;let changed=false;
   for(const r of candidates){await new Promise(resolve=>setTimeout(resolve,0));const key=sourceKey(r),text=r.text.replace(/\s/gu,''),b=r.bbox,chars=[...text];let selected;
@@ -104,7 +109,7 @@ async function analyze(result,original,geometry,light=false){
     const inside=sourceInside(r,result,geometry);
     if(!inside){
      const scale=Math.min(1,512/Math.max(b[2]-b[0],b[3]-b[1])),w=Math.max(1,Math.round((b[2]-b[0])*scale)),h=Math.max(1,Math.round((b[3]-b[1])*scale)),c=document.createElement('canvas');c.width=w;c.height=h;const ctx=c.getContext('2d',{willReadFrequently:true});ctx.drawImage(im,b[0],b[1],b[2]-b[0],b[3]-b[1],0,0,w,h);
-     const features=shapeDescriptor(ctx.getImageData(0,0,w,h).data,w,h,chars.length),group=r.type==='effect'?['impact','shower']:['dialogue','narration','reflective','handwritten','stone'];
+     const features=shapeDescriptor(ctx.getImageData(0,0,w,h).data,w,h,chars.length),group=r.type==='effect'?['impact','kimdaegeon','shower']:['dialogue','narration','reflective','handwritten','stone'];
      if(features){const scores=new Map();for(const ref of templateShapes(text,w/h,group)){const score=shapeDistance(features,ref.features);scores.set(ref.id,Math.min(scores.get(ref.id)??Infinity,score));}
       const ranked=[...scores].sort((a,b)=>a[1]-b[1]),best=ranked[0],runner=ranked[1],printed=Math.min(scores.get('dialogue')??Infinity,scores.get('narration')??Infinity);
       if(best&&best[1]<.24&&runner&&runner[1]-best[1]>.012&&(r.type==='effect'||!['dialogue','narration'].includes(best[0])&&printed-best[1]>.025))selected={choice:best[0],distance:best[1],margin:runner[1]-best[1]};
@@ -118,5 +123,5 @@ async function analyze(result,original,geometry,light=false){
  })();analysisTasks.set(result,task);try{return await task;}finally{analysisTasks.delete(result);}
 }
 
-globalThis.MangaFonts={configure,normalizePolicy,defaultPolicy,roles,category,analyze,shapeDescriptor,shapeDistance,sourceKey,catalog,groups,choice,weight,ensure,decorate,css,get revision(){return revision;},setLoader(value){loader=value;}};
+globalThis.MangaFonts={defaultChoice,pageDefaults,withPage,configure,normalizePolicy,defaultPolicy,roles,category,analyze,shapeDescriptor,shapeDistance,sourceKey,catalog,groups,choice,weight,ensure,decorate,css,get revision(){return revision;},setLoader(value){loader=value;}};
 })();

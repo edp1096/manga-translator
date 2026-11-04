@@ -3,7 +3,8 @@ Copyright © KERIS. All rights reserved.
 
 Unmodified WOFF files from https://copyright.keris.or.kr/wft/fntDwnld
 Licensed under the SIL Open Font License 1.1.
-Original families: 학교안심 바른돋움 R, 학교안심 날개 R, 학교안심 바른바탕 R, 학교안심 여행 R, 학교안심 투호 R, 학교안심 민들레홀씨 R, 학교안심 돌담 M, 학교안심 소나기 R, 학교안심 산뜻바탕 M.
+Original families: 학교안심 바른돋움 R, 학교안심 날개 R, 학교안심 바른바탕 R, 학교안심 여행 R, 학교안심 투호 R, 학교안심 민들레홀씨 R, 학교안심 돌담 M, 학교안심 소나기 R, 학교안심 산뜻바탕 M, 솔뫼 김대건 Medium.
+솔뫼 김대건 Medium original copyright: COPYRIGHT (C) SUMMITDESIGN ALL RIGHT RESERVED.
 
 SIL OPEN FONT LICENSE Version 1.1 - 26 February 2007
 -----------------------------------------------------------

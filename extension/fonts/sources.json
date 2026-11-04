@@ -34,5 +34,9 @@
   "serif": {
     "source": "https://copyright.keris.or.kr/wft/fntDwnldView?fntGrpId=GFT202301090000000000002",
     "sha256": "c7ab37754fbf53c341ffb9c9a37940ebacb3d4f26bd6d8de4d32c6a505605cab"
+  },
+  "kimdaegeon": {
+    "source": "https://copyright.keris.or.kr/wft/fntDwnldView?fntGrpId=GFT202210280000000000002",
+    "sha256": "a59513a97a84aecf313fbe2448c09c3ff822eee0a189d1cddf18f7964ff03bfb"
   }
 }

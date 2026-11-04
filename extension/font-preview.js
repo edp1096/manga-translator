@@ -13,17 +13,17 @@ function attach(select,read){
  summary.textContent=select.closest('.font-policy-row')?'글꼴 비교':'글꼴 비교 · 눌러서 선택';grid.className='font-preview-grid';details.append(summary,grid);root.append(caption,text,details);select.closest('label').after(root);
  let sequence=0;
  async function update(){
-  const seq=++sequence,{region={},target='Korean',light=false}=read();
-  const result={target,regions:[region]};text.textContent='글꼴 불러오는 중…';
+  const seq=++sequence,{region={},target='Korean',light=false,fontDefaults}=read();
+  const result={target,fontDefaults,regions:[region]};text.textContent='글꼴 불러오는 중…';
   await MangaFonts.ensure(result,light);if(seq!==sequence)return;
   const id=MangaFonts.choice(region,target,light),decorated=MangaFonts.decorate(result,light).regions[0];
-  caption.textContent=(select.value==='auto'?'자동 → ':'')+(MangaFonts.catalog[id]||'기본 글꼴')+(light?' · 경량 처리':'');
+  caption.textContent=(select.value==='mixed'?'현재 영역: ':select.value==='auto'?'자동 → ':'')+(MangaFonts.catalog[id]||'기본 글꼴')+(light?' · 경량 처리':'');
   text.style.font=MangaFonts.css(23,decorated);text.textContent=region.translation||sample;
   text.title=text.textContent;
-  if(details.open)await compare(seq,region);
+  if(details.open)await compare(seq,region,fontDefaults);
  }
- async function compare(seq,region){
-  const result={target:'Korean',regions:MangaFonts.groups.flatMap(group=>group.ids).map(fontChoice=>({...region,fontChoice}))};
+ async function compare(seq,region,fontDefaults){
+  const result={target:'Korean',fontDefaults,regions:MangaFonts.groups.flatMap(group=>group.ids).map(fontChoice=>({...region,fontChoice}))};
   await MangaFonts.ensure(result);if(seq!==sequence||!details.open)return;
   grid.replaceChildren();
   const decorated=MangaFonts.decorate(result).regions;
