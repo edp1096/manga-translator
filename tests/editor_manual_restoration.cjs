@@ -26,6 +26,14 @@ const fs=require('fs'),path=require('path'),assert=require('assert/strict'),{chr
  // Rotated current layout imports its polygon, not its enclosing rectangle.
  await page.evaluate(async()=>{result.regions[0].box=[30,30,70,70];result.regions[0].rotation=45;result.regions[0].layoutOverride=true;await draw();});await page.click('#mask-edit');await page.click('#mask-layout-box');
  const rotated=await page.evaluate(()=>{const m=encodedManualMask();return {bounds:m.bounds,count:m.runs.filter((_,i)=>i%2).reduce((a,b)=>a+b,0)};});assert(rotated.count< (rotated.bounds[2]-rotated.bounds[0])*(rotated.bounds[3]-rotated.bounds[1])*.7);await page.click('#mask-cancel');
+ // Re-run restoration after moving and resizing a previously restored text box.
+ const previousAsset=await page.evaluate(()=>result.regions[0].manualRestoration.asset);
+ await page.evaluate(async()=>{result.regions[0].box=[40,45,90,75];result.regions[0].rotation=0;await draw();});
+ await page.click('#mask-edit');await page.click('#mask-layout-box');await page.click('#mask-preview');await page.waitForFunction(()=>!busy&&!maskEditing);
+ assert.deepEqual(await page.evaluate(()=>result.regions[0].manualRestoration.mask.bounds),[40,45,90,75]);
+ assert.notEqual(await page.evaluate(()=>result.regions[0].manualRestoration.asset),previousAsset);
+ await page.click('#apply');await page.waitForFunction(()=>document.querySelector('#status').textContent==='원본 페이지에 적용했습니다.');
+ assert.deepEqual(await page.evaluate(()=>testState.saved.result.regions[0].manualRestoration.mask.bounds),[40,45,90,75]);
  if(process.env.MANGA_EVIDENCE){fs.mkdirSync(process.env.MANGA_EVIDENCE,{recursive:true});await page.screenshot({path:path.join(process.env.MANGA_EVIDENCE,'editor-layout.png')});await page.click('#mask-edit');await page.click('#mask-layout-box');await page.screenshot({path:path.join(process.env.MANGA_EVIDENCE,'editor-erasure.png')});}
  console.log('PASS empty initial mask, replacement rectangle without clearing, manual selection, empty-mask guard, preview, exact mask clipping, mode roundtrip, apply persistence, failed-request rollback, manual off-page placement, strict automatic bounds, rotated clipped erasure import, compare without inference');
  }finally{await browser.close();}})().catch(e=>{console.error(e);process.exitCode=1});

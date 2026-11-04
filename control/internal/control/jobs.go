@@ -258,11 +258,16 @@ func (m *Manager) KeepJobs(ids []string, keep bool) error {
 	if e := validateJobIDs(ids); e != nil {
 		return e
 	}
-	release, e := m.jobMaintenance()
+	release, e := m.jobDataMaintenance()
 	if e != nil {
 		return e
 	}
 	defer release()
+	unlock, e := leaseJobs(m.root, ids)
+	if e != nil {
+		return e
+	}
+	defer unlock()
 	for _, id := range ids {
 		if _, e := readJobInfo(m.root, id); e != nil {
 			return e
@@ -291,7 +296,7 @@ func (m *Manager) DeleteJobs(ids []string, allUnkept bool) ([]string, error) {
 			return nil, e
 		}
 	}
-	release, e := m.jobMaintenance()
+	release, e := m.jobDataMaintenance()
 	if e != nil {
 		return nil, e
 	}
@@ -308,6 +313,11 @@ func (m *Manager) DeleteJobs(ids []string, allUnkept bool) ([]string, error) {
 			}
 		}
 	}
+	unlock, e := leaseJobs(m.root, ids)
+	if e != nil {
+		return nil, e
+	}
+	defer unlock()
 	for _, id := range ids {
 		j, e := readJobInfo(m.root, id)
 		if e != nil {

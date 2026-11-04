@@ -190,6 +190,11 @@ type SavedJob struct {
 }
 
 func readLibraryJSON(root, id, name string) (json.RawMessage, error) {
+	release, e := jobLease(root, id, false)
+	if e != nil {
+		return nil, e
+	}
+	defer release()
 	p, e := jobPath(root, id)
 	if e != nil {
 		return nil, e
@@ -268,6 +273,12 @@ func (m *Manager) libraryRoutes(mux *http.ServeMux) {
 			return
 		}
 		id := r.PathValue("id")
+		release, e := jobLease(m.root, id, false)
+		if e != nil {
+			action(w, e)
+			return
+		}
+		defer release()
 		base, e := readLibraryJSON(m.root, id, "result.json")
 		if e != nil {
 			http.NotFound(w, r)
@@ -330,6 +341,12 @@ func (m *Manager) libraryRoutes(mux *http.ServeMux) {
 	})
 	mux.HandleFunc("GET /api/library/assets/{id}/{name}", func(w http.ResponseWriter, r *http.Request) {
 		id, name := r.PathValue("id"), r.PathValue("name")
+		release, e := jobLease(m.root, id, false)
+		if e != nil {
+			http.NotFound(w, r)
+			return
+		}
+		defer release()
 		valid := map[string]bool{"original.png": true, "cleaned.png": true, "mask.png": true, "result.json": true, "restored-v1.png": true, "restoration-v1.json": true}
 		if !valid[name] && !regexp.MustCompile(`^manual-[0-9a-f]{32}\.png$`).MatchString(name) {
 			http.NotFound(w, r)

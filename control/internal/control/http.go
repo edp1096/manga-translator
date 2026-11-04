@@ -79,6 +79,12 @@ func (m *Manager) Handler() http.Handler {
 		action(w, e)
 	})
 	mux.HandleFunc("GET /api/jobs/image/{id}", func(w http.ResponseWriter, r *http.Request) {
+		release, e := jobLease(m.root, r.PathValue("id"), false)
+		if e != nil {
+			http.NotFound(w, r)
+			return
+		}
+		defer release()
 		p, e := jobPath(m.root, r.PathValue("id"))
 		if e == nil {
 			p, e = safeDestination(p, "original.png")
