@@ -18,5 +18,21 @@
   "impact": {
     "source": "https://copyright.keris.or.kr/wft/fntDwnldView?fntGrpId=GFT202312110000000000015",
     "sha256": "7a729454b6379763c84e5b021e4001306cf782f4b44d5d7bb8d2f115cb3a45a2"
+  },
+  "handwritten": {
+    "source": "https://copyright.keris.or.kr/wft/fntDwnldView?fntGrpId=GFT202509240000000000003",
+    "sha256": "8e114bf0a76b6118b242231ebeae3d6db5803f8df9b0402f79d758f692e9608c"
+  },
+  "stone": {
+    "source": "https://copyright.keris.or.kr/wft/fntDwnldView?fntGrpId=GFT202301090000000000003",
+    "sha256": "cf4b94c8dc6cfa72aaad3a9c3cbeb9a54f793f54a1e99adc09dfeaca970fb1a6"
+  },
+  "shower": {
+    "source": "https://copyright.keris.or.kr/wft/fntDwnldView?fntGrpId=GFT202312110000000000008",
+    "sha256": "554618b5f82584b056bdc48c6ccc517f4890a794a7c820d89d478afbf914c3ed"
+  },
+  "serif": {
+    "source": "https://copyright.keris.or.kr/wft/fntDwnldView?fntGrpId=GFT202301090000000000002",
+    "sha256": "c7ab37754fbf53c341ffb9c9a37940ebacb3d4f26bd6d8de4d32c6a505605cab"
   }
 }

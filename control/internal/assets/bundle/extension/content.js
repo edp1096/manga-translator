@@ -7,35 +7,36 @@ const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 const pageIdentity=()=>{if(globalThis.MangaReaders)return MangaReaders.pageIdentity(location.href);const u=new URL(location.href);u.hash='';return u.href;};
 const captureReader=async()=>{if((await rpc({type:'settings'})).captureFallback===false)throw Error('이 뷰어는 확장 설정의 화면 캡처 허용이 필요합니다.');return rpc({type:'capture'});};
 let reader=globalThis.MangaReaders?.create({fetchImage:url=>rpc({type:'fetchImage',url}),metadata:()=>rpc({type:'readerMetadata'}),capture:captureReader,onWait:text=>status(text),cancelled:()=>running&&stopped})||null;
-let pageCache=null,exportPosition=null;
+let pageCache=null,exportPosition=null,pendingFontPolicy;
 const overlayInstance=crypto.randomUUID();
 let tooltipClipSequence=0;
 let entries=[],running=false,stopped=false,showOriginal=false,message='이미지를 탐지하세요.',scannedURL=pageIdentity();
+let forceTooltipRestoration=false;
 let lightweightDisplay=false,displayMode='auto',outsideTextMode='tooltip',displayRevision=0,displayBusy=false,displayMessage='',displayPaused=false,displayTask=null,displayTimer=0,exporting=false,pendingDisplayMode;
 let nameMessage='',nameBusy=false;
 function presentation(entry){
  const mode=lightweightDisplay?'auto':displayMode,outside=lightweightDisplay?'tooltip':outsideTextMode;
  const restoration=entry.restored?entry.restoration:undefined;
- if(entry.presentationLight!==lightweightDisplay||entry.presentationFontRevision!==(globalThis.MangaFonts?.revision||0)||entry.presentationBase!==entry.result||entry.presentationGeometry!==entry.bubbles||entry.presentationMode!==mode||entry.presentationOutsideMode!==outside||entry.presentationRestoration!==restoration){
-  entry.presentation=MangaRender.presentation(entry.result,mode,entry.bubbles,outside,restoration,lightweightDisplay);entry.presentationLight=lightweightDisplay;entry.presentationFontRevision=globalThis.MangaFonts?.revision||0;entry.presentationRestoration=restoration;
+ if(entry.presentationForce!==forceTooltipRestoration||entry.presentationLight!==lightweightDisplay||entry.presentationFontRevision!==(globalThis.MangaFonts?.revision||0)||entry.presentationBase!==entry.result||entry.presentationGeometry!==entry.bubbles||entry.presentationMode!==mode||entry.presentationOutsideMode!==outside||entry.presentationRestoration!==restoration){
+  entry.presentation=MangaRender.presentation(entry.result,mode,entry.bubbles,outside,restoration,lightweightDisplay,forceTooltipRestoration);entry.presentationForce=forceTooltipRestoration;entry.presentationLight=lightweightDisplay;entry.presentationFontRevision=globalThis.MangaFonts?.revision||0;entry.presentationRestoration=restoration;
   entry.presentationBase=entry.result;entry.presentationGeometry=entry.bubbles;entry.presentationMode=mode;entry.presentationOutsideMode=outside;
  }
  return entry.presentation;
 }
 function setDisplayMode(mode,retry=false){setDisplayModes(mode,outsideTextMode,retry);}
-function setDisplayModes(mode,outside,retry=false,light=lightweightDisplay){
- light=light===true;
+function setDisplayModes(mode,outside,retry=false,light=lightweightDisplay,force=forceTooltipRestoration){
+ light=light===true;force=force===true;
  mode=mode==='white'?'white':'auto';outside=['white','restore'].includes(outside)?outside:'tooltip';
- if(exporting){pendingDisplayMode={mode,outside,light};return;}
- if(mode===displayMode&&outside===outsideTextMode&&light===lightweightDisplay&&!retry)return;
- displayMode=mode;outsideTextMode=outside;lightweightDisplay=light;displayRevision++;displayPaused=false;displayMessage='';clearTimeout(displayTimer);
+ if(exporting){pendingDisplayMode={mode,outside,light,force};return;}
+ if(mode===displayMode&&outside===outsideTextMode&&light===lightweightDisplay&&force===forceTooltipRestoration&&!retry)return;
+ forceTooltipRestoration=force;displayMode=mode;outsideTextMode=outside;lightweightDisplay=light;displayRevision++;displayPaused=false;displayMessage='';clearTimeout(displayTimer);
  const paused=globalThis.__mangaPausedBatch;
  if(!running&&paused?.phase==='display'&&(retry||paused.reason==='display-error')){run(paused.keys).catch(error=>status(error.message));return;}
  if(!running&&paused?.phase==='display')displayPaused=true;
  for(const entry of entries)if(entry.result&&entry.original&&entry.cleaned&&!entry.restoring&&!entry.pendingJob)overlay(entry).catch(()=>{});
  queueDisplay();
 }
-const needsDisplay=entry=>entry.result&&entry.original&&entry.cleaned&&!entry.restoring&&!entry.cachedRestore&&!entry.pendingJob&&(entry.displayRevision!==displayRevision||entry.displayResult!==entry.result);
+const needsDisplay=entry=>entry.result&&entry.original&&entry.cleaned&&!entry.restoring&&!entry.cachedRestore&&!entry.pendingJob&&(entry.displayRevision!==displayRevision||entry.displayResult!==entry.result||!lightweightDisplay&&displayMode==='white'&&entry.whiteRevision!==displayRevision);
 const needsGeometry=result=>!lightweightDisplay&&(displayMode==='white'&&result.regions.some(MangaRender.whiteCandidate)||result.regions.some(MangaRender.outsideCandidate));
 const restorationReady=entry=>lightweightDisplay||!(outsideTextMode==='restore'&&entry.result.regions.some(MangaRender.outsideCandidate)||entry.result.regions.some(r=>MangaRender.bubbleRestorationCandidate(r,entry.result,entry.bubbles)))||!!entry.restored&&entry.restoration?.version===1;
 const geometryReady=entry=>entry.bubbles&&(entry.bubbles.version>=3||entry.geometryChecked===entry.job);
@@ -58,16 +59,28 @@ async function applyEntryDisplay(entry,active=()=>true,progress=()=>{}){
   entry.restoration=restoration;entry.restored=restored;
  }
  if(!current())return false;
+ if(displayMode==='white'&&!lightweightDisplay){
+  const shown=MangaRender.presentation(result,displayMode,entry.bubbles,outsideTextMode,entry.restoration,false),whites={...(result.sourceWhites||{})};
+  for(const r of shown.regions){if(!MangaRender.forceCandidate(r))continue;await sleep(0);if(!current())return false;
+   const background=await MangaRender.sourceWhiteBackground(shown,r,entry.bubbles,entry.original);if(!current())return false;if(background)whites[r.id]=background;
+  }
+  result.sourceWhites=whites;entry.whiteRevision=revision;entry.presentationBase=null;remember(entry);
+ }
+ if(forceTooltipRestoration&&!lightweightDisplay){
+  const shown=MangaRender.presentation(result,displayMode,entry.bubbles,outsideTextMode,entry.restoration,false);
+  const forced=await MangaRender.forceRestore(shown,job,rpc,current,()=>stage('대사·독백 툴팁 복원'),entry.bubbles);if(!current()||!forced)return false;
+  result.forcedRestorations=forced.saved;entry.forceFailed=forced.failed;entry.forceRevision=revision;entry.forceResult=result;entry.presentationBase=null;remember(entry);
+ }
  stage('최종 표시 적용');await overlay(entry);if(!current())return false;
- entry.displayRevision=revision;entry.displayResult=result;
+ entry.displayRevision=revision;entry.displayResult=result;remember(entry);
  if(entry.completionState){entry.state=entry.completionState;delete entry.completionState;}
  return true;
  }catch(error){if(!current())return false;throw error;}
 }
 function displaySummary(){
- if(lightweightDisplay)return '경량 표시 · 추가 경계 분석·복원 생략 · 개별 편집과 툴팁 겹침 방지 유지';
+ if(lightweightDisplay)return '경량 처리 · 추가 경계 분석·복원 생략 · 개별 편집과 툴팁 겹침 방지 유지';
  const count=entries.reduce((sum,entry)=>sum+(entry.presentation?.regions.filter(region=>outsideTextMode==='restore'?region.automaticRestoration:region.automaticOutside).length||0),0);
- return (displayMode==='white'?'말풍선 흰 배경':'말풍선 기본 표시')+' · '+(outsideTextMode==='white'?`바깥 글자 흰 배경 ${count}곳`:outsideTextMode==='restore'?`대사·독백 이미지 복원 ${count}곳 · 나머지 툴팁`:'바깥 글자 툴팁')+' · 개별 편집 유지';
+ return (displayMode==='white'?'말풍선 흰 배경':'말풍선 기본 표시')+' · '+(outsideTextMode==='white'?`바깥 글자 흰 배경 ${count}곳`:outsideTextMode==='restore'?`대사·독백 이미지 복원 ${count}곳 · 나머지 툴팁`:'바깥 글자 툴팁')+(forceTooltipRestoration?` · 추가 복원 ${entries.reduce((n,e)=>n+(e.presentation?.regions.filter(r=>r.automaticForced).length||0),0)}곳 · 보류 ${entries.reduce((n,e)=>n+(e.forceFailed||0),0)}곳`:'')+' · 개별 편집 유지';
 }
 function queueDisplay(){
  if(displayTask||displayPaused||running||exporting||pageIdentity()!==scannedURL||!entries.some(needsDisplay))return;
@@ -92,11 +105,11 @@ function queueDisplay(){
   if(!displayPaused&&!running&&!exporting&&entries.some(needsDisplay))queueDisplay();
  });
 }
-chrome.storage?.onChanged?.addListener((changes,area)=>{if(area!=='local')return;if(changes.displayMode||changes.outsideTextMode||changes.lightweightDisplay)setDisplayModes(changes.displayMode?changes.displayMode.newValue:(pendingDisplayMode?.mode||displayMode),changes.outsideTextMode?changes.outsideTextMode.newValue:(pendingDisplayMode?.outside||outsideTextMode),false,changes.lightweightDisplay?changes.lightweightDisplay.newValue:(pendingDisplayMode?.light??lightweightDisplay));if(changes.nameWorks||changes.target)nameMessage='';});
+chrome.storage?.onChanged?.addListener((changes,area)=>{if(area!=='local')return;if(changes.fontPolicy){if(exporting)pendingFontPolicy=changes.fontPolicy.newValue;else if(globalThis.MangaFonts?.configure(changes.fontPolicy.newValue))setDisplayMode(displayMode,true);}if(changes.displayMode||changes.outsideTextMode||changes.lightweightDisplay||changes.forceTooltipRestoration)setDisplayModes(changes.displayMode?changes.displayMode.newValue:(pendingDisplayMode?.mode||displayMode),changes.outsideTextMode?changes.outsideTextMode.newValue:(pendingDisplayMode?.outside||outsideTextMode),false,changes.lightweightDisplay?changes.lightweightDisplay.newValue:(pendingDisplayMode?.light??lightweightDisplay),changes.forceTooltipRestoration?changes.forceTooltipRestoration.newValue:(pendingDisplayMode?.force??forceTooltipRestoration));if(changes.nameWorks||changes.target)nameMessage='';});
 const status=t=>message=t;
 const updateRow=()=>{};
 function urlOf(img){return img.currentSrc||img.getAttribute('data-src')||img.getAttribute('data-original')||img.src;}
-function snapshot(){return {message,running,nameMessage,nameBusy,displayMode,outsideTextMode,lightweightDisplay,displayBusy:displayBusy||!!displayTask,displayMessage,displayPaused,pageURL:location.href,reader:reader?.name,items:entries.map(e=>({key:e.key,index:e.index,state:e.state,done:!!e.result,error:e.error,preview:e.readerPage?(e.readerPreview||MangaReaders.placeholder(e.index)):(e.sourceURL||urlOf(e.img)),title:e.title||e.img?.alt||`이미지 ${e.index+1}`,width:e.readerWidth||e.img?.naturalWidth||e.img?.width||0,height:e.readerHeight||e.img?.naturalHeight||e.img?.height||0}))};}
+function snapshot(){return {message,running,nameMessage,nameBusy,displayMode,outsideTextMode,lightweightDisplay,forceTooltipRestoration,displayBusy:displayBusy||!!displayTask,displayMessage,displayPaused,forceFailures:forceTooltipRestoration&&!lightweightDisplay?entries.reduce((n,e)=>n+(e.forceFailed||0),0):0,pageURL:location.href,reader:reader?.name,items:entries.map(e=>({key:e.key,index:e.index,state:e.state,done:!!e.result,error:e.error,preview:e.readerPage?(e.readerPreview||MangaReaders.placeholder(e.index)):(e.sourceURL||urlOf(e.img)),title:e.title||e.img?.alt||`이미지 ${e.index+1}`,width:e.readerWidth||e.img?.naturalWidth||e.img?.width||0,height:e.readerHeight||e.img?.naturalHeight||e.img?.height||0}))};}
 function readerScan(options={}){
  const previous=new Map(entries.map(e=>[e.sourceURL,e]));
  const next=reader.pages().map(page=>{
@@ -114,7 +127,8 @@ async function scan(options={}){
  if(running&&!options.loading)return snapshot();
  const samePage=scannedURL===pageIdentity();scannedURL=pageIdentity();if(!samePage){pageCache=null;for(const e of entries){e.overlay?.remove();e.resizeObserver?.disconnect();}entries=[];reader=globalThis.MangaReaders?.create({fetchImage:url=>rpc({type:'fetchImage',url}),metadata:()=>rpc({type:'readerMetadata'}),capture:captureReader,onWait:text=>status(text),cancelled:()=>running&&stopped})||null;}
  const settings=options.settings||await rpc({type:'settings'});
- setDisplayModes(settings.displayMode,settings.outsideTextMode,false,settings.lightweightDisplay);
+ const fontPolicyChanged=globalThis.MangaFonts?.configure(settings.fontPolicy);
+ setDisplayModes(settings.displayMode,settings.outsideTextMode,!!fontPolicyChanged,settings.lightweightDisplay,settings.forceTooltipRestoration);
  if(pageCache===null){const saved=await rpc({type:'restore'}).catch(()=>[]);pageCache=Array.isArray(saved)?saved:[];}
  if(reader){const active=reader;await active.prepare?.();if(reader!==active||active.identity!==pageIdentity())return snapshot();return readerScan(options);}
  let imgs;
@@ -264,16 +278,18 @@ function place(e){
 
 async function overlay(e){
  const epoch=e.renderEpoch=(e.renderEpoch||0)+1,job=e.job,result=e.result,revision=displayRevision;
+ const original=e.original||await rpc({type:'asset',id:job,name:'original.png'});
+ const fontChanged=await globalThis.MangaFonts?.analyze(result,original,e.bubbles,lightweightDisplay);
  await globalThis.MangaFonts?.ensure(result,lightweightDisplay);
  if(e.renderEpoch!==epoch||e.job!==job||e.result!==result||displayRevision!==revision)return;
+ if(fontChanged)e.presentationBase=null;
  const shown=presentation(e);
- const original=e.original||await rpc({type:'asset',id:job,name:'original.png'});
  const cleaned=e.cleaned||await rpc({type:'asset',id:job,name:'cleaned.png'});
  if(e.renderEpoch!==epoch||e.job!==job||e.result!==result||displayRevision!==revision)return;
  const canvas=document.createElement('canvas');
  try{await MangaRender.render(canvas,shown,original,cleaned,e.restored);
  if(e.renderEpoch!==epoch||e.job!==job||e.result!==result||displayRevision!==revision)return;
- e.original=original;e.cleaned=cleaned;
+ e.original=original;e.cleaned=cleaned;if(fontChanged)remember(e);
  if(!e.overlay){e.overlay=document.createElement('div');e.overlay.dataset.mangaTranslatorOverlay=overlayInstance;e.overlay.style.cssText='position:absolute;z-index:999;pointer-events:auto;display:none';e.canvas=document.createElement('canvas');e.canvas.style.cssText='display:block;width:100%;height:100%';e.overlay.append(e.canvas);document.body.append(e.overlay);e.resizeObserver=new ResizeObserver(()=>place(e));if(e.img)e.resizeObserver.observe(e.img);}
  e.overlay.dataset.mangaSource=e.sourceURL||urlOf(e.img);
  e.canvas.width=canvas.width;e.canvas.height=canvas.height;e.canvas.getContext('2d',{willReadFrequently:true}).drawImage(canvas,0,0);
@@ -300,7 +316,7 @@ async function overlay(e){
  }
  if(tooltipGeometry.childElementCount)e.overlay.append(tooltipGeometry);
  place(e);
- if(revision===displayRevision&&(!needsGeometry(result)||geometryReady(e))&&restorationReady(e)){e.displayRevision=revision;e.displayResult=result;}
+ if(revision===displayRevision&&(!needsGeometry(result)||geometryReady(e))&&restorationReady(e)&&(lightweightDisplay||displayMode!=='white'||e.whiteRevision===revision)&&(!forceTooltipRestoration||lightweightDisplay||e.forceRevision===revision&&e.forceResult===result)){e.displayRevision=revision;e.displayResult=result;}
 }
 async function correctNames(undo=false){
  if(running||exporting||displayBusy)return;
@@ -422,6 +438,10 @@ chrome.runtime.onMessage.addListener((m,s,reply)=>{
     if(exporting)throw Error('저장이 끝난 뒤 표시 방식을 바꾸세요.');
     const mode=await rpc({type:'outsideTextMode',mode:m.mode});setDisplayModes(displayMode,mode);queueDisplay();
    }
+   if(m.action==='forceTooltipRestoration'){
+    if(exporting)throw Error('저장이 끝난 뒤 표시 방식을 바꾸세요.');
+    const force=await rpc({type:'forceTooltipRestoration',enabled:m.enabled});setDisplayModes(displayMode,outsideTextMode,false,lightweightDisplay,force);queueDisplay();
+   }
    if(m.action==='lightweightDisplay'){
     if(exporting)throw Error('저장이 끝난 뒤 표시 방식을 바꾸세요.');
     const light=await rpc({type:'lightweightDisplay',enabled:m.enabled});setDisplayModes(displayMode,outsideTextMode,false,light);queueDisplay();
@@ -445,7 +465,7 @@ chrome.runtime.onMessage.addListener((m,s,reply)=>{
     status(`${e.index+1}번 이미지로 이동했습니다.`);
    }
    if(m.action==='exportStart'){if(running)throw Error('작업이 끝난 뒤 저장하세요.');exporting=true;exportPosition=reader?{reader,position:reader.position(),identity:pageIdentity()}:null;return snapshot();}
-   if(m.action==='exportEnd'){const saved=exportPosition;exportPosition=null;exporting=false;if(pendingDisplayMode!==undefined){const pending=pendingDisplayMode;pendingDisplayMode=undefined;setDisplayModes(pending.mode,pending.outside,false,pending.light);}if(saved&&saved.identity===pageIdentity())await saved.reader.restore(saved.position);queueDisplay();return snapshot();}
+   if(m.action==='exportEnd'){const saved=exportPosition;exportPosition=null;exporting=false;if(pendingFontPolicy!==undefined){globalThis.MangaFonts?.configure(pendingFontPolicy);pendingFontPolicy=undefined;setDisplayMode(displayMode,true);}if(pendingDisplayMode!==undefined){const pending=pendingDisplayMode;pendingDisplayMode=undefined;setDisplayModes(pending.mode,pending.outside,false,pending.light,pending.force);}if(saved&&saved.identity===pageIdentity())await saved.reader.restore(saved.position);queueDisplay();return snapshot();}
    if(m.action==='export'){
     if(running)throw Error('작업이 끝난 뒤 저장하세요.');
     const e=entries.find(e=>e.key===m.key);if(!e)throw Error('목록의 이미지를 찾지 못했습니다.');
@@ -456,11 +476,11 @@ chrome.runtime.onMessage.addListener((m,s,reply)=>{
     }catch(error){warning='번역 이미지 렌더링 실패 · 원본 저장: '+error.message;}}
     return {data,kind,warning,state:e.state};
    }
-   if(m.action==='edit'){const e=entries.find(e=>e.key===m.key);if(e?.result)await rpc({type:'edit',id:e.job,key:e.key,result:presentation(e),baseResult:e.result,geometry:e.bubbles,restoration:e.restoration,displayMode:lightweightDisplay?'auto':displayMode,outsideTextMode:lightweightDisplay?'tooltip':outsideTextMode,lightweightDisplay});}
+   if(m.action==='edit'){const e=entries.find(e=>e.key===m.key);if(e?.result)await rpc({type:'edit',id:e.job,key:e.key,result:presentation(e),baseResult:e.result,geometry:e.bubbles,restoration:e.restoration,displayMode:lightweightDisplay?'auto':displayMode,outsideTextMode:lightweightDisplay?'tooltip':outsideTextMode,forceTooltipRestoration,lightweightDisplay});}
    return snapshot();
   })().then(reply,e=>reply({error:e.message}));return true;
  }
- if(m.type==='applyEdited'){const e=entries.find(e=>e.key===m.key);if(e){e.result=m.result;overlay(e).then(()=>{remember(e);queueDisplay();reply({result:presentation(e),baseResult:e.result,geometry:e.bubbles,restoration:e.restoration,displayMode:lightweightDisplay?'auto':displayMode,outsideTextMode:lightweightDisplay?'tooltip':outsideTextMode,lightweightDisplay});}).catch(err=>reply({error:err.message}));}else reply({error:'페이지를 다시 열어 원본 이미지 연결이 끊어졌습니다.'});return true;}
+ if(m.type==='applyEdited'){const e=entries.find(e=>e.key===m.key);if(e){e.result=m.result;overlay(e).then(()=>{remember(e);queueDisplay();reply({result:presentation(e),baseResult:e.result,geometry:e.bubbles,restoration:e.restoration,displayMode:lightweightDisplay?'auto':displayMode,outsideTextMode:lightweightDisplay?'tooltip':outsideTextMode,forceTooltipRestoration,lightweightDisplay});}).catch(err=>reply({error:err.message}));}else reply({error:'페이지를 다시 열어 원본 이미지 연결이 끊어졌습니다.'});return true;}
  if(m.type==='namesApplied'){const entry=entries.find(entry=>entry.job===m.id&&entry.sourceURL===m.sourceURL);if(entry&&!running&&JSON.stringify(entry.result)===JSON.stringify(m.before)){const before=entry.result;entry.result=m.result;overlay(entry).then(()=>{entry.state='명칭 통일 완료';queueDisplay();reply({ok:true});}).catch(error=>{entry.result=before;overlay(entry).catch(()=>{});reply({error:error.message});});return true;}reply({ok:false});}
 });
 })();

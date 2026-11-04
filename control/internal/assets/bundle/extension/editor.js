@@ -1,3 +1,4 @@
+let forceTooltipRestoration=false;
 const $=id=>document.getElementById(id),job=new URLSearchParams(location.search).get('job');
 const rpc=async msg=>{const r=await chrome.runtime.sendMessage(msg);if(!r?.ok)throw Error(r?.error||'확장 오류');return r.value;};
 MangaRender.setAssetLoader((id,name)=>rpc({type:'asset',id,name}));
@@ -8,8 +9,8 @@ let busy=false,bubbleGeometry,displayGeometry,displayMode,outsideTextMode;
 let maskEditing=false,maskTarget,maskPriorOriginal=false;
 const tell=t=>$('status').textContent=t;
 async function draw(){
- const seq=++drawSeq;await globalThis.MangaFonts?.ensure(result,lightweightDisplay);if(seq!==drawSeq)return;
- result=MangaRender.presentation(MangaRender.editedBase(result,baseResult),displayMode,displayGeometry,outsideTextMode,restoration,lightweightDisplay);
+ const seq=++drawSeq;await globalThis.MangaFonts?.analyze(result,original,displayGeometry,lightweightDisplay);await globalThis.MangaFonts?.ensure(result,lightweightDisplay);if(seq!==drawSeq)return;
+ result=MangaRender.presentation(MangaRender.editedBase(result,baseResult),displayMode,displayGeometry,outsideTextMode,restoration,lightweightDisplay,forceTooltipRestoration);
  const canvas=document.createElement('canvas');
  if(showOriginal||maskEditing){canvas.width=result.width;canvas.height=result.height;canvas.getContext('2d').drawImage(await MangaRender.image(original),0,0);}else await MangaRender.render(canvas,result,original,cleaned,restored);
  if(seq!==drawSeq)return;syncEditMode(result.regions[selected]);$('canvas').width=canvas.width;$('canvas').height=canvas.height;$('canvas').getContext('2d',{willReadFrequently:true}).drawImage(canvas,0,0);if(document.activeElement!==$('rotation'))$('rotation').value=result.regions[selected]?MangaRotation.angle(result.regions[selected]):0;handles();
@@ -38,9 +39,13 @@ async function changeDisplay(){
     bubbleGeometry ||= rpc({type:'bubbles',id:job}).catch(error=>{bubbleGeometry=null;throw error;});
     background=MangaRender.whiteBackground(result,region,await bubbleGeometry);
    }
-  }catch(error){if(region.type!=='effect'||error.code!=='NO_SAFE_BUBBLE')throw error;background={kind:'box'};scope='box';fallback=true;$('white-area').value='box';}}
+  }catch(error){
+   if(error.code!=='NO_SAFE_BUBBLE')throw error;
+   if(region.type==='text'){background=await MangaRender.sourceWhiteBackground(result,region,await bubbleGeometry,original);if(!background)throw error;region.box=background.box;region.layoutOverride=true;delete region.automaticForced;}
+   else if(region.type==='effect'){background={kind:'box'};scope='box';fallback=true;$('white-area').value='box';}else throw error;
+  }}
   region.displayOverride=true;region.whiteBackground=background;region.whiteScope=scope;region.mode='white';showOriginal=false;$('toggle').textContent='원본 보기';
-  await draw();tell(fallback?'안전한 말풍선 경계가 없어 글상자 흰 배경으로 전환했습니다. 주변 대사를 보호한 미리보기를 확인하세요.':scope==='bubble'?'말풍선 내부를 흰색으로 표시합니다. 미리보기를 확인하고 페이지에 적용하세요.':'원문과 번역 글상자 범위를 흰색으로 표시합니다.');
+  await draw();tell(background.kind==='source-ink'?'말풍선 테두리를 보존하고 원문 획 주변만 흰색으로 교정했습니다.':fallback?'안전한 말풍선 경계가 없어 글상자 흰 배경으로 전환했습니다. 주변 대사를 보호한 미리보기를 확인하세요.':scope==='bubble'?'말풍선 내부를 흰색으로 표시합니다. 미리보기를 확인하고 페이지에 적용하세요.':'원문과 번역 글상자 범위를 흰색으로 표시합니다.');
  }catch(error){tell(/서버 409:/.test(error.message)?'번역 작업이 끝난 뒤 흰 배경 번역을 다시 선택하세요.':/서버 404:/.test(error.message)?'말풍선 경계를 불러오지 못했습니다. 관리 앱을 최신 버전으로 실행하고 기존 결과가 남아 있는지 확인하세요.':error.message);}
  finally{busy=false;select(selected);}
 }
@@ -75,25 +80,26 @@ function handles(){
     if(!box.every(Number.isFinite)||box[2]<=box[0]||box[3]<=box[1])return;
     r.box=[...box];r.rotation=angle;changed=true;place();$('rotation').value=angle;
    };
-   const finish=()=>{node.onpointermove=null;node.onpointerup=null;node.onpointercancel=null;if(changed){r.layoutOverride=true;r.displayOverride=true;}draw();};node.onpointerup=finish;
+   const finish=()=>{node.onpointermove=null;node.onpointerup=null;node.onpointercancel=null;if(changed){delete r.automaticForced;r.layoutOverride=true;r.displayOverride=true;}draw();};node.onpointerup=finish;
    node.onpointercancel=()=>{r.box=old;if(oldRotation===undefined)delete r.rotation;else r.rotation=oldRotation;changed=false;finish();};
   };$('handles').append(node);
  });
 }
 $('rotation').onchange=()=>{const r=result?.regions[selected],angle=Number($('rotation').value);if(!r||busy||!Number.isFinite(angle))return;const value=MangaRotation.normalize(angle);r.rotation=value;r.layoutOverride=true;r.displayOverride=true;draw();};
 $('rotation-auto').onclick=()=>{const r=result?.regions[selected];if(!r||busy)return;delete r.rotation;draw();};
-for(const [id,prop]of [['source','text'],['translation','translation'],['font','fontSize']])$(id).oninput=()=>{if(!result?.regions[selected])return;if(id==='font')result.regions[selected].layoutOverride=true;result.regions[selected][prop]=id==='font'?Math.max(8,Math.min(100,Number($(id).value)||24)):$(id).value;draw();};
+for(const [id,prop]of [['source','text'],['translation','translation'],['font','fontSize']])$(id).oninput=()=>{if(!result?.regions[selected])return;if(id==='font')result.regions[selected].layoutOverride=true;result.regions[selected][prop]=id==='font'?Math.max(8,Math.min(200,Number($(id).value)||24)):$(id).value;draw();};
 $('font-family').onchange=()=>{const r=result?.regions[selected];if(!r||busy)return;const choice=$('font-family').value;if(choice==='auto')delete r.fontChoice;else r.fontChoice=choice;draw();};
 $('mode').onchange=changeDisplay;
 $('white-area').onchange=changeDisplay;
 $('regions').onchange=()=>select(Number($('regions').value));
 $('reset').onclick=()=>{if(result.regions[selected]){result.regions[selected].layoutOverride=true;result.regions[selected].box=[...result.regions[selected].bbox];draw();}};
 $('toggle').onclick=()=>{showOriginal=!showOriginal;$('toggle').textContent=showOriginal?'번역 보기':'원본 보기';draw();};
-$('apply').onclick=async()=>{if(busy)return;busy=true;select(selected);tell('페이지에 적용하는 중…');try{const applied=await rpc({type:'apply',id:job,result:MangaRender.editedBase(result,baseResult),previewResult:result});if(applied?.result){lightweightDisplay=applied.lightweightDisplay===true;result=applied.result;baseResult=applied.baseResult;displayGeometry=applied.geometry;displayMode=applied.displayMode;outsideTextMode=applied.outsideTextMode;restoration=applied.restoration;if(restoration?.version===1&&!restored)restored=await rpc({type:'asset',id:job,name:'restored-v1.png'});refreshRegions();await draw();}tell('원본 페이지에 적용했습니다.');}catch(e){tell(e.message);}finally{busy=false;select(selected);}};
+$('apply').onclick=async()=>{if(busy)return;busy=true;select(selected);tell('페이지에 적용하는 중…');try{const applied=await rpc({type:'apply',id:job,result:MangaRender.editedBase(result,baseResult),previewResult:result});if(applied?.result){forceTooltipRestoration=applied.forceTooltipRestoration===true;lightweightDisplay=applied.lightweightDisplay===true;result=applied.result;baseResult=applied.baseResult;displayGeometry=applied.geometry;displayMode=applied.displayMode;outsideTextMode=applied.outsideTextMode;restoration=applied.restoration;if(restoration?.version===1&&!restored)restored=await rpc({type:'asset',id:job,name:'restored-v1.png'});refreshRegions();await draw();}tell('원본 페이지에 적용했습니다.');}catch(e){tell(e.message);}finally{busy=false;select(selected);}};
 function download(url,name){const a=document.createElement('a');a.href=url;a.download=name;a.click();}
 $('png').onclick=async()=>{try{const c=document.createElement('canvas');await MangaRender.render(c,result,original,cleaned,restored);download(c.toDataURL('image/png'),`translated-${job}.png`);}catch(e){tell(e.message);}};
 $('project').onclick=()=>{const url=URL.createObjectURL(new Blob([JSON.stringify(result,null,2)],{type:'application/json'}));download(url,`translation-${job}.json`);setTimeout(()=>URL.revokeObjectURL(url),10000);};
-(async()=>{try{const saved=(await chrome.storage.local.get('edit:'+job))['edit:'+job];if(!saved)throw Error('페이지의 편집 버튼으로 열어주세요.');lightweightDisplay=saved.lightweightDisplay===true;result=MangaRender.prepare(saved.result);baseResult=saved.baseResult;displayGeometry=saved.geometry;displayMode=saved.displayMode;outsideTextMode=saved.outsideTextMode;restoration=saved.restoration;[original,cleaned]=await Promise.all(['original.png','cleaned.png'].map(name=>rpc({type:'asset',id:job,name})));if(restoration?.version===1)restored=await rpc({type:'asset',id:job,name:'restored-v1.png'});refreshRegions();await draw();tell(`${result.regions.length}개 영역`);}catch(e){tell(e.message);}})();
+chrome.storage?.onChanged?.addListener((changes,area)=>{if(area==='local'&&changes.fontPolicy&&globalThis.MangaFonts?.configure(changes.fontPolicy.newValue)&&result)draw();});
+(async()=>{try{const preferences=await rpc({type:'settings'}).catch(()=>({}));globalThis.MangaFonts?.configure(preferences.fontPolicy);const saved=(await chrome.storage.local.get('edit:'+job))['edit:'+job];if(!saved)throw Error('페이지의 편집 버튼으로 열어주세요.');forceTooltipRestoration=saved.forceTooltipRestoration===true;lightweightDisplay=saved.lightweightDisplay===true;result=MangaRender.prepare(saved.result);baseResult=saved.baseResult;displayGeometry=saved.geometry;displayMode=saved.displayMode;outsideTextMode=saved.outsideTextMode;restoration=saved.restoration;[original,cleaned]=await Promise.all(['original.png','cleaned.png'].map(name=>rpc({type:'asset',id:job,name})));if(restoration?.version===1)restored=await rpc({type:'asset',id:job,name:'restored-v1.png'});refreshRegions();await draw();tell(`${result.regions.length}개 영역`);}catch(e){tell(e.message);}})();
 
 setupManualMask();
 

@@ -47,7 +47,7 @@ const root=path.resolve(__dirname,'..'),evidence=process.env.FONT_EVIDENCE||path
  await page.screenshot({path:path.join(evidence,'font-styles.png'),fullPage:true});fs.writeFileSync(path.join(evidence,'report.json'),JSON.stringify(report,null,2));
  // Failed font download must preserve display with original fallback.
  const failure=await browser.newPage();for(const f of ['fonts.js','render.js'])await failure.evaluate(fs.readFileSync(path.join(root,'extension',f),'utf8'));
- assert.equal(await failure.evaluate(async()=>{MangaFonts.setLoader(()=>Promise.reject(Error('offline')));await MangaFonts.ensure({target:'Korean',regions:[{}]});return MangaFonts.css(24,{_fontId:'dialogue'});}), '600 24px "Noto Sans CJK KR", "Malgun Gothic", sans-serif');
+ assert.equal(await failure.evaluate(async()=>{MangaFonts.setLoader(()=>Promise.reject(Error('offline')));await MangaFonts.ensure({target:'Korean',regions:[{}]});return MangaFonts.css(24,{_fontId:'dialogue'});}), '400 24px "Noto Sans CJK KR", "Malgun Gothic", sans-serif');
  console.log('PASS browser fonts: five actual WOFFs, strict CSP, measured layout, manual persistence, light-mode pixel parity, cache invalidation, download failure fallback');
  }finally{await browser.close();}
 })().catch(e=>{console.error(e);process.exitCode=1});

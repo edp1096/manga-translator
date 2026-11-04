@@ -1,4 +1,4 @@
-const defaults = {server:'http://127.0.0.1:8793',token:'',target:'Korean',selector:'',captureFallback:true,displayMode:'auto',outsideTextMode:'tooltip',lightweightDisplay:false};
+const defaults = {server:'http://127.0.0.1:8793',token:'',target:'Korean',selector:'',captureFallback:true,displayMode:'auto',outsideTextMode:'tooltip',lightweightDisplay:false,forceTooltipRestoration:false,fontPolicy:{}};
 importScripts('fonts.js','panel_scope.js','readers.js','names.js','job_cache.js','library.js');
 async function settings(){return {...defaults,...await chrome.storage.local.get(Object.keys(defaults))};}
 async function api(path, options={}) {
@@ -89,6 +89,7 @@ chrome.runtime.onMessage.addListener((msg,sender,respond)=>{
         const latest=await nameContext(sender.tab?.url||'');if(latest.target!==context.target||latest.work?.id!==dictionary.id||latest.work?.revision!==dictionary.revision)throw Error('작업 중 명칭 사전이 바뀌었습니다. 다시 실행하세요.');return response;
       }
       case 'nameReading':return (await api(`/api/jobs/${msg.id}/names/reading`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({region:msg.region,preview:!!msg.preview}),timeout:120000})).json();
+      case 'forceTooltipRestoration':{const enabled=msg.enabled===true;await chrome.storage.local.set({forceTooltipRestoration:enabled});return enabled;}
       case 'lightweightDisplay':{const enabled=msg.enabled===true;await chrome.storage.local.set({lightweightDisplay:enabled});return enabled;}
       case 'outsideTextMode':{const mode=['white','restore'].includes(msg.mode)?msg.mode:'tooltip';await chrome.storage.local.set({outsideTextMode:mode});return mode;}
       case 'displayMode':{
@@ -155,7 +156,7 @@ chrome.runtime.onMessage.addListener((msg,sender,respond)=>{
         let response;try{response=await MangaLibrary.request('/assets/'+msg.id+'/'+msg.name);}catch{response=await api(`/api/jobs/${msg.id}/${msg.name}`);}return encoded(await response.blob());
       }
       case 'edit':{
-        await chrome.storage.local.set({['edit:'+msg.id]:{tabId:sender.tab.id,key:msg.key,result:msg.result,baseResult:msg.baseResult,geometry:msg.geometry,restoration:msg.restoration,displayMode:msg.displayMode,outsideTextMode:msg.outsideTextMode,lightweightDisplay:msg.lightweightDisplay===true}});
+        await chrome.storage.local.set({['edit:'+msg.id]:{tabId:sender.tab.id,key:msg.key,result:msg.result,baseResult:msg.baseResult,geometry:msg.geometry,restoration:msg.restoration,displayMode:msg.displayMode,outsideTextMode:msg.outsideTextMode,forceTooltipRestoration:msg.forceTooltipRestoration===true,lightweightDisplay:msg.lightweightDisplay===true}});
         await chrome.tabs.create({windowId:sender.tab.windowId,url:chrome.runtime.getURL('editor.html')+'?job='+encodeURIComponent(msg.id)});return true;
       }
       case 'apply':{
