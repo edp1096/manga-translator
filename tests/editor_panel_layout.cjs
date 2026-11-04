@@ -14,13 +14,23 @@ const fs=require('fs'),path=require('path'),assert=require('assert/strict'),{chr
  await page.locator('#font-details > summary').click();assert(await page.locator('#font-family').isVisible());await page.selectOption('#font-weight','700');await page.locator('#font-details > summary').click();
  await page.locator('#color-details summary').click();await page.selectOption('#paint-preset','white-black');await page.locator('#color-details summary').click();
  await page.locator('#position-details summary').click();await page.fill('#font','80');await page.locator('#position-details summary').click();
- await page.locator('#editor-help summary').click();assert(await page.locator('.help-body').isVisible());await page.locator('#editor-help summary').click();
+ await page.locator('#editor-help-toggle').click();assert(await page.locator('.help-body').isVisible());assert(await page.locator('.help-body').evaluate(e=>{const b=e.getBoundingClientRect();return b.left>=0&&b.right<=innerWidth&&b.top>=0&&b.bottom<=innerHeight&&e.contains(document.elementFromPoint(b.left+8,b.top+8))}));await page.locator('#editor-help-toggle').click();
+ // The popup must escape both the scrolling sidebar and high-z-index image handles.
+ await page.evaluate(()=>document.querySelector('#handles').style.zIndex='2147483647');
+ for(const viewport of [{width:1400,height:900},{width:850,height:600}]){
+  await page.setViewportSize(viewport);await page.locator('#editor-help-toggle').click();
+  assert(await page.locator('#editor-help-popup').evaluate(e=>{const b=e.getBoundingClientRect();return b.left>=0&&b.right<=innerWidth&&b.top>=0&&b.bottom<=innerHeight&&[8,b.width/2,b.width-8].every(x=>e.contains(document.elementFromPoint(b.left+x,b.top+8)))}));
+  await page.keyboard.press('Escape');assert(await page.locator('#editor-help-popup').isHidden());
+ }
+ await page.locator('#editor-help-toggle').click();await page.locator('h1').click();assert(await page.locator('#editor-help-popup').isHidden());
+ await page.locator('#editor-help-toggle').click();await page.evaluate(()=>document.querySelector('aside').scrollTop=50);await page.waitForFunction(()=>!document.querySelector('#editor-help-popup').matches(':popover-open'));
+ await page.setViewportSize({width:1100,height:900});await page.evaluate(()=>{document.querySelector('aside').scrollTop=0;document.querySelector('#handles').style.zIndex='';});
  await page.click('#mask-edit');assert(await page.locator('#manual-tools').evaluate(e=>e.open));await page.click('#mask-box');await page.click('#mask-preview');await page.waitForFunction(()=>!busy&&maskPreviewShowing);assert(await page.locator('#translation').isVisible());assert.equal(await page.locator('#apply').isDisabled(),false);assert(await page.locator('#mask-preview').isVisible());
  await page.locator('#manual-tools summary').click();assert(await page.locator('#mask-preview').isHidden());assert(await page.locator('#translation').isVisible());await page.click('#mask-edit');assert(await page.locator('#mask-preview').isVisible());
 
  const foldBefore=await page.evaluate(()=>JSON.stringify(result));
  for(const position of ['top','bottom']){
-  await page.locator('.panel-fold[data-position='+position+'] [data-panel-fold=expand]').click();assert(await page.evaluate(()=>[...document.querySelectorAll('aside details:not(.editor-help)')].every(e=>e.open)));assert.equal(await page.locator('#editor-help').evaluate(e=>e.open),false);
+  await page.locator('.panel-fold[data-position='+position+'] [data-panel-fold=expand]').click();assert(await page.evaluate(()=>[...document.querySelectorAll('aside details:not(.editor-help)')].every(e=>e.open)));assert.equal(await page.locator('#editor-help-popup').evaluate(e=>e.matches(':popover-open')),false);
   await page.locator('.panel-fold[data-position='+position+'] [data-panel-fold=collapse]').click();assert(await page.evaluate(()=>[...document.querySelectorAll('aside details:not(.editor-help)')].every(e=>!e.open)));
  }
  assert.equal(await page.evaluate(()=>JSON.stringify(result)),foldBefore,'Folding must not change edits');

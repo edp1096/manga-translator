@@ -25,9 +25,9 @@ aside button{margin:0;padding:7px 10px;font-size:13px}
 #recognition-preview button{margin:3px 2px}
 #page-font-settings{margin-top:12px}
 .editor-help{position:relative;flex:none}
-.editor-help>summary{list-style:none;cursor:pointer;width:22px;height:22px;border:1px solid #8a9da3;border-radius:50%;display:flex;align-items:center;justify-content:center;font:italic 600 14px Georgia,serif;color:#125c69}
-.editor-help>summary::-webkit-details-marker{display:none}
-.help-body{position:absolute;right:0;top:28px;z-index:6;width:280px;max-height:360px;overflow:auto;background:white;padding:12px;border:1px solid #ccd5dd;border-radius:8px;box-shadow:0 4px 18px #0002;font-size:12px;line-height:1.5}
+.editor-help>button{list-style:none;cursor:pointer;width:22px;height:22px;border:1px solid #8a9da3;border-radius:50%;display:flex;align-items:center;justify-content:center;font:italic 600 14px Georgia,serif;color:#125c69}
+
+.help-body{position:fixed;inset:auto;margin:0;width:min(300px,calc(100vw - 16px));max-height:min(360px,calc(100vh - 16px));color:#19232f;overflow:auto;background:white;padding:12px;border:1px solid #ccd5dd;border-radius:8px;box-shadow:0 4px 18px #0002;font-size:12px;line-height:1.5}
 .help-body p,.help-body small{display:block;margin:0 0 9px;font-size:12px}
 header{display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding:8px 16px}
 header h1{margin-right:6px}header button{margin:0;padding:7px 11px;font-size:13px}
@@ -40,3 +40,11 @@ button:focus-visible,summary:focus-visible{outline:2px solid #258e99;outline-off
 .panel-fold{display:flex;gap:6px;justify-content:flex-end;margin:0 0 8px}
 .panel-fold button{background:#e8eef1;color:#234;font-size:12px;padding:5px 9px}
 .panel-fold[data-position=bottom]{border-top:1px solid #e0e5e9;padding-top:10px;margin:12px 0 0}
+
+#selection-count{white-space:nowrap;flex:none}
+.editor-marquee{position:absolute;pointer-events:none;border:1px solid #167582;background:#258e9922;z-index:2;box-sizing:border-box}
+#stage.marquee-active{user-select:none;cursor:crosshair}
+
+#editor-help-toggle{padding:0;background:white;margin:0}
+#editor-help-popup:popover-open{display:block}
+#editor-help-popup::backdrop{background:transparent;pointer-events:none}

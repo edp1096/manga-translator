@@ -27,19 +27,23 @@ function refreshRegions(){
 function selectedRegions(){return result?.regions.filter(r=>selectedIds.has(r.id))||[];}
 function syncSelection(){
  const rows=selectedRegions(),locked=busy||maskDrawing();
- $('selection-count').textContent=rows.length>1?`${rows.length}개 선택 · 글꼴·굵기 일괄 적용 (나머지 편집은 현재 영역)`:`${rows.length}개 선택`;
+ $('selection-count').textContent=`${rows.length}개 선택`;
+ $('selection-count').title=rows.length>1?'글꼴·굵기는 선택한 모든 글상자에 적용됩니다. 나머지 항목은 현재 글상자만 편집합니다.':'';
  for(const id of ['select-all','select-single','page-font-family','page-font-weight'])$(id).disabled=locked||!result?.regions.length;
+ $('select-single').disabled=locked||!rows.length;
  const defaults=MangaFonts.pageDefaults(result?.fontDefaults);$('page-font-family').value=defaults.font;$('page-font-weight').value=String(defaults.weight);
  if(rows.length>1){const families=new Set(rows.map(r=>r.fontChoice==='friendly'?'dialogue':r.fontChoice||'auto')),weights=new Set(rows.map(r=>r.fontWeight||'auto'));$('font-family').value=families.size===1?[...families][0]:'mixed';$('font-weight').value=weights.size===1?String([...weights][0]):'mixed';}
 }
-function select(i){selected=i;const r=result.regions[i];
+function select(i){selected=Number.isInteger(i)&&i>=0&&i<result.regions.length?i:-1;const r=result.regions[selected];
+ if(!r){selectedIds.clear();selectionAnchor=null;}
  if(maskEditing&&maskTarget!==r?.id){maskEditing=false;maskTarget=undefined;setMaskPreview(false);$('erase-mask').hidden=true;$('mask-controls').hidden=true;}
  if(recognitionPending&&recognitionPending.snapshot.id!==r?.id)clearRecognition();
  for(const id of selectedIds)if(!result.regions.some(r=>r.id===id))selectedIds.delete(id);
  if(r&&!selectedIds.has(r.id)){selectedIds.clear();selectedIds.add(r.id);selectionAnchor=r.id;}
 
- for(const id of ['recognize-region','source','translation','mode','white-area','font','font-family','font-weight','text-outline','paint-preset','text-color','text-hex','stroke-color','stroke-hex','stroke-width','rotation','rotation-auto','reset','delete','regions'])$(id).disabled=!r||busy||maskDrawing();
+ for(const id of ['recognize-region','source','translation','mode','white-area','font','font-family','font-weight','text-outline','paint-preset','text-color','text-hex','stroke-color','stroke-hex','stroke-width','rotation','rotation-auto','reset','delete'])$(id).disabled=!r||busy||maskDrawing();
  for(const id of ['apply','png','project','toggle'])$(id).disabled=busy||maskDrawing();
+ $('regions').disabled=busy||maskDrawing()||!result.regions.length;
  $('add').disabled=busy||maskDrawing()||result.regions.length>=150;
  $('restore-again').disabled=!r||busy||maskDrawing()||!savedRestorationMask(r);
  $('regions').value=r?String(i):'';$('source').value=r?.text||'';$('translation').value=r?.translation||'';$('mode').value=maskDrawing()?'restore':r?.mode||'replace';$('white-area').value=r?.whiteScope||r?.whiteBackground?.kind||'bubble';$('font-family').value=(r?.fontChoice==='friendly'?'dialogue':r?.fontChoice)||'auto';$('font-weight').value=r?.fontWeight===400||r?.fontWeight===700?String(r.fontWeight):'auto';$('font-note').textContent=lightweightDisplay?'경량 모드에서는 기본 글꼴로 표시합니다. 선택은 저장됩니다.':'자동은 설정과 원문 형태를 따릅니다. 직접 고르면 이 영역에 우선 적용됩니다.';$('font').value=r?.fontSize||24;syncPaint(r);$('rotation').value=r?MangaRotation.angle(r):0;handles();syncEditMode(r);$('mask-edit').disabled=!r||busy||maskDrawing();for(const id of ['mask-tool','mask-size','mask-layout-box','mask-box','mask-clear','mask-preview','mask-cancel'])$(id).disabled=busy;syncSelection();fontPreview.update();
@@ -87,8 +91,8 @@ function handles(){
   node.onpointerdown=e=>{
    if(busy||maskDrawing())return;e.preventDefault();
    if(e.ctrlKey||e.metaKey||e.shiftKey){
-    if(e.shiftKey){const anchor=result.regions.findIndex(r=>r.id===selectionAnchor),start=anchor<0?selected:anchor;if(!e.ctrlKey&&!e.metaKey)selectedIds.clear();for(let n=Math.min(start,i);n<=Math.max(start,i);n++)selectedIds.add(result.regions[n].id);}
-    else{if(selectedIds.has(r.id)&&selectedIds.size>1)selectedIds.delete(r.id);else selectedIds.add(r.id);selectionAnchor=r.id;}
+    if(e.shiftKey){const anchor=result.regions.findIndex(r=>r.id===selectionAnchor),start=anchor<0?(selected>=0?selected:i):anchor;if(!e.ctrlKey&&!e.metaKey)selectedIds.clear();for(let n=Math.min(start,i);n<=Math.max(start,i);n++)selectedIds.add(result.regions[n].id);}
+    else{if(selectedIds.has(r.id))selectedIds.delete(r.id);else selectedIds.add(r.id);selectionAnchor=r.id;}
     select(selectedIds.has(r.id)?i:result.regions.findIndex(r=>selectedIds.has(r.id)));return;
    }
    drawSeq++;selected=i;selectedIds.clear();selectedIds.add(r.id);selectionAnchor=r.id;
@@ -105,7 +109,7 @@ function handles(){
     if(!box.every(Number.isFinite)||box[2]<=box[0]||box[3]<=box[1])return;
     r.box=[...box];r.rotation=angle;changed=true;place();$('rotation').value=angle;
    };
-   const finish=()=>{node.onpointermove=null;node.onpointerup=null;node.onpointercancel=null;if(changed){delete r.automaticForced;r.layoutOverride=true;r.displayOverride=true;}draw();};node.onpointerup=finish;
+   const finish=()=>{node.onpointermove=null;node.onpointerup=null;node.onpointercancel=null;if(changed){delete r.automaticForced;r.layoutOverride=true;r.displayOverride=true;}select(selected);draw();};node.onpointerup=finish;
    node.onpointercancel=()=>{r.box=old;if(oldRotation===undefined)delete r.rotation;else r.rotation=oldRotation;changed=false;finish();};
   };$('handles').append(node);
  });
@@ -117,7 +121,7 @@ $('font-family').onchange=()=>{if(busy||maskDrawing())return;const choice=$('fon
 $('mode').onchange=changeDisplay;
 $('white-area').onchange=changeDisplay;
 $('regions').onchange=()=>{selectedIds.clear();select(Number($('regions').value));};
-$('select-all').onclick=()=>{if(busy||maskDrawing())return;for(const r of result.regions)selectedIds.add(r.id);select(selected);};
+$('select-all').onclick=()=>{if(busy||maskDrawing())return;for(const r of result.regions)selectedIds.add(r.id);select(selected>=0?selected:0);};
 $('select-single').onclick=()=>{selectedIds.clear();select(selected);};
 $('reset').onclick=()=>{if(result.regions[selected]){result.regions[selected].layoutOverride=true;result.regions[selected].box=[...result.regions[selected].bbox];draw();}};
 $('toggle').onclick=()=>{showOriginal=!showOriginal;$('toggle').textContent=showOriginal?'번역 보기':'원본 보기';draw();};
@@ -129,6 +133,7 @@ chrome.storage?.onChanged?.addListener((changes,area)=>{if(area==='local'&&chang
 (async()=>{try{const preferences=await rpc({type:'settings'}).catch(()=>({}));globalThis.MangaFonts?.configure(preferences.fontPolicy);const saved=(await chrome.storage.local.get('edit:'+job))['edit:'+job];if(!saved)throw Error('페이지의 편집 버튼으로 열어주세요.');forceTooltipRestoration=saved.forceTooltipRestoration===true;lightweightDisplay=saved.lightweightDisplay===true;result=MangaRender.prepare(saved.result);baseResult=saved.baseResult;displayGeometry=saved.geometry;displayMode=saved.displayMode;outsideTextMode=saved.outsideTextMode;restoration=saved.restoration;[original,cleaned]=await Promise.all(['original.png','cleaned.png'].map(name=>rpc({type:'asset',id:job,name})));if(restoration?.version===1)restored=await rpc({type:'asset',id:job,name:'restored-v1.png'});refreshRegions();await draw();tell(`${result.regions.length}개 영역`);}catch(e){tell(e.message);}})();
 
 setupManualMask();
+setupMarqueeSelection();
 
 $('font-weight').onchange=()=>{if(busy||maskDrawing())return;const value=$('font-weight').value;if(!['auto','400','700'].includes(value))return;for(const r of selectedRegions())if(value==='auto')delete r.fontWeight;else r.fontWeight=Number(value);draw();};
 
@@ -202,3 +207,14 @@ for(const button of document.querySelectorAll('[data-panel-fold]'))button.onclic
  if(!open)panel.scrollTop=0;
  else if(button.closest('.panel-fold').dataset.position==='bottom')button.scrollIntoView({block:'nearest'});
 };
+
+function positionEditorHelp(){
+ const popup=$('editor-help-popup'),button=$('editor-help-toggle'),b=button.getBoundingClientRect(),margin=8;
+ const width=Math.min(300,innerWidth-margin*2),availableBelow=innerHeight-b.bottom-6-margin,availableAbove=b.top-6-margin;
+ const below=availableBelow>=Math.min(240,availableAbove),height=Math.max(40,Math.min(360,below?availableBelow:availableAbove));
+ popup.style.width=width+'px';popup.style.maxHeight=height+'px';popup.style.left=Math.max(margin,Math.min(innerWidth-width-margin,b.right-width))+'px';
+ popup.style.top=below?b.bottom+6+'px':'auto';popup.style.bottom=below?'auto':innerHeight-b.top+6+'px';
+}
+$('editor-help-popup').addEventListener('beforetoggle',event=>{if(event.newState==='open')positionEditorHelp();});
+window.addEventListener('resize',()=>{if($('editor-help-popup').matches(':popover-open'))positionEditorHelp();});
+document.addEventListener('scroll',event=>{const popup=$('editor-help-popup');if(popup.matches(':popover-open')&&!popup.contains(event.target))popup.hidePopover();},true);
