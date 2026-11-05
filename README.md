@@ -23,3 +23,5 @@
 ```sh
 ./build.sh
 ```
+
+라이선스: [MIT](LICENSE) · Copyright (c) 2026 edp1096.

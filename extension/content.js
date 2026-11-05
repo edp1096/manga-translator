@@ -6,7 +6,7 @@ globalThis.MangaFonts?.setLoader(id=>rpc({type:'font',id}));
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 const pageIdentity=()=>{if(globalThis.MangaReaders)return MangaReaders.pageIdentity(location.href);const u=new URL(location.href);u.hash='';return u.href;};
 const captureReader=async()=>{if((await rpc({type:'settings'})).captureFallback===false)throw Error('이 뷰어는 확장 설정의 화면 캡처 허용이 필요합니다.');return rpc({type:'capture'});};
-let reader=globalThis.MangaReaders?.create({fetchImage:url=>rpc({type:'fetchImage',url}),metadata:()=>rpc({type:'readerMetadata'}),capture:captureReader,onWait:text=>status(text),cancelled:()=>running&&stopped})||null;
+let reader=globalThis.MangaReaders?.create({fetchImage:url=>rpc({type:'fetchImage',url}),metadata:command=>rpc({type:'readerMetadata',command}),capture:captureReader,onWait:text=>status(text),cancelled:()=>running&&stopped})||null;
 let pageCache=null,exportPosition=null,pendingFontPolicy;
 const overlayInstance=crypto.randomUUID();
 let tooltipClipSequence=0;
@@ -109,7 +109,7 @@ chrome.storage?.onChanged?.addListener((changes,area)=>{if(area!=='local')return
 const status=t=>message=t;
 const updateRow=()=>{};
 function urlOf(img){return img.currentSrc||img.getAttribute('data-src')||img.getAttribute('data-original')||img.src;}
-function snapshot(){return {message,running,nameMessage,nameBusy,displayMode,outsideTextMode,lightweightDisplay,forceTooltipRestoration,displayBusy:displayBusy||!!displayTask,displayMessage,displayPaused,forceFailures:forceTooltipRestoration&&!lightweightDisplay?entries.reduce((n,e)=>n+(e.forceFailed||0),0):0,pageURL:location.href,reader:reader?.name,items:entries.map(e=>({key:e.key,index:e.index,state:e.state,done:!!e.result,error:e.error,preview:e.readerPage?(e.readerPreview||MangaReaders.placeholder(e.index)):(e.sourceURL||urlOf(e.img)),title:e.title||e.img?.alt||`이미지 ${e.index+1}`,width:e.readerWidth||e.img?.naturalWidth||e.img?.width||0,height:e.readerHeight||e.img?.naturalHeight||e.img?.height||0}))};}
+function snapshot(){return {message,running,nameMessage,nameBusy,displayMode,outsideTextMode,lightweightDisplay,forceTooltipRestoration,displayBusy:displayBusy||!!displayTask,displayMessage,displayPaused,forceFailures:forceTooltipRestoration&&!lightweightDisplay?entries.reduce((n,e)=>n+(e.forceFailed||0),0):0,pageURL:location.href,pageIdentity:pageIdentity(),reader:reader?.name,items:entries.map(e=>({key:e.key,index:e.index,sourceURL:e.sourceURL||urlOf(e.img),state:e.state,done:!!e.result,error:e.error,preview:e.readerPage?(e.readerPreview||MangaReaders.placeholder(e.index)):(e.sourceURL||urlOf(e.img)),title:e.title||e.img?.alt||`이미지 ${e.index+1}`,width:e.readerWidth||e.img?.naturalWidth||e.img?.width||0,height:e.readerHeight||e.img?.naturalHeight||e.img?.height||0}))};}
 function readerScan(options={}){
  const previous=new Map(entries.map(e=>[e.sourceURL,e]));
  const next=reader.pages().map(page=>{
@@ -125,7 +125,7 @@ function readerScan(options={}){
 
 async function scan(options={}){
  if(running&&!options.loading)return snapshot();
- const samePage=scannedURL===pageIdentity();scannedURL=pageIdentity();if(!samePage){pageCache=null;for(const e of entries){e.overlay?.remove();e.resizeObserver?.disconnect();}entries=[];reader=globalThis.MangaReaders?.create({fetchImage:url=>rpc({type:'fetchImage',url}),metadata:()=>rpc({type:'readerMetadata'}),capture:captureReader,onWait:text=>status(text),cancelled:()=>running&&stopped})||null;}
+ const samePage=scannedURL===pageIdentity();scannedURL=pageIdentity();if(!samePage){pageCache=null;for(const e of entries){e.overlay?.remove();e.resizeObserver?.disconnect();}entries=[];reader=globalThis.MangaReaders?.create({fetchImage:url=>rpc({type:'fetchImage',url}),metadata:command=>rpc({type:'readerMetadata',command}),capture:captureReader,onWait:text=>status(text),cancelled:()=>running&&stopped})||null;}
  const settings=options.settings||await rpc({type:'settings'});
  const fontPolicyChanged=globalThis.MangaFonts?.configure(settings.fontPolicy);
  setDisplayModes(settings.displayMode,settings.outsideTextMode,!!fontPolicyChanged,settings.lightweightDisplay,settings.forceTooltipRestoration);
@@ -268,7 +268,7 @@ function place(e){
   if(reader?.identity!==pageIdentity()){e.overlay.style.display='none';return;}
   const node=reader?.element(e.readerPage);if(e.img!==node){e.resizeObserver?.disconnect();e.img=node;if(node)e.resizeObserver?.observe(node);}
   if(!node?.isConnected){e.overlay.style.display='none';return;}
-  const r=node.getBoundingClientRect(),anchor=node.parentElement,ar=anchor.getBoundingClientRect();if(!r.width||!r.height||!ar.width||!ar.height){e.overlay.style.display='none';return;}
+  const r=reader.bounds?.(e.readerPage)||node.getBoundingClientRect(),anchor=node.parentElement,ar=anchor.getBoundingClientRect();if(!r.width||!r.height||!ar.width||!ar.height){e.overlay.style.display='none';return;}
   if(getComputedStyle(anchor).position==='static')anchor.style.position='relative';if(e.overlay.parentElement!==anchor)anchor.append(e.overlay);
   const sx=ar.width/(anchor.offsetWidth||ar.width),sy=ar.height/(anchor.offsetHeight||ar.height);
   Object.assign(e.overlay.style,{left:(r.left-ar.left)/sx+'px',top:(r.top-ar.top)/sy+'px',width:r.width/sx+'px',height:r.height/sy+'px',display:showOriginal?'none':'block',pointerEvents:'none'});return;

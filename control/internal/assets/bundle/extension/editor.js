@@ -29,6 +29,7 @@ function syncSelection(){
  const rows=selectedRegions(),locked=busy||maskDrawing();
  $('selection-count').textContent=`${rows.length}개 선택`;
  $('selection-count').title=rows.length>1?'글꼴·굵기는 선택한 모든 글상자에 적용됩니다. 나머지 항목은 현재 글상자만 편집합니다.':'';
+ syncOverlapPicker();
  for(const id of ['select-all','select-single','page-font-family','page-font-weight'])$(id).disabled=locked||!result?.regions.length;
  $('select-single').disabled=locked||!rows.length;
  const defaults=MangaFonts.pageDefaults(result?.fontDefaults);$('page-font-family').value=defaults.font;$('page-font-weight').value=String(defaults.weight);
@@ -80,7 +81,7 @@ $('add').onclick=()=>{
  selected=result.regions.length-1;showOriginal=false;$('toggle').textContent='원본 보기';refreshRegions();draw();$('translation').focus();tell('글상자를 추가했습니다. 원문에 맞춰 위치와 크기를 조정한 뒤 영역 재인식·번역을 누르세요.');
 };
 $('delete').onclick=()=>{const removed=result?.regions[selected];if(!removed)return;if(!removed.manual){result.preservedRegions||=[];result.preservedRegions.push({bbox:removed.bbox,text:removed.text});}result.regions.splice(selected,1);selected=Math.max(0,Math.min(selected,result.regions.length-1));refreshRegions();draw();tell('선택한 글상자를 삭제했습니다. 페이지에 적용하면 저장됩니다.');};
-document.addEventListener('keydown',e=>{if(!maskDrawing()&&!busy&&e.key==='Delete'&&!e.target.closest('input,textarea,select,[contenteditable]')){e.preventDefault();$('delete').click();}});
+document.addEventListener('keydown',e=>{if(!maskDrawing()&&!busy&&e.key==='Delete'&&!e.target.closest('input,textarea,select,[contenteditable],#overlap-picker')){e.preventDefault();$('delete').click();}});
 function handles(){
  $('handles').replaceChildren();if(showOriginal||maskDrawing())return;
  result.regions.forEach((r,i)=>{
@@ -89,7 +90,7 @@ function handles(){
   for(const direction of ['nw','n','ne','e','se','s','sw','w']){const h=document.createElement('span');h.className='resize';h.dataset.handle=direction;h.title='글상자 크기 조절';node.append(h);}
   const turn=document.createElement('span');turn.className='rotate-handle';turn.dataset.handle='rotate';turn.title='글상자 회전';node.append(turn);
   node.onpointerdown=e=>{
-   if(busy||maskDrawing())return;e.preventDefault();
+   if(e.button!==0||busy||maskDrawing())return;e.preventDefault();
    if(e.ctrlKey||e.metaKey||e.shiftKey){
     if(e.shiftKey){const anchor=result.regions.findIndex(r=>r.id===selectionAnchor),start=anchor<0?(selected>=0?selected:i):anchor;if(!e.ctrlKey&&!e.metaKey)selectedIds.clear();for(let n=Math.min(start,i);n<=Math.max(start,i);n++)selectedIds.add(result.regions[n].id);}
     else{if(selectedIds.has(r.id))selectedIds.delete(r.id);else selectedIds.add(r.id);selectionAnchor=r.id;}
@@ -134,6 +135,7 @@ chrome.storage?.onChanged?.addListener((changes,area)=>{if(area==='local'&&chang
 
 setupManualMask();
 setupMarqueeSelection();
+setupOverlapSelection();
 
 $('font-weight').onchange=()=>{if(busy||maskDrawing())return;const value=$('font-weight').value;if(!['auto','400','700'].includes(value))return;for(const r of selectedRegions())if(value==='auto')delete r.fontWeight;else r.fontWeight=Number(value);draw();};
 
@@ -218,3 +220,15 @@ function positionEditorHelp(){
 $('editor-help-popup').addEventListener('beforetoggle',event=>{if(event.newState==='open')positionEditorHelp();});
 window.addEventListener('resize',()=>{if($('editor-help-popup').matches(':popover-open'))positionEditorHelp();});
 document.addEventListener('scroll',event=>{const popup=$('editor-help-popup');if(popup.matches(':popover-open')&&!popup.contains(event.target))popup.hidePopover();},true);
+
+let editorSideChanged=false;
+function setEditorPanelSide(side){
+ const left=side==='left',button=$('editor-panel-side');if($('overlap-picker').matches(':popover-open'))$('overlap-picker').hidePopover();$('layout').classList.toggle('panel-left',left);
+ const label=left?'패널을 오른쪽으로 이동':'패널을 왼쪽으로 이동';button.title=label;button.setAttribute('aria-label',label);
+ if($('editor-help-popup').matches(':popover-open'))requestAnimationFrame(positionEditorHelp);
+}
+$('editor-panel-side').onclick=()=>{
+ editorSideChanged=true;const side=$('layout').classList.contains('panel-left')?'right':'left';setEditorPanelSide(side);
+ Promise.resolve(chrome.storage.local.set?.({editorPanelSide:side})).catch(()=>{});
+};
+chrome.storage.local.get('editorPanelSide').then(saved=>{if(!editorSideChanged)setEditorPanelSide(saved.editorPanelSide);}).catch(()=>{});

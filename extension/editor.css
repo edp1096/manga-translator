@@ -48,3 +48,16 @@ button:focus-visible,summary:focus-visible{outline:2px solid #258e99;outline-off
 #editor-help-toggle{padding:0;background:white;margin:0}
 #editor-help-popup:popover-open{display:block}
 #editor-help-popup::backdrop{background:transparent;pointer-events:none}
+
+#layout{grid-template-areas:"stage panel"}
+#stage{grid-area:stage;min-width:0}#layout>aside{grid-area:panel}
+#layout.panel-left{grid-template-columns:360px minmax(350px,1fr);grid-template-areas:"panel stage"}
+#editor-panel-side{margin-right:auto;font-size:16px;line-height:16px;min-width:30px;padding:5px 8px}
+@media(max-width:850px){#layout.panel-left{grid-template-columns:320px minmax(240px,1fr)}}
+
+.box.selected{z-index:1}.box.primary{z-index:2}
+#overlap-picker{position:fixed;inset:auto;margin:0;padding:10px;background:white;color:#19232f;border:1px solid #b8cbd0;border-radius:9px;box-shadow:0 5px 20px #0003;overflow:auto;font:13px/1.5 system-ui,sans-serif}
+.overlap-head{display:flex;gap:8px;align-items:center;margin-bottom:6px}.overlap-head strong{flex:1}
+#overlap-picker button{margin:0;padding:4px 8px;font-size:12px}#overlap-close{background:transparent;color:#456}
+.overlap-row{display:flex;align-items:center;gap:6px;padding:6px 0;border-bottom:1px solid #e4eaed}.overlap-row.current{background:#eef6f7}
+.overlap-row label{display:flex;gap:6px;align-items:center;min-width:0;flex:1;margin:0;cursor:pointer}.overlap-row span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.overlap-row button{flex:none}

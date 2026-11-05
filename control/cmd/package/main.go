@@ -198,7 +198,7 @@ func archiveSource(project, path string) error {
 	gz := gzip.NewWriter(f)
 	tw := tar.NewWriter(gz)
 	// Explicit source allowlist: never package models, config, jobs or backups.
-	for _, name := range []string{"AGENTS.md", "README.md", "THIRD_PARTY_NOTICES.md", ".gitignore", "build.sh", "build.ps1", "control", "native", "extension", "tests", "deployment/orangepi/services"} {
+	for _, name := range []string{"AGENTS.md", "README.md", "LICENSE", "THIRD_PARTY_NOTICES.md", ".gitignore", "build.sh", "build.ps1", "control", "native", "extension", "tests", "deployment/orangepi/services"} {
 		if name == "THIRD_PARTY_NOTICES.md" {
 			if _, err := os.Stat(filepath.Join(project, name)); os.IsNotExist(err) {
 				continue // Individual dependency notices are included under control/.
@@ -320,8 +320,6 @@ func main() {
 	for _, target := range []struct{ platform, goos, arch, filename string }{{"linux-arm64", "linux", "arm64", "manga-control"}, {"windows-x64", "windows", "amd64", "MangaTranslator.exe"}, {"linux-x64", "linux", "amd64", "manga-control"}} {
 		app := filepath.Join(dist, "manga-translator-"+target.platform+"-"+control.Version)
 		must(os.MkdirAll(app, 0755))
-		// Remove the obsolete application declaration from previous builds.
-		must(removeIfPresent(filepath.Join(app, "licenses", "application.txt")))
 		flags := "-s -w"
 		if target.goos == "windows" {
 			flags += " -H windowsgui"

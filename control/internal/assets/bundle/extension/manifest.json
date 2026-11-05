@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Manga Translator",
-  "version": "0.5.1",
+  "version": "0.5.2",
   "description": "브라우저에서 만화 이미지를 읽고 로컬 또는 원격 서버에서 번역합니다.",
   "permissions": [
     "activeTab",
