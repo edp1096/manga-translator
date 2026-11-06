@@ -140,7 +140,7 @@ function display(s){
  const displaySummary=$('display-tools').querySelector('summary'),namesSummary=$('name-tools').querySelector('summary');
  displaySummary.textContent='표시 옵션 · '+(s.lightweightDisplay?'경량':(s.displayMode==='white'?'흰 배경':'기본')+' / '+({tooltip:'툴팁',white:'흰 배경',restore:'복원'}[s.outsideTextMode]||'툴팁'));
  namesSummary.textContent='명칭 도구'+(s.nameBusy?' · 적용 중':'');namesSummary.title=s.nameMessage||'';
- running=!!s.running;
+ running=!!s.running||!!s.editing;
  displayBusy=!!s.displayBusy;
  if(!changingDisplay){$('force-tooltip-restoration').checked=!!s.forceTooltipRestoration;$('lightweight-display').checked=!!s.lightweightDisplay;$('display-mode').value=s.displayMode||'auto';$('outside-text-mode').value=s.outsideTextMode||'tooltip';}
  $('display-status').textContent=s.displayMessage||'';$('display-status').hidden=!s.displayMessage||!s.displayBusy&&!s.displayPaused&&!s.forceFailures;$('display-retry').hidden=!s.displayPaused&&!s.forceFailures;
@@ -151,7 +151,7 @@ function display(s){
  }
  if(helpOpen()){helpStatus();positionHelp();}
  if(!saving&&Date.now()>noticeUntil)$('status').textContent=s.message;
- $('run').disabled=s.running;$('preload').disabled=s.running;
+ $('run').disabled=running;$('preload').disabled=running;
  const active=new Set(s.items.map(e=>e.key));
  for(const [key,row]of rows)if(!active.has(key)){row.observer?.disconnect();row.node.remove();rows.delete(key);known.delete(key);selected.delete(key);}
  let previous=null;
@@ -172,7 +172,7 @@ function display(s){
    locate.onclick=()=>control('locate',{key:r.entry.key,sourceURL:r.entry.preview});
    edit.onclick=()=>control('edit',{key:r.entry.key});
   }
-  r.entry=e;r.check.checked=selected.has(e.key);r.edit.hidden=!e.done;r.edit.disabled=running||displayBusy||saving;
+  r.entry=e;r.check.checked=selected.has(e.key);r.edit.hidden=false;r.edit.title=e.done?'번역 결과 편집':'원본에서 글상자 추가·영역 재인식·번역';r.edit.disabled=running||displayBusy||saving;
   const label=`${e.index+1}. ${e.state}`;
   r.node.title=`${e.title||'이미지'} · ${e.width||'?'}×${e.height||'?'}`+(e.sourceWarnings?.length?'\n'+e.sourceWarnings.map(w=>`${w.region}번 영역: ${w.message}`).join('\n'):'');
   if(r.label.textContent!==label)r.label.textContent=label;

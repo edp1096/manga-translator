@@ -161,7 +161,7 @@ func scanJobs(root string) ([]JobInfo, int, error) {
 	return jobs, skipped, nil
 }
 func readJobPolicy(root string) (JobPolicy, error) {
-	p := JobPolicy{RetentionDays: 1}
+	p := JobPolicy{RetentionDays: 0}
 	name, e := safeDestination(root, "data/native_api/job-policy.json")
 	if e != nil {
 		return p, e

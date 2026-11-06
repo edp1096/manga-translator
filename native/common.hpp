@@ -16,6 +16,7 @@
 #include <string>
 #include <vector>
 #include "vendor/json.hpp"
+#include "utf8.hpp"
 #include "vendor/stb_image.h"
 using json=nlohmann::json;namespace fs=std::filesystem;using Clock=std::chrono::steady_clock;
 inline double ms(Clock::time_point t){return std::chrono::duration<double,std::milli>(Clock::now()-t).count();}
@@ -65,13 +66,17 @@ inline Prepared prepare(const fs::path& path,int budget,bool padded,const std::v
 }
 inline std::vector<float> block_mask(int vision,int text,int full=0){int len=full?full:vision+text;std::vector<float> mask(size_t(len)*len,-1e9f);for(int row=0;row<len;++row){int visible=row<vision?vision:std::min(row+1,vision+text);std::fill_n(mask.begin()+size_t(row)*len,visible,0.f);}return mask;}
 inline std::vector<float> unshuffle(const float* features,int ph,int pw){int oh=(ph+1)/2,ow=(pw+1)/2;std::vector<float> result(size_t(oh)*ow*3072);for(int y=0;y<oh;++y)for(int x=0;x<ow;++x)for(int c=0;c<768;++c)for(int dy=0;dy<2;++dy)for(int dx=0;dx<2;++dx){int sy=std::min(2*y+dy,ph-1),sx=std::min(2*x+dx,pw-1);result[(size_t(y)*ow+x)*3072+c*4+dy*2+dx]=features[(size_t(sy)*pw+sx)*768+c];}return result;}
-inline std::vector<uint32_t> codepoints(const std::string& text){std::vector<uint32_t> out;for(size_t i=0;i<text.size();){unsigned char b=text[i++];uint32_t cp=b;int n=0;if(b>=0xf0){cp=b&7;n=3;}else if(b>=0xe0){cp=b&15;n=2;}else if(b>=0xc0){cp=b&31;n=1;}else require(b<128,"Invalid UTF-8 token");for(int k=0;k<n;++k){require(i<text.size()&&(uint8_t(text[i])&0xc0)==0x80,"Invalid UTF-8 token");cp=(cp<<6)|(uint8_t(text[i++])&63);}out.push_back(cp);}return out;}
+inline std::vector<uint32_t> codepoints(const std::string& text){require(utf8::validate(text).complete,"Invalid UTF-8 token");std::vector<uint32_t> out;for(size_t i=0;i<text.size();){unsigned char b=text[i++];uint32_t cp=b;int n=0;if(b>=0xf0){cp=b&7;n=3;}else if(b>=0xe0){cp=b&15;n=2;}else if(b>=0xc0){cp=b&31;n=1;}else require(b<128,"Invalid UTF-8 token");for(int k=0;k<n;++k){require(i<text.size()&&(uint8_t(text[i])&0xc0)==0x80,"Invalid UTF-8 token");cp=(cp<<6)|(uint8_t(text[i++])&63);}out.push_back(cp);}return out;}
 struct Tokenizer{
  int bos,eos,pad;std::vector<std::string> pieces;std::set<int> special;
  explicit Tokenizer(const fs::path& path){auto d=read_json(path);if(d.is_array()){bos=1;eos=2;pad=0;special={0,1,2,3};pieces.resize(d.size()+4);for(size_t i=0;i<d.size();++i)pieces[i+4]=d[i].get<std::string>();return;}auto vocab=d.at("model").at("vocab");for(const auto& t:d.at("added_tokens"))vocab[t.at("content").get<std::string>()]=t.at("id");require(d.at("decoder").at("type")=="ByteLevel","Expected ByteLevel decoder");bos=vocab.at("<bos>");eos=vocab.at("<eos>");pad=vocab.at("<pad>");for(auto& t:d.at("added_tokens"))if(t.at("special").get<bool>())special.insert(t.at("id").get<int>());
   std::map<uint32_t,uint8_t> reverse;int next=256;for(int b=0;b<256;++b){bool direct=(b>=33&&b<=126)||(b>=161&&b<=172)||(b>=174);reverse[direct?uint32_t(b):uint32_t(next++)]=uint8_t(b);}pieces.resize(vocab.size());
   for(auto it=vocab.begin();it!=vocab.end();++it){int id=it.value();require(id>=0&&id<int(pieces.size()),"Non-dense vocab");if(special.count(id))continue;for(auto cp:codepoints(it.key())){auto b=reverse.find(cp);require(b!=reverse.end(),"Invalid byte-level vocabulary");pieces[id].push_back(char(b->second));}}}
- std::string decode(const std::vector<int64_t>& ids)const{std::string text;for(auto id:ids){require(id>=0&&id<int64_t(pieces.size()),"Token id out of bounds");text+=pieces[id];}return text;}
+ struct Decoded {std::string text;bool complete;bool incomplete_tail;size_t error_offset;};
+ Decoded decode_checked(const std::vector<int64_t>& ids)const{std::string text;for(auto id:ids){require(id>=0&&id<int64_t(pieces.size()),"Token id out of bounds");text+=pieces[id];}const auto state=utf8::validate(text);return {text.substr(0,state.prefix),state.complete,state.incomplete_tail,state.prefix};}
+ // Verification reads must never return malformed or silently shortened text.
+ // The primary OCR path uses decode_checked() and records truncation explicitly.
+ std::string decode(const std::vector<int64_t>& ids)const{const auto decoded=decode_checked(ids);return decoded.complete?decoded.text:std::string{};}
  bool stop(int64_t id)const{return id==eos||id==pad;}
 };
 inline int64_t argmax(const float* p,size_t n){require(n>0,"Empty logits");size_t best=0;for(size_t i=0;i<n;++i){require(std::isfinite(p[i]),"Nonfinite logits");if(p[i]>p[best])best=i;}return int64_t(best);}

@@ -136,10 +136,13 @@ chrome.runtime.onMessage.addListener((msg,sender,respond)=>{
         await new Promise(r=>setTimeout(r,550));
         return chrome.tabs.captureVisibleTab(tab.windowId,{format:'png'});
       }
+      case 'createDraft':
       case 'submit':{
+        if(msg.type==='createDraft'&&(await(await api('/api/ping')).json()).manualDraftVersion!==1)throw Error('번역 전 편집을 지원하는 최신 관리 앱으로 실행하세요.');
         const blob=await (await fetch(msg.data)).blob(), form=new FormData();
         const options=await settings(),target=options.target,context=await nameContext(sender.tab?.url||'',target),dictionary=MangaNames.dictionary(context.work);
         form.append('contextFonts',String(target==='Korean'&&!options.lightweightDisplay));form.append('image',blob,'page.png');form.append('target',target);form.append('pageURL',(sender.tab?.url||'').slice(0,8192));form.append('title',(sender.tab?.title||'').slice(0,1024));if(typeof msg.sourceURL==='string'&&msg.sourceURL.length<=8192)form.append('sourceURL',msg.sourceURL);if(Number.isInteger(msg.page)&&msg.page>0)form.append('page',String(msg.page));
+        if(msg.type==='createDraft')form.append('draft','true');
         if(dictionary?.entries.length)form.append('dictionary',JSON.stringify(dictionary));
         return (await api('/api/jobs',{method:'POST',body:form})).json();
       }

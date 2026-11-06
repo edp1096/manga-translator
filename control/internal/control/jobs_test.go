@@ -129,3 +129,26 @@ func TestImportJobSelection(t *testing.T) {
 		})
 	}
 }
+
+func TestJobRetentionPolicyDefaultsAndCustomDays(t *testing.T) {
+	root := t.TempDir()
+	policy, err := readJobPolicy(root)
+	if err != nil || policy.RetentionDays != 0 {
+		t.Fatal("missing setting must disable deletion", policy, err)
+	}
+	m := &Manager{root: root, processes: map[string]*managedProcess{}}
+	for _, days := range []int{0, 1, 2, 13, 30, 365} {
+		if err := m.SaveJobPolicy(days); err != nil {
+			t.Fatal(days, err)
+		}
+		policy, err = readJobPolicy(root)
+		if err != nil || policy.RetentionDays != days {
+			t.Fatal(days, policy, err)
+		}
+	}
+	for _, days := range []int{-1, 366} {
+		if err := m.SaveJobPolicy(days); err == nil {
+			t.Fatal("invalid retention accepted", days)
+		}
+	}
+}

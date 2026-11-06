@@ -46,7 +46,7 @@ const std::string listen_host=config.at("host");require(listen_host=="127.0.0.1"
  std::mutex mutex,upload_mutex,inference_mutex;std::condition_variable cv;std::deque<std::pair<std::string,std::string>> queue;std::set<std::string> active;std::map<std::string,std::shared_ptr<JobLease>> job_leases;std::map<std::string,std::string> terminal_errors;std::atomic<bool> stopping{false};
  auto cleanup=[&](){
   std::unique_lock<std::mutex> maintenance(inference_mutex,std::try_to_lock);if(!maintenance.owns_lock())return;
-  int days=1;const auto policy=data/"job-policy.json";
+  int days=0;const auto policy=data/"job-policy.json";
   if(fs::exists(policy)){try{const auto value=read_json(policy).at("retentionDays");if(!value.is_number_integer())return;days=value.get<int>();}catch(...){return;}}
   if(days<=0||days>365)return;
   const auto now=fs::file_time_type::clock::now();
@@ -78,8 +78,43 @@ const std::string listen_host=config.at("host");require(listen_host=="127.0.0.1"
  };
  server.set_pre_routing_handler([&](const httplib::Request&req,httplib::Response&res){auto origin=req.get_header_value("Origin");if(origin.rfind("chrome-extension://",0)==0){res.set_header("Access-Control-Allow-Origin",origin);res.set_header("Access-Control-Allow-Methods","GET,POST,OPTIONS");res.set_header("Access-Control-Allow-Headers","Authorization,Content-Type");res.set_header("Access-Control-Allow-Private-Network","true");res.set_header("Vary","Origin");}if(req.method=="OPTIONS"){res.status=204;return httplib::Server::HandlerResponse::Handled;}if(req.path.rfind("/api/",0)==0&&!token_equal(req.get_header_value("Authorization"),token)&&!device_authorized(req.get_header_value("Authorization"))){reply(res,{{"error","Invalid access token"}},401);return httplib::Server::HandlerResponse::Handled;}return httplib::Server::HandlerResponse::Unhandled;});
  server.set_exception_handler([&](const httplib::Request&,httplib::Response&res,std::exception_ptr ep){try{std::rethrow_exception(ep);}catch(const std::exception&e){reply(res,{{"error",std::string(e.what()).substr(0,1000)}},500);}catch(...){reply(res,{{"error","Internal error"}},500);}});
- server.Get("/health",[&](const httplib::Request&,httplib::Response&res){std::lock_guard<std::mutex> lock(mutex);reply(res,{{"ok",true},{"version","0.5.3-native"},{"native",true},{"jobLocksVersion",1},{"jobStore",jobs.u8string()},{"restorationBackend",config.value("inpaint_backend",std::string("onnx"))},{"restorationReady",bool(pipeline.resident_restorer)},{"active",active.size()+manual_active.load()},{"maxRssMiB",peak_rss_mib()},{"models",{{"layout",config.at("layout_model")},{"ocr",config.at("ocr_dir")},{"ocrBackend",config.value("ocr_backend",std::string("litert"))},{"translation",config.at("llm_model")}}}});});
- server.Post("/api/jobs",[&](const httplib::Request&req,httplib::Response&res){if(stopping){reply(res,{{"error","Server stopping"}},503);return;}if(!req.has_file("image")){reply(res,{{"error","Missing image"}},400);return;}std::string target=req.has_file("target")?req.get_file_value("target").content:(req.has_param("target")?req.get_param_value("target"):"Korean");if(target!="Korean"&&target!="English"&&target!="Japanese"&&target!="Chinese"){reply(res,{{"error","Unsupported target language"}},400);return;}json dictionary=json::object();try{if(req.has_file("dictionary"))dictionary=checked_dictionary(json::parse(req.get_file_value("dictionary").content),target);}catch(const std::exception& error){reply(res,{{"error",error.what()}},400);return;}std::lock_guard<std::mutex> upload_lock(upload_mutex);{std::lock_guard<std::mutex> lock(mutex);if(active.size()>=8){reply(res,{{"error","Queue full; retry shortly"}},429);return;}}if(available_kib()<3*1024*1024){reply(res,{{"error","Insufficient available memory; retry when other workloads finish"}},503);return;}const auto& raw=req.get_file_value("image").content;if(raw.size()>24*1024*1024){reply(res,{{"error","Image exceeds 24 MiB"}},413);return;}PageImage im;try{im=decode_upload(raw);}catch(const std::exception&e){reply(res,{{"error",e.what()}},400);return;}auto id=job_id();auto job_lease=std::make_shared<JobLease>(jobs,id);require(bool(*job_lease),"Job is in use");auto folder=jobs/id;require(fs::create_directory(folder),"Cannot create job directory");write_png(folder/"original.png",im.width,im.height,3,im.rgb.data());json metadata={{"target",target},{"backend","native-local"},{"dictionary",dictionary},{"contextFonts",target=="Korean"&&req.has_file("contextFonts")&&req.get_file_value("contextFonts").content=="true"}};for(const auto* key:{"title","pageURL","sourceURL","page"})if(req.has_file(key)){const auto value=req.get_file_value(key).content;if(value.size()<=8192){if(std::string(key)=="page"){try{const int page=std::stoi(value);if(page>0&&page<=100000)metadata[key]=page;}catch(...){}}else metadata[key]=value;}}atomic_json(folder/"request.json",metadata);atomic_json(folder/"status.json",{{"status","queued"}});{std::lock_guard<std::mutex> lock(mutex);active.insert(id);job_leases[id]=job_lease;queue.emplace_back(id,target);}cv.notify_one();reply(res,{{"id",id}});});
+ server.Get("/health",[&](const httplib::Request&,httplib::Response&res){std::lock_guard<std::mutex> lock(mutex);reply(res,{{"ok",true},{"version","0.5.4-native"},{"native",true},{"jobLocksVersion",1},{"jobStore",jobs.u8string()},{"restorationBackend",config.value("inpaint_backend",std::string("onnx"))},{"restorationReady",bool(pipeline.resident_restorer)},{"active",active.size()+manual_active.load()},{"maxRssMiB",peak_rss_mib()},{"models",{{"layout",config.at("layout_model")},{"ocr",config.at("ocr_dir")},{"ocrBackend",config.value("ocr_backend",std::string("litert"))},{"translation",config.at("llm_model")}}}});});
+ server.Post("/api/jobs",[&](const httplib::Request&req,httplib::Response&res){
+  if(stopping){reply(res,{{"error","Server stopping"}},503);return;}
+  if(!req.has_file("image")){reply(res,{{"error","Missing image"}},400);return;}
+  const bool draft=req.has_file("draft")&&req.get_file_value("draft").content=="true";
+  const std::string target=req.has_file("target")?req.get_file_value("target").content:(req.has_param("target")?req.get_param_value("target"):"Korean");
+  if(target!="Korean"&&target!="English"&&target!="Japanese"&&target!="Chinese"){reply(res,{{"error","Unsupported target language"}},400);return;}
+  json dictionary=json::object();try{if(req.has_file("dictionary"))dictionary=checked_dictionary(json::parse(req.get_file_value("dictionary").content),target);}catch(const std::exception& error){reply(res,{{"error",error.what()}},400);return;}
+  std::lock_guard<std::mutex> upload_lock(upload_mutex);
+  if(!draft){std::lock_guard<std::mutex> lock(mutex);if(active.size()>=8){reply(res,{{"error","Queue full; retry shortly"}},429);return;}}
+  if(available_kib()<(draft?512:3*1024)*1024){reply(res,{{"error","Insufficient available memory; retry when other workloads finish"}},503);return;}
+  const auto& raw=req.get_file_value("image").content;if(raw.size()>24*1024*1024){reply(res,{{"error","Image exceeds 24 MiB"}},413);return;}
+  PageImage im;try{im=decode_upload(raw);}catch(const std::exception&e){reply(res,{{"error",e.what()}},400);return;}
+  const auto id=job_id();auto job_lease=std::make_shared<JobLease>(jobs,id);require(bool(*job_lease),"Job is in use");
+  const auto folder=jobs/id;require(fs::create_directory(folder),"Cannot create job directory");
+  try{
+   write_png(folder/"original.png",im.width,im.height,3,im.rgb.data());
+   json metadata={{"target",target},{"backend","native-local"},{"dictionary",dictionary},{"contextFonts",target=="Korean"&&req.has_file("contextFonts")&&req.get_file_value("contextFonts").content=="true"}};
+   if(draft)metadata["draft"]=true;
+   for(const auto* key:{"title","pageURL","sourceURL","page"})if(req.has_file(key)){
+    const auto value=req.get_file_value(key).content;if(value.size()>8192)continue;
+    if(std::string(key)=="page"){try{const int page=std::stoi(value);if(page>0&&page<=100000)metadata[key]=page;}catch(...){}}else metadata[key]=value;
+   }
+   atomic_json(folder/"request.json",metadata);
+   if(draft){
+    // A manual editing page has source assets but no detector/OCR/LLM work.
+    fs::copy_file(folder/"original.png",folder/"cleaned.png");
+    const std::vector<uint8_t> mask(size_t(im.width)*im.height,0);write_png(folder/"mask.png",im.width,im.height,1,mask.data());
+    const json result={{"width",im.width},{"height",im.height},{"target",target},{"regions",json::array()},{"displayVersion",2},{"manualDraft",true}};
+    atomic_json(folder/"result.json",result);atomic_json(folder/"status.json",{{"status","done"}});
+    reply(res,{{"id",id},{"result",result}});return;
+   }
+   atomic_json(folder/"status.json",{{"status","queued"}});
+  }catch(...){std::error_code ignored;fs::remove_all(folder,ignored);throw;}
+  {std::lock_guard<std::mutex> lock(mutex);active.insert(id);job_leases[id]=job_lease;queue.emplace_back(id,target);}
+  cv.notify_one();reply(res,{{"id",id}});
+ });
  server.Get(R"(/api/jobs/([0-9a-f-]+))",[&](const httplib::Request&req,httplib::Response&res){std::string id=req.matches[1];if(!valid_id(id)||!fs::is_directory(jobs/id)){reply(res,{{"error","Not found"}},404);return;}JobLease job_lease(jobs,id);if(!job_lease){reply(res,{{"error","Job is being deleted; retry later"}},409);return;}if(!valid_id(id)){reply(res,{{"error","Not found"}},404);return;}{std::lock_guard<std::mutex> lock(mutex);const auto failure=terminal_errors.find(id);if(failure!=terminal_errors.end()){reply(res,{{"status","error"},{"error",failure->second}});return;}}auto s=read_job_snapshot(jobs/id);if(s.is_null()){reply(res,{{"error","Not found"}},404);return;}reply(res,s);});
  server.Get(R"(/api/jobs/([0-9a-f-]+)/([^/]+))",[&](const httplib::Request&req,httplib::Response&res){std::string id=req.matches[1],name=req.matches[2];if(!valid_id(id)||!fs::is_directory(jobs/id)){reply(res,{{"error","Not found"}},404);return;}JobLease job_lease(jobs,id);if(!job_lease){reply(res,{{"error","Job is being deleted; retry later"}},409);return;}if(!valid_id(id)||(name!="original.png"&&name!="cleaned.png"&&name!="mask.png"&&name!="result.json"&&name!="restored-v1.png"&&!std::regex_match(name,std::regex("manual-[0-9a-f]{32}\\.png")))||!fs::is_regular_file(jobs/id/name)){reply(res,{{"error","Not found"}},404);return;}res.set_content(read_text(jobs/id/name),name=="result.json"?"application/json":"image/png");res.set_header("Cache-Control","no-store");});
  server.Post(R"(/api/jobs/([0-9a-f-]+)/restoration)",[&](const httplib::Request& request,httplib::Response& response){
@@ -138,7 +173,7 @@ const std::string listen_host=config.at("host");require(listen_host=="127.0.0.1"
   if(action=="correct")reply(response,pipeline.correct_names(input.at("result"),dictionary));
   else reply(response,pipeline.suggest_name(input.at("source"),input.at("translation")));
  });
- server.Get("/api/ping",[&](const httplib::Request&,httplib::Response&res){reply(res,{{"ok",true},{"version","0.5.3-native"}});});
+ server.Get("/api/ping",[&](const httplib::Request&,httplib::Response&res){reply(res,{{"ok",true},{"version","0.5.4-native"},{"manualDraftVersion",1}});});
  server.Post("/api/shutdown",[&](const httplib::Request&,httplib::Response&res){reply(res,{{"ok",true}});stop_requested=1;});
  std::signal(SIGINT,request_stop);std::signal(SIGTERM,request_stop);
 #ifdef _WIN32

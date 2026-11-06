@@ -536,7 +536,7 @@
       ]
     }
   ],
-  "version": "0.5.3",
+  "version": "0.5.4",
   "artifacts": [
     {
       "id": "ort-linux-arm64",
@@ -1043,14 +1043,14 @@
       "group": "application",
       "platform": "windows-amd64",
       "url": "embedded:engine/windows-amd64.gz",
-      "sha256": "8da3e9751029a272645055d9444db96dc83620cefae3798704ed13afdbf90638",
-      "size": 2254621,
+      "sha256": "b363ae8281d8da8e874a5b6b83398fff75e84cade41efadb67a1c33308110e31",
+      "size": 2258952,
       "format": "gzip",
       "files": [
         {
           "path": "bin/manga-translator-server.exe",
-          "sha256": "9e08347d9b23a66a18c48f7ce258fa51657dd386ec72b90258ac0fb2947b3a5a",
-          "size": 7406539,
+          "sha256": "038d706b17c0afc4dacb70df2f2b45c595bb06b30fc293bbe93c3a9af7061d97",
+          "size": 7418217,
           "executable": true
         }
       ]
@@ -2335,14 +2335,14 @@
       "group": "application",
       "platform": "linux-amd64",
       "url": "embedded:engine/linux-amd64.gz",
-      "sha256": "0456123b986152f6d3c08e95fbcdb05b6ceef100fc6ddab7546f3def53e9b3f2",
-      "size": 1578749,
+      "sha256": "c833b02c2d338c0f0e65008d2ab3f867f98e872cce88e1b7be4f0de46d233ff5",
+      "size": 1582963,
       "format": "gzip",
       "files": [
         {
           "path": "bin/manga-translator-server",
-          "sha256": "c87984b4b6e48deaa4ae0b4016053d1e86c8eebb4c81c19436291ff139ea1358",
-          "size": 3829056,
+          "sha256": "1bf8960b30b7973cd6db58ba078be21b65625f0bcebd791012e0ea9662d506ab",
+          "size": 3838200,
           "executable": true
         }
       ]
