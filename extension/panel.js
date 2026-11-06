@@ -174,7 +174,7 @@ function display(s){
   }
   r.entry=e;r.check.checked=selected.has(e.key);r.edit.hidden=!e.done;r.edit.disabled=running||displayBusy||saving;
   const label=`${e.index+1}. ${e.state}`;
-  r.node.title=`${e.title||'이미지'} · ${e.width||'?'}×${e.height||'?'}`;
+  r.node.title=`${e.title||'이미지'} · ${e.width||'?'}×${e.height||'?'}`+(e.sourceWarnings?.length?'\n'+e.sourceWarnings.map(w=>`${w.region}번 영역: ${w.message}`).join('\n'):'');
   if(r.label.textContent!==label)r.label.textContent=label;
   // Keep the same button node between pointerdown and pointerup, even while polling.
   const expected=previous?previous.nextSibling:$('items').firstChild;

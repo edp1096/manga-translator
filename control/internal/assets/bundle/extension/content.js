@@ -109,7 +109,7 @@ chrome.storage?.onChanged?.addListener((changes,area)=>{if(area!=='local')return
 const status=t=>message=t;
 const updateRow=()=>{};
 function urlOf(img){return img.currentSrc||img.getAttribute('data-src')||img.getAttribute('data-original')||img.src;}
-function snapshot(){return {message,running,nameMessage,nameBusy,displayMode,outsideTextMode,lightweightDisplay,forceTooltipRestoration,displayBusy:displayBusy||!!displayTask,displayMessage,displayPaused,forceFailures:forceTooltipRestoration&&!lightweightDisplay?entries.reduce((n,e)=>n+(e.forceFailed||0),0):0,pageURL:location.href,pageIdentity:pageIdentity(),reader:reader?.name,items:entries.map(e=>({key:e.key,index:e.index,sourceURL:e.sourceURL||urlOf(e.img),state:e.state,done:!!e.result,error:e.error,preview:e.readerPage?(e.readerPreview||MangaReaders.placeholder(e.index)):(e.sourceURL||urlOf(e.img)),title:e.title||e.img?.alt||`이미지 ${e.index+1}`,width:e.readerWidth||e.img?.naturalWidth||e.img?.width||0,height:e.readerHeight||e.img?.naturalHeight||e.img?.height||0}))};}
+function snapshot(){return {message,running,nameMessage,nameBusy,displayMode,outsideTextMode,lightweightDisplay,forceTooltipRestoration,displayBusy:displayBusy||!!displayTask,displayMessage,displayPaused,forceFailures:forceTooltipRestoration&&!lightweightDisplay?entries.reduce((n,e)=>n+(e.forceFailed||0),0):0,pageURL:location.href,pageIdentity:pageIdentity(),reader:reader?.name,items:entries.map(e=>({key:e.key,index:e.index,sourceURL:e.sourceURL||urlOf(e.img),state:e.state,done:!!e.result,error:e.error,preview:e.readerPage?(e.readerPreview||MangaReaders.placeholder(e.index)):(e.sourceURL||urlOf(e.img)),title:e.title||e.img?.alt||`이미지 ${e.index+1}`,sourceWarnings:e.result?.ocrWarnings||[],width:e.readerWidth||e.img?.naturalWidth||e.img?.width||0,height:e.readerHeight||e.img?.naturalHeight||e.img?.height||0}))};}
 function readerScan(options={}){
  const previous=new Map(entries.map(e=>[e.sourceURL,e]));
  const next=reader.pages().map(page=>{
@@ -213,7 +213,7 @@ async function restoreEntryNow(e,saved){
  try{
   const [original,cleaned]=await Promise.all(['original.png','cleaned.png'].map(name=>rpc({type:'asset',id:saved.id,name})));
   if(e.job!==saved.id||e.pendingJob||e.result!==saved.result)return;
-  Object.assign(e,{original,cleaned});await overlay(e);e.completionState=e.result.nameWarnings?.length?'명칭 확인 필요 · 이전 결과 복원':e.result.regions.length?'완료 · 이전 결과 복원':'글자 없음 · 원본 유지';e.state=e.displayRevision===displayRevision&&e.displayResult===e.result?e.completionState:'이전 결과 표시 준비';if(e.state===e.completionState)delete e.completionState;
+  Object.assign(e,{original,cleaned});await overlay(e);e.completionState=e.result.ocrWarnings?.length?`원문 확인 필요 ${e.result.ocrWarnings.length}곳 · 이전 결과 복원`:e.result.nameWarnings?.length?'명칭 확인 필요 · 이전 결과 복원':e.result.regions.length?'완료 · 이전 결과 복원':'글자 없음 · 원본 유지';e.state=e.displayRevision===displayRevision&&e.displayResult===e.result?e.completionState:'이전 결과 표시 준비';if(e.state===e.completionState)delete e.completionState;
  }catch(error){
   if(e.job===saved.id&&!e.pendingJob&&e.result===saved.result){
    if(/서버 404:/.test(error.message||'')){e.result=null;e.job=null;e.state='지난 결과 만료 · 다시 번역';}
@@ -391,7 +391,7 @@ async function run(keys){
      }
     }
     if(stopped)break;
-    displayEntry=e;e.completionState=e.result.nameWarnings?.length?'완료 · 명칭 확인 필요':e.result.regions.length?'완료':'글자 없음 · 원본 유지';
+    displayEntry=e;e.completionState=e.result.ocrWarnings?.length?`완료 · 원문 확인 필요 ${e.result.ocrWarnings.length}곳`:e.result.nameWarnings?.length?'완료 · 명칭 확인 필요':e.result.regions.length?'완료':'글자 없음 · 원본 유지';
     const displayStart=Date.now();let applied=false;
     while(active()&&!applied){
      displayBusy=true;
