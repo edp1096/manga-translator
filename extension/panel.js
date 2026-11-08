@@ -2,7 +2,7 @@ const embeddedPanel=globalThis.MangaPagePanel;
 const $=id=>(embeddedPanel?.root||document).getElementById(id),selected=new Set();
 let tabId,known=new Set(),busy=false,pageURL='',noticeUntil=0,autoSelectNew=true,saving=false,running=false,displayBusy=false,changingDisplay=false;
 const thumbs=new Map(),thumbTasks=new Map(),rows=new Map();
-let nameWork=null,namePageURL='';
+let nameWork=null,namePageURL='',nameScope='chapter',nameScopeReady=false,changingNameScope=false;
 const helpTopics={
  status:['진행 상태',[]],
  force:['대사·독백 툴팁 복원',['효과음을 제외한 대사·독백 툴팁에 원문 영역 제거와 배경 복원을 추가로 시도합니다. 말풍선 안팎 모두 포함합니다.','그림이 손상될 수 있습니다. 실패하거나 글자가 들어가지 않는 영역은 툴팁으로 유지합니다. 끄면 기존 표시로 돌아갑니다. 경량 처리에서는 실행하지 않습니다.']],
@@ -15,7 +15,7 @@ const helpTopics={
   '사이트에는 번역 이미지만 표시하며 처리는 확장에서 합니다. 단색 배경의 대사는 직접 표시하고, 복잡한 그림은 원본을 보존합니다.']],
  names:['명칭 사전',[
   '작품과 번역 언어에 맞는 사전에 인물명·장소·용어·호칭을 등록하면 다음 번역부터 적용됩니다.',
-  '명칭 통일은 현재 작품의 불러온 결과와 저장된 다른 화에 적용합니다. 명칭 되돌림으로 교정을 되돌릴 수 있습니다.']],
+  '현재 회차는 이 탭에 불러온 번역 이미지만 처리합니다. 작품 전체는 기존 방식대로 같은 작품·번역 언어의 확장 캐시에 남은 다른 회차까지 처리합니다. 전체 선택 체크박스와는 별개이며, 아직 번역하지 않은 이미지는 처리하지 않습니다. 명칭 되돌림에도 같은 범위를 적용합니다.']],
  display:['말풍선 표시',[
   '말풍선 흰 배경 자동은 확인된 말풍선의 툴팁을 흰 배경 번역문으로 바꿉니다. 기본 표시로 돌아가면 이전 표시를 복원합니다.',
   '선택 여부와 관계없이 모든 번역 페이지에 적용하고, 다음 번역에도 선택을 유지합니다. 개별 편집은 유지합니다.',
@@ -132,8 +132,9 @@ function selectionState(){
  const groups=syncSaveOptions();$('zip').disabled=running||saving||displayBusy||!selected.size||!saveReady;$('save-options-toggle').disabled=saving;$('zip').textContent=`선택 저장 (${groups.length<selected.size?selected.size+'→'+groups.length:selected.size})`;
  $('force-tooltip-restoration').disabled=saving||changingDisplay||$('lightweight-display').checked;
  $('lightweight-display').disabled=saving||changingDisplay;$('display-mode').disabled=saving||changingDisplay||$('lightweight-display').checked;$('outside-text-mode').disabled=saving||changingDisplay||$('lightweight-display').checked;$('display-retry').disabled=saving||changingDisplay||running||displayBusy;
- if($('names-correct'))$('names-correct').disabled=running||saving||displayBusy||!nameWork?.entries?.some(entry=>entry.kind!=='honorific');
- if($('names-undo'))$('names-undo').disabled=running||saving||displayBusy;
+ if($('name-scope'))$('name-scope').disabled=running||saving||displayBusy||!nameScopeReady||changingNameScope;
+ if($('names-correct'))$('names-correct').disabled=running||saving||displayBusy||!nameScopeReady||changingNameScope||!nameWork?.entries?.some(entry=>entry.kind!=='honorific');
+ if($('names-undo'))$('names-undo').disabled=running||saving||displayBusy||!nameScopeReady||changingNameScope;
  const all=$('all').querySelector('input');all.checked=known.size>0&&selected.size===known.size;all.indeterminate=selected.size>0&&selected.size<known.size;
 }
 function display(s){
@@ -214,8 +215,13 @@ $('display-mode').onchange=async()=>{const mode=$('display-mode').value;changing
 $('outside-text-mode').onchange=async()=>{const mode=$('outside-text-mode').value;changingDisplay=true;selectionState();try{await control('outsideTextMode',{mode});}finally{changingDisplay=false;await control('status');}};
 $('display-retry').onclick=()=>control('displayRetry');
 if($('names-settings'))$('names-settings').onclick=()=>rpc({type:'openNames',tabId}).catch(error=>{$('name-status').textContent=error.message;$('name-status').hidden=false;});
-if($('names-correct'))$('names-correct').onclick=()=>control('namesCorrect');
-if($('names-undo'))$('names-undo').onclick=()=>control('namesUndo');
+if($('names-correct'))$('names-correct').onclick=()=>control('namesCorrect',{scope:nameScope});
+if($('names-undo'))$('names-undo').onclick=()=>control('namesUndo',{scope:nameScope});
+if($('name-scope')){
+ rpc({type:'settings'}).then(value=>{nameScope=value.nameCorrectionScope==='work'?'work':'chapter';$('name-scope').value=nameScope;}).catch(()=>{}).finally(()=>{nameScopeReady=true;selectionState();});
+ $('name-scope').onchange=async()=>{const next=$('name-scope').value;changingNameScope=true;selectionState();try{nameScope=await rpc({type:'nameCorrectionScope',scope:next});}catch(error){$('name-status').textContent=error.message;$('name-status').hidden=false;}finally{$('name-scope').value=nameScope;changingNameScope=false;selectionState();}};
+}
+chrome.storage?.onChanged?.addListener((changes,area)=>{if(area==='local'&&changes.nameCorrectionScope&&!changingNameScope){nameScope=changes.nameCorrectionScope.newValue==='work'?'work':'chapter';if($('name-scope'))$('name-scope').value=nameScope;}});
 chrome.storage?.onChanged?.addListener((changes,area)=>{if(area==='local'&&(changes.nameWorks||changes.target)){namePageURL='';nameWork=null;control('status');}});
 $('run').onclick=()=>control('run',{keys:[...selected]});$('stop').onclick=()=>control('stop');$('toggle').onclick=()=>control('toggle');$('settings').onclick=()=>embeddedPanel?rpc({type:'openOptions'}):chrome.runtime.openOptionsPage();
 $('all').querySelector('input').onchange=e=>{

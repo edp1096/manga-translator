@@ -3,12 +3,19 @@ const stored={server:'http://127.0.0.1:8793',token:'test-token'},handlers=[],req
 let releaseRequest=null,hold=false;
 const context={URL,TextEncoder,crypto:require('node:crypto').webcrypto,structuredClone,AbortSignal,FormData,Blob,setTimeout,clearTimeout,console};
 context.chrome={storage:{local:{get:async keys=>structuredClone(keys===null?stored:Object.fromEntries((Array.isArray(keys)?keys:[keys]).filter(key=>key in stored).map(key=>[key,stored[key]]))),set:async value=>Object.assign(stored,structuredClone(value)),remove:async keys=>keys.forEach(key=>delete stored[key])}},runtime:{onMessage:{addListener:listener=>handlers.push(listener)},onMessageExternal:{addListener(){}},id:'test'},tabs:{query:async()=>[{id:2,url:'https://reader.test/work-chapter-89.html'}],sendMessage:async(tabId,message)=>notices.push({tabId,message})}};
-context.fetch=async(url,options)=>{if(String(url).startsWith('data:'))return fetch(url);requests.push({url,options});if(hold)await new Promise(resolve=>releaseRequest=resolve);return new Response(JSON.stringify({result:JSON.parse(options.body).result,changed:0}),{status:200});};
+context.chrome.storage.onChanged={addListener(){}};
+context.chrome.tabs=context.chrome.tabs||{};context.chrome.tabs.onUpdated={addListener(){}};context.chrome.tabs.onRemoved={addListener(){}};
+context.fetch=async(url,options)=>{if(String(url).startsWith('data:'))return fetch(url);if(String(url).includes('/api/library/presentation/'))return new Response('{}',{status:200});requests.push({url,options});if(hold)await new Promise(resolve=>releaseRequest=resolve);return new Response(JSON.stringify({result:JSON.parse(options.body).result,changed:0}),{status:200});};
 vm.createContext(context);context.importScripts=(...files)=>{for(const name of files)if(name!=='panel_scope.js')vm.runInContext(fs.readFileSync(path.join(__dirname,'../extension',name),'utf8'),context);};vm.runInContext(fs.readFileSync(path.join(__dirname,'../extension/background.js'),'utf8'),context);
 const sender={tab:{id:1,url:'https://reader.test/work-chapter-88.html'}};
 const send=(message,origin=sender)=>new Promise(resolve=>handlers[0](message,origin,resolve));
 const work={id:'test-work',title:'Test',revision:'one',scopes:[sender.tab.url],entries:[{source:'佐々木チロル',translation:'사사키 티롤',givenSource:'チロル',givenTranslation:'티롤'}]};
 (async()=>{
+ assert.equal((await send({type:'settings'})).value.nameCorrectionScope,'chapter');
+ assert.equal((await send({type:'nameCorrectionScope',scope:'work'})).value,'work');
+ assert.equal((await send({type:'settings'})).value.nameCorrectionScope,'work');
+ await send({type:'control',tabId:1,action:'namesCorrect',scope:'work'});assert.equal(notices.pop().message.scope,'work');
+ assert.equal((await send({type:'nameCorrectionScope',scope:'invalid'})).value,'chapter');assert.equal(stored.token,'test-token');
  assert((await send({type:'namesSave',work})).ok);
  assert.equal((await send({type:'namesContext'},{tab:{url:'https://reader.test/work-chapter-89.html'}})).value.work.id,work.id);
  assert.equal((await send({type:'namesContext'},{tab:{url:'https://reader.test/other-chapter-89.html'}})).value.work,undefined);

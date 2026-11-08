@@ -347,13 +347,13 @@ async function overlay(e){
  place(e);
  if(revision===displayRevision&&(!needsGeometry(result)||geometryReady(e))&&restorationReady(e)&&(lightweightDisplay||displayMode!=='white'||e.whiteRevision===revision)&&(!forceTooltipRestoration||lightweightDisplay||e.forceRevision===revision&&e.forceResult===result)){e.displayRevision=revision;e.displayResult=result;}
 }
-async function correctNames(undo=false){
+async function correctNames(undo=false,scope='chapter'){
  if(running||exporting||displayBusy)return;
  const context=await rpc({type:'namesContext'}),work=context?.work;
  if(running||exporting||displayBusy)return;
  if(!undo&&!work?.entries?.some(entry=>entry.kind!=='honorific'))throw Error('현재 작품의 명칭 사전을 먼저 저장하세요.');
  const selected=entries.filter(entry=>entry.result&&(entry.result.target||'Korean')===(context.target||'Korean')&&!entry.pendingJob&&!entry.restoring&&!entry.cachedRestore);
- const cached=await rpc({type:'namesTargets'}),other=(cached||[]).filter(target=>!(target.pageURL===pageIdentity()&&selected.some(entry=>entry.job===target.id&&entry.sourceURL===target.sourceURL)));
+ const cached=scope==='work'?await rpc({type:'namesTargets'}):[],other=(cached||[]).filter(target=>!(target.pageURL===pageIdentity()&&selected.some(entry=>entry.job===target.id&&entry.sourceURL===target.sourceURL)));
  if(running||exporting||displayBusy)return;
  if(!selected.length&&!other.length)throw Error('이전 번역 결과를 먼저 불러오세요.');
  const identity=pageIdentity();running=true;nameBusy=true;stopped=false;let changed=0,failed=0,done=0,interrupted='';
@@ -479,7 +479,7 @@ chrome.runtime.onMessage.addListener((m,s,reply)=>{
    if((editOpening||entries.some(e=>e.applyingEdit))&&['run','preload','edit','export','exportStart','namesCorrect','namesUndo'].includes(m.action))throw Error('편집 화면을 준비하고 있습니다.');
    if(['run','preload','edit','export','exportStart','namesCorrect','namesUndo'].includes(m.action)&&(displayBusy||displayTask))throw Error('표시 적용이 끝난 뒤 실행하세요.');
    if(m.action==='nameRegions')return {regions:entries.flatMap(entry=>entry.result?(entry.result.regions||[]).filter(region=>region.text?.trim()&&region.text.length<=100).map(region=>({id:entry.job,region:region.id,page:entry.index+1,text:region.text})):[])};
-   if(m.action==='namesCorrect'||m.action==='namesUndo')correctNames(m.action==='namesUndo').catch(error=>{nameMessage=error.message;status(error.message);});
+   if(m.action==='namesCorrect'||m.action==='namesUndo')correctNames(m.action==='namesUndo',m.scope).catch(error=>{nameMessage=error.message;status(error.message);});
    if(m.action==='preload')preload().catch(e=>status(e.message));
    if(m.action==='run'){displayPaused=false;run(m.keys||[]).catch(e=>status(e.message));}
    if(m.action==='stop'){stopped=true;displayPaused=true;clearTimeout(displayTimer);displayMessage='표시 적용 중지 · 다시 적용으로 계속';status('중지 요청됨 · 현재 서버 작업은 보존합니다.');}

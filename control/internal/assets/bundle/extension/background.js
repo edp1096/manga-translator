@@ -1,4 +1,4 @@
-const defaults = {server:'http://127.0.0.1:8793',token:'',managementServer:'',target:'Korean',selector:'',captureFallback:true,displayMode:'auto',outsideTextMode:'tooltip',lightweightDisplay:false,forceTooltipRestoration:false,fontPolicy:{}};
+const defaults = {server:'http://127.0.0.1:8793',token:'',managementServer:'',target:'Korean',selector:'',captureFallback:true,displayMode:'auto',outsideTextMode:'tooltip',lightweightDisplay:false,forceTooltipRestoration:false,nameCorrectionScope:'chapter',fontPolicy:{}};
 importScripts('server-addresses.js','fonts.js','panel_scope.js','readers.js','names.js','job_cache.js','library.js','editor-session.js');
 async function settings(){return {...defaults,...await chrome.storage.local.get(Object.keys(defaults))};}
 async function api(path, options={}) {
@@ -73,6 +73,7 @@ chrome.runtime.onMessage.addListener((msg,sender,respond)=>{
       }
       case 'namesContext':return nameContext(/^https?:/.test(sender.tab?.url||'')?sender.tab.url:msg.pageURL||'');
       case 'namesSave':return saveNames(msg.work);
+      case 'nameCorrectionScope':{const scope=msg.scope==='work'?'work':'chapter';await chrome.storage.local.set({nameCorrectionScope:scope});return scope;}
       case 'namesTargets':return nameTargets(sender.tab?.url||'');
       case 'namesRememberTarget':return rememberNameTarget(msg,sender);
       case 'openNames':{
@@ -102,7 +103,7 @@ chrome.runtime.onMessage.addListener((msg,sender,respond)=>{
       }
       case 'control':{
         if(!Number.isInteger(msg.tabId)||msg.tabId<0)throw Error('만화 페이지를 선택한 뒤 새로고침을 눌러주세요.');
-        const command={type:'control',action:msg.action,keys:msg.keys,key:msg.key,sourceURL:msg.sourceURL,mode:msg.mode,enabled:msg.enabled};
+        const command={type:'control',action:msg.action,keys:msg.keys,key:msg.key,sourceURL:msg.sourceURL,mode:msg.mode,enabled:msg.enabled,scope:msg.scope};
         if(msg.action==='locate')await chrome.tabs.update(msg.tabId,{active:true});
         try{return await chrome.tabs.sendMessage(msg.tabId,command);}
         catch(error){

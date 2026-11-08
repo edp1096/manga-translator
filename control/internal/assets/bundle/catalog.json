@@ -536,7 +536,7 @@
       ]
     }
   ],
-  "version": "0.5.6",
+  "version": "0.5.7",
   "artifacts": [
     {
       "id": "ort-linux-arm64",
