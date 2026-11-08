@@ -122,7 +122,7 @@
   const host=location.hostname;
   const extra=extraReader({capture,fetchImage,onWait,cancelled,metadata:readMetadata});if(extra)return extra;
   let kind,name;
-  if(host==='comic-walker.com'&&/\/episodes\//.test(location.pathname)){kind='comicwalker';name='카도코미';}
+  if(host==='comic-walker.com'&&(/\/episodes\//.test(location.pathname)||/^\/detail\/[^/]+\/?$/.test(location.pathname))){kind='comicwalker';name='카도코미';}
   else if(['tonarinoyj.jp','www.sunday-webry.com','shonenjumpplus.com','comic-days.com','comic-earthstar.com'].includes(host)&&/^\/episode\/\d+\/?$/.test(location.pathname)){kind='tonari';name=({'tonarinoyj.jp':'토나리노 영점프','www.sunday-webry.com':'선데이 웨브리','shonenjumpplus.com':'소년점프+','comic-days.com':'코믹데이즈','comic-earthstar.com':'코믹 어스스타'})[host];}
   else if(host==='vw.mangaz.com'&&/^\/virgo\/view\/\d+/.test(location.pathname)){kind='mangaz';name='망가즈';}
   else if(host==='manga-one.com'&&/^\/manga\/\d+\/chapter\/\d+\/?$/.test(location.pathname)||host==='manga-mee.jp'&&/^\/detail\/\d+\/?$/.test(location.pathname)){kind='mangaone';name=host==='manga-mee.jp'?'망가미':'망가원·우라선데이';}
@@ -155,6 +155,7 @@
    },'뷰어 페이지 이동 시간 초과',20000);
   }
   async function prepare(){
+   if(kind==='comicwalker'){await until(()=>comicCanvases().length>0,'카도코미 만화 뷰어를 불러오지 못했습니다. 읽기 뷰어를 연 뒤 새로고침하세요.',15000);return;}
    if(kind==='tonari'){await until(()=>tonariPages().some(p=>p.type==='main'&&typeof p.src==='string')&&document.querySelector('.js-viewer .js-page-area'),'본문 페이지 목록이 없습니다. 회차의 읽기 뷰어를 여세요.',8000);return;}
    if(kind==='pixiv'){
     if(pixivCount&&(!readMetadata||pixivPages))return;if(preparing)return preparing;

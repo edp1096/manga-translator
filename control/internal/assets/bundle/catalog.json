@@ -536,7 +536,7 @@
       ]
     }
   ],
-  "version": "0.5.4",
+  "version": "0.5.5",
   "artifacts": [
     {
       "id": "ort-linux-arm64",
@@ -706,14 +706,14 @@
       "group": "application",
       "platform": "linux-arm64",
       "url": "embedded:engine/linux-arm64.gz",
-      "sha256": "961a320ab7821783cf66ca95c90d5ba08bc0a3e7ca49a1810ab05072b19ed10d",
-      "size": 1452107,
+      "sha256": "a05bc853531c048414ff08ce3f80ebe59b1f1f93cffa56d1ffc6c7e7c9030c8b",
+      "size": 1500039,
       "format": "gzip",
       "files": [
         {
           "path": "bin/manga-translator-server",
-          "sha256": "1f5313c707713f41c334cbd07a09f40bc5a5a816797ef10d0fb4517d1a93ce87",
-          "size": 3232056,
+          "sha256": "3dfd8d154059b2a40e0bf08bbb2f93947f284ddb9fb2d927a41985d9aff3b101",
+          "size": 3448968,
           "executable": true
         }
       ]
@@ -1043,13 +1043,13 @@
       "group": "application",
       "platform": "windows-amd64",
       "url": "embedded:engine/windows-amd64.gz",
-      "sha256": "b363ae8281d8da8e874a5b6b83398fff75e84cade41efadb67a1c33308110e31",
+      "sha256": "50350075cf806e6c25742a5824e4f0896c83165743b12dc45940e3024adcd716",
       "size": 2258952,
       "format": "gzip",
       "files": [
         {
           "path": "bin/manga-translator-server.exe",
-          "sha256": "038d706b17c0afc4dacb70df2f2b45c595bb06b30fc293bbe93c3a9af7061d97",
+          "sha256": "2fb333b707b0dc9dfa2db071952c825c8a8005e16eb91c849d220081c02fe24a",
           "size": 7418217,
           "executable": true
         }
@@ -2335,13 +2335,13 @@
       "group": "application",
       "platform": "linux-amd64",
       "url": "embedded:engine/linux-amd64.gz",
-      "sha256": "c833b02c2d338c0f0e65008d2ab3f867f98e872cce88e1b7be4f0de46d233ff5",
-      "size": 1582963,
+      "sha256": "161c1464747d372ba147d6f04ce9b273bfee1e91a079e77c6e8e7990cd9ca61a",
+      "size": 1582964,
       "format": "gzip",
       "files": [
         {
           "path": "bin/manga-translator-server",
-          "sha256": "1bf8960b30b7973cd6db58ba078be21b65625f0bcebd791012e0ea9662d506ab",
+          "sha256": "e0e93ba4903980ba5376325c3b71dad055f2e8d1a3bf282b61a1f9425f3c10ad",
           "size": 3838200,
           "executable": true
         }
