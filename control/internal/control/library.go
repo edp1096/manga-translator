@@ -263,8 +263,71 @@ func (m *Manager) savedJobs(jobs []JobInfo, page, target string, withResult bool
 	}
 	return out, nil
 }
+
+// Editor reopens read the durable job instead of accumulating browser snapshots.
+func (m *Manager) editorData(id string) (map[string]any, error) {
+	release, err := jobLease(m.root, id, false)
+	if err != nil {
+		return nil, err
+	}
+	defer release()
+	raw, err := readLibraryJSON(m.root, id, "result.json")
+	if err != nil {
+		return nil, err
+	}
+	var dimensions struct {
+		Width   int               `json:"width"`
+		Height  int               `json:"height"`
+		Regions []json.RawMessage `json:"regions"`
+	}
+	if json.Unmarshal(raw, &dimensions) != nil || dimensions.Width <= 0 || dimensions.Height <= 0 || dimensions.Regions == nil {
+		return nil, fmt.Errorf("편집 가능한 저장 결과가 없습니다")
+	}
+	result := raw
+	var geometry json.RawMessage
+	if saved, err := readLibraryJSON(m.root, id, "presentation.json"); err == nil {
+		var view struct {
+			Result  json.RawMessage `json:"result"`
+			Bubbles json.RawMessage `json:"bubbles"`
+		}
+		if json.Unmarshal(saved, &view) == nil && validPresentation(view.Result, raw) {
+			result = view.Result
+			geometry = view.Bubbles
+		}
+	}
+	out := map[string]any{"result": result, "baseResult": result}
+	if len(geometry) > 0 && string(geometry) != "null" {
+		out["geometry"] = geometry
+	}
+	if saved, err := readLibraryJSON(m.root, id, "request.json"); err == nil {
+		var metadata struct {
+			PageURL   string `json:"pageURL"`
+			SourceURL string `json:"sourceURL"`
+		}
+		if json.Unmarshal(saved, &metadata) == nil {
+			out["pageURL"] = metadata.PageURL
+			out["sourceURL"] = metadata.SourceURL
+		}
+	}
+	if saved, err := readLibraryJSON(m.root, id, "restoration-v1.json"); err == nil {
+		folder, _ := jobPath(m.root, id)
+		if !absent(filepath.Join(folder, "restored-v1.png")) {
+			out["restoration"] = saved
+		}
+	}
+	return out, nil
+}
+
 func (m *Manager) libraryRoutes(mux *http.ServeMux) {
 	m.libraryGroupRoutes(mux)
+	mux.HandleFunc("GET /api/library/editor/{id}", func(w http.ResponseWriter, r *http.Request) {
+		data, err := m.editorData(r.PathValue("id"))
+		if err != nil {
+			http.NotFound(w, r)
+			return
+		}
+		respond(w, data, 200)
+	})
 	mux.HandleFunc("POST /api/library/presentation/{id}", func(w http.ResponseWriter, r *http.Request) {
 		token, e := os.ReadFile(filepath.Join(m.root, "data/native_api/access-token"))
 		expected := "Bearer " + strings.TrimSpace(string(token))

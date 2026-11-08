@@ -1,5 +1,5 @@
 const defaults = {server:'http://127.0.0.1:8793',token:'',managementServer:'',target:'Korean',selector:'',captureFallback:true,displayMode:'auto',outsideTextMode:'tooltip',lightweightDisplay:false,forceTooltipRestoration:false,fontPolicy:{}};
-importScripts('server-addresses.js','fonts.js','panel_scope.js','readers.js','names.js','job_cache.js','library.js');
+importScripts('server-addresses.js','fonts.js','panel_scope.js','readers.js','names.js','job_cache.js','library.js','editor-session.js');
 async function settings(){return {...defaults,...await chrome.storage.local.get(Object.keys(defaults))};}
 async function api(path, options={}) {
   const s=await settings();
@@ -40,8 +40,8 @@ function browserImage(url,referrer){
 }
 const pageCacheKey=url=>'page:'+MangaReaders.pageIdentity(url);
 async function nameContext(url,target){const saved=await chrome.storage.local.get('nameWorks'),works=saved.nameWorks||[];target=target||(await settings()).target;return {works,target,work:url?MangaNames.forURL(works,url,target):null};}
-async function nameTargets(url){const context=await nameContext(url);if(!context.work)return [];const stored=await chrome.storage.local.get(null),server=(await settings()).server;return Object.entries(stored).filter(([key,value])=>key.startsWith('page:')&&value?.server===server&&Date.now()-value.updated<86400000&&MangaNames.forURL(context.works,key.slice(5),context.target)?.id===context.work.id).flatMap(([key,value])=>(value.items||[]).filter(item=>item.result&&!item.pendingJob&&(item.result.target||'Korean')===context.target).map(item=>({cacheKey:key,pageURL:key.slice(5),sourceURL:item.sourceURL,key:item.key,id:item.id,result:item.result})));}
-function rememberNameTarget(msg,sender){const task=cacheWrites.catch(()=>{}).then(async()=>{const context=await nameContext(sender.tab?.url||'');if(!context.work||MangaNames.forURL(context.works,msg.target.pageURL,context.target)?.id!==context.work.id||(msg.target.result?.target||'Korean')!==context.target||(msg.result?.target||'Korean')!==context.target)throw Error('다른 작품의 결과에는 적용할 수 없습니다.');const key=pageCacheKey(msg.target.pageURL),saved=(await chrome.storage.local.get(key))[key];if(saved?.server!==(await settings()).server)return false;const item=saved.items?.find(item=>item.id===msg.target.id&&item.sourceURL===msg.target.sourceURL);if(!item||JSON.stringify(item.result)!==JSON.stringify(msg.target.result))return false;item.result=msg.result;item.updated=Date.now();saved.updated=Date.now();await chrome.storage.local.set({[key]:saved});await MangaLibrary.remember(item).catch(error=>console.warn("명칭 표시 저장:",error.message));const tabs=await chrome.tabs.query({});for(const tab of tabs)if(tab.id!==sender.tab?.id&&tab.url&&pageCacheKey(tab.url)===key)chrome.tabs.sendMessage(tab.id,{type:'namesApplied',id:item.id,sourceURL:item.sourceURL,before:msg.target.result,result:msg.result}).catch(()=>{});return true;});cacheWrites=task;return task;}
+async function nameTargets(url){const context=await nameContext(url);if(!context.work)return [];const stored=await MangaJobCache.pages(),server=(await settings()).server;return Object.entries(stored).filter(([key,value])=>key.startsWith('page:')&&value?.server===server&&Date.now()-value.updated<86400000&&MangaNames.forURL(context.works,key.slice(5),context.target)?.id===context.work.id).flatMap(([key,value])=>(value.items||[]).filter(item=>item.result&&!item.pendingJob&&(item.result.target||'Korean')===context.target).map(item=>({cacheKey:key,pageURL:key.slice(5),sourceURL:item.sourceURL,key:item.key,id:item.id,result:item.result})));}
+function rememberNameTarget(msg,sender){const task=cacheWrites.catch(()=>{}).then(async()=>{const context=await nameContext(sender.tab?.url||'');if(!context.work||MangaNames.forURL(context.works,msg.target.pageURL,context.target)?.id!==context.work.id||(msg.target.result?.target||'Korean')!==context.target||(msg.result?.target||'Korean')!==context.target)throw Error('다른 작품의 결과에는 적용할 수 없습니다.');const key=pageCacheKey(msg.target.pageURL),saved=(await chrome.storage.local.get(key))[key];if(saved?.server!==(await settings()).server)return false;const item=saved.items?.find(item=>item.id===msg.target.id&&item.sourceURL===msg.target.sourceURL);if(!item||JSON.stringify(item.result)!==JSON.stringify(msg.target.result))return false;item.result=msg.result;item.updated=Date.now();saved.updated=Date.now();await MangaLibrary.remember(item);await MangaJobCache.writePage(key,saved).catch(error=>console.warn('명칭 표시 캐시:',error.message));const tabs=await chrome.tabs.query({});for(const tab of tabs)if(tab.id!==sender.tab?.id&&tab.url&&pageCacheKey(tab.url)===key)chrome.tabs.sendMessage(tab.id,{type:'namesApplied',id:item.id,sourceURL:item.sourceURL,before:msg.target.result,result:msg.result}).catch(()=>{});return true;});cacheWrites=task;return task;}
 let nameWrites=Promise.resolve();
 function saveNames(work){const task=nameWrites.catch(()=>{}).then(async()=>{const validated=MangaNames.validate(work),saved=await nameContext('');const others=saved.works.filter(item=>item.id!==validated.id).map(item=>({...item,scopes:(item.scopes||[]).filter(scope=>(item.target||'Korean')!==validated.target||!validated.scopes.includes(scope))}));if(others.length>=100)throw Error('작품 사전은 100개까지 저장할 수 있습니다.');const works=[...others,validated];await chrome.storage.local.set({nameWorks:works});return{works,work:validated};});nameWrites=task;return task;}
 let cacheWrites=Promise.resolve();
@@ -50,16 +50,15 @@ function rememberPage(msg,sender){
  const task=cacheWrites.catch(()=>{}).then(async()=>{
   if(discardedJobs.has(msg.id))return false;
   if(!sender.tab?.url||typeof msg.sourceURL!=='string'||msg.sourceURL.length>8192||!msg.result||!Array.isArray(msg.result.regions)||msg.result.regions.length>150)return false;
-  const key=pageCacheKey(sender.tab.url),server=(await settings()).server,all=await chrome.storage.local.get(null),now=Date.now();
-  const prior=all[key]?.server===server?all[key].items||[]:[];
-  const items=prior.filter(x=>x.sourceURL!==msg.sourceURL&&now-x.updated<86400000);
-  items.push({sourceURL:msg.sourceURL,key:msg.key,id:msg.id,result:msg.result,...(msg.bubbles?{bubbles:msg.bubbles}:{}),updated:now});
-  all[key]={server,updated:now,items:items.slice(-200)};
-  const pages=Object.entries(all).filter(([k])=>k.startsWith('page:')).sort((a,b)=>(a[1].updated||0)-(b[1].updated||0));
-  let total=pages.reduce((n,[,value])=>n+new TextEncoder().encode(JSON.stringify(value)).length,0);const remove=[];
-  for(const [k,value]of pages){if(k===key)continue;if(now-(value.updated||0)>86400000||total>4*1024*1024){remove.push(k);total-=new TextEncoder().encode(JSON.stringify(value)).length;}}
-  while(new TextEncoder().encode(JSON.stringify(all[key])).length>4*1024*1024&&all[key].items.length)all[key].items.shift();
-  if(remove.length)await chrome.storage.local.remove(remove);await chrome.storage.local.set({[key]:all[key]});await MangaLibrary.remember(msg).catch(error=>console.warn("표시 정보 저장:",error.message));return true;
+  let persisted=false;
+  try{await MangaLibrary.remember(msg);persisted=true;}catch(error){if(msg.requirePersist)throw error;console.warn('표시 정보 저장:',error.message);}
+  try{
+   const key=pageCacheKey(sender.tab.url),server=(await settings()).server,saved=(await chrome.storage.local.get(key))[key],now=Date.now();
+   const prior=saved?.server===server?saved.items||[]:[],items=prior.filter(x=>x.sourceURL!==msg.sourceURL&&now-x.updated<86400000);
+   items.push({sourceURL:msg.sourceURL,key:msg.key,id:msg.id,result:msg.result,...(msg.bubbles?{bubbles:msg.bubbles}:{}),updated:now});
+   await MangaJobCache.writePage(key,{server,updated:now,items:items.slice(-200)});
+  }catch(error){if(!persisted&&msg.requirePersist)throw error;console.warn('브라우저 표시 캐시:',error.message);}
+  return true;
  });cacheWrites=task;return task;
 }
 chrome.runtime.onMessage.addListener((msg,sender,respond)=>{
@@ -150,8 +149,7 @@ chrome.runtime.onMessage.addListener((msg,sender,respond)=>{
       case 'bubbles':try{return await(await MangaLibrary.request('/bubbles/'+msg.id)).json();}catch{return (await api(`/api/jobs/${msg.id}/bubbles`,{method:'POST'})).json();}
       case 'recognizeRegion':{
         if(!/^[0-9a-f-]+$/.test(msg.id))throw Error('잘못된 작업 ID입니다.');
-        const saved=(await chrome.storage.local.get('edit:'+msg.id))['edit:'+msg.id];
-        if(!saved)throw Error('편집 화면을 다시 열어 주세요.');
+        const saved=await MangaEditorSessions.load(msg.id,sender);
         const payload={box:msg.box,rotation:msg.rotation,type:msg.regionType};
         let pageURL=saved.pageURL;
         if(!pageURL)try{pageURL=(await chrome.tabs.get(saved.tabId)).url;}catch{}
@@ -168,16 +166,14 @@ chrome.runtime.onMessage.addListener((msg,sender,respond)=>{
         if(!['original.png','cleaned.png','mask.png','result.json','restored-v1.png'].includes(msg.name)&&!/^manual-[0-9a-f]{32}\.png$/.test(msg.name))throw Error('Invalid asset');
         let response;try{response=await MangaLibrary.request('/assets/'+msg.id+'/'+msg.name);}catch{response=await api(`/api/jobs/${msg.id}/${msg.name}`);}return encoded(await response.blob());
       }
-      case 'edit':{
-        await chrome.storage.local.set({['edit:'+msg.id]:{tabId:sender.tab.id,pageURL:sender.tab.url,key:msg.key,result:msg.result,baseResult:msg.baseResult,geometry:msg.geometry,restoration:msg.restoration,displayMode:msg.displayMode,outsideTextMode:msg.outsideTextMode,forceTooltipRestoration:msg.forceTooltipRestoration===true,lightweightDisplay:msg.lightweightDisplay===true}});
-        await chrome.tabs.create({windowId:sender.tab.windowId,url:chrome.runtime.getURL('editor.html')+'?job='+encodeURIComponent(msg.id)});return true;
-      }
+      case 'edit':return MangaEditorSessions.open(msg,sender);
+      case 'loadEdit':return MangaEditorSessions.load(msg.id,sender);
       case 'apply':{
-        const key='edit:'+msg.id, saved=(await chrome.storage.local.get(key))[key];
-        if(!saved)throw Error('원본 탭 정보가 없습니다.');
-        const applied=await chrome.tabs.sendMessage(saved.tabId,{type:'applyEdited',key:saved.key,result:msg.result});if(applied?.error)throw Error(applied.error);
-        const updated=applied?.result?applied:{result:msg.previewResult||msg.result,baseResult:msg.result};
-        await chrome.storage.local.set({[key]:{...saved,...updated}});return updated;
+        const saved=await MangaEditorSessions.route(msg.id,sender);
+        if(!Number.isInteger(saved.tabId)||!saved.key)throw Error('원본 만화 탭에서 편집을 다시 열어주세요.');
+        let applied;try{applied=await chrome.tabs.sendMessage(saved.tabId,{type:'applyEdited',id:msg.id,key:saved.key,result:msg.result});}catch{throw Error('원본 만화 탭에 연결하지 못했습니다. 편집 내용은 현재 창에 남아 있습니다. 원본 탭을 확인하세요.');}
+        if(applied?.error)throw Error(applied.error);
+        return applied?.result?applied:{result:msg.previewResult||msg.result,baseResult:msg.result};
       }
     }
     throw Error('Unknown request');
@@ -205,7 +201,7 @@ chrome.runtime.onMessageExternal.addListener((msg,sender,respond)=>{
   }
   if(msg.type==='control-cache-stats')return MangaJobCache.stats();
   if(msg.type==='control-cache-prune'){
-   const task=cacheWrites.catch(()=>{}).then(async()=>{if(msg.all){const stored=await chrome.storage.local.get(null);for(const [key,value]of Object.entries(stored)){if(key.startsWith('page:'))for(const item of value.items||[])discardedJobs.add(item.id);else if(key.startsWith('edit:'))discardedJobs.add(key.slice(5));}}else for(const id of msg.ids||[])discardedJobs.add(id);while(discardedJobs.size>10000)discardedJobs.delete(discardedJobs.values().next().value);return MangaJobCache.prune(msg.ids,!!msg.all);});cacheWrites=task;const result=await task;
+   const task=cacheWrites.catch(()=>{}).then(async()=>{if(msg.all){const stored=await MangaJobCache.pages();for(const value of Object.values(stored))for(const item of value.items||[])discardedJobs.add(item.id);for(const key of await MangaJobCache.keys())if(key.startsWith('edit:'))discardedJobs.add(key.slice(5));}else for(const id of msg.ids||[])discardedJobs.add(id);while(discardedJobs.size>10000)discardedJobs.delete(discardedJobs.values().next().value);return MangaJobCache.prune(msg.ids,!!msg.all);});cacheWrites=task;const result=await task;
    for(const tab of await chrome.tabs.query({}))chrome.tabs.sendMessage(tab.id,{type:'jobsRemoved',ids:msg.ids||[],all:!!msg.all}).catch(()=>{});
    return result;
   }

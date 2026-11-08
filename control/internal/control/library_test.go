@@ -109,3 +109,42 @@ func TestLibraryRereading(t *testing.T) {
 		t.Fatal(w.Body.String())
 	}
 }
+
+func TestEditorReadsLatestDurableResultWithoutBrowserSnapshot(t *testing.T) {
+	root := t.TempDir()
+	m := &Manager{root: root}
+	id := fixtureJob(t, root, 501, false)
+	folder, _ := jobPath(root, id)
+	base := json.RawMessage(`{"width":100,"height":200,"target":"Korean","regions":[{"id":1,"translation":"original"}]}`)
+	saved := json.RawMessage(`{"width":100,"height":200,"target":"Korean","regions":[{"id":1,"translation":"saved edit"}]}`)
+	if err := os.WriteFile(filepath.Join(folder, "result.json"), base, 0600); err != nil {
+		t.Fatal(err)
+	}
+	if err := writeJSON(filepath.Join(folder, "presentation.json"), map[string]any{"result": saved, "bubbles": map[string]any{"version": 3}}); err != nil {
+		t.Fatal(err)
+	}
+	get := func(id string) *httptest.ResponseRecorder {
+		r := httptest.NewRequest("GET", "http://127.0.0.1:8794/api/library/editor/"+id, nil)
+		w := httptest.NewRecorder()
+		m.Handler().ServeHTTP(w, r)
+		return w
+	}
+	response := get(id)
+	var data map[string]json.RawMessage
+	if response.Code != 200 || json.Unmarshal(response.Body.Bytes(), &data) != nil {
+		t.Fatal(response.Code, response.Body.String())
+	}
+	if !strings.Contains(string(data["result"]), "saved edit") || string(data["result"]) != string(data["baseResult"]) || len(data["geometry"]) == 0 {
+		t.Fatal(string(response.Body.Bytes()))
+	}
+	if err := os.WriteFile(filepath.Join(folder, "presentation.json"), []byte("broken"), 0600); err != nil {
+		t.Fatal(err)
+	}
+	response = get(id)
+	if response.Code != 200 || !strings.Contains(response.Body.String(), "original") {
+		t.Fatal(response.Code, response.Body.String())
+	}
+	if response = get("invalid"); response.Code != 404 {
+		t.Fatal(response.Code)
+	}
+}
