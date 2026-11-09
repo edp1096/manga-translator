@@ -48,6 +48,15 @@ func libraryIdentity(raw string) string {
 			u.Path = strings.TrimSuffix(u.Path, "/")
 			u.RawQuery = ""
 		}
+	case "yanmaga.jp":
+		if regexp.MustCompile(`^/viewer/comics/[^/]+/[^/]+/?$`).MatchString(u.Path) {
+			u.Path = strings.TrimSuffix(u.Path, "/")
+			cid := u.Query().Get("cid")
+			u.RawQuery = ""
+			if cid != "" {
+				u.RawQuery = url.Values{"cid": {cid}}.Encode()
+			}
+		}
 	case "www.pixiv.net":
 		if m := regexp.MustCompile(`^/(?:[a-z]{2}/)?artworks/([0-9]+)/?$`).FindStringSubmatch(u.Path); m != nil {
 			u.Path = "/artworks/" + m[1]
@@ -64,6 +73,14 @@ func libraryWork(raw string) string {
 	u, _ := url.Parse(raw)
 	if u == nil {
 		return raw
+	}
+	if u.Hostname() == "yanmaga.jp" {
+		if work := regexp.MustCompile(`^/viewer/comics/[^/]+`).FindString(u.Path); work != "" {
+			u.Path = work
+			u.RawQuery = ""
+			u.Fragment = ""
+			return u.String()
+		}
 	}
 	for _, pattern := range []string{`^(/detail/[^/]+)/episodes/`, `^(/manga/[0-9]+)/chapter/`, `^(/read/[^/]+)/ch[0-9]`} {
 		if m := regexp.MustCompile(pattern).FindStringSubmatch(u.Path); m != nil {

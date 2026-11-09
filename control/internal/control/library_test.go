@@ -148,3 +148,19 @@ func TestEditorReadsLatestDurableResultWithoutBrowserSnapshot(t *testing.T) {
 		t.Fatal(response.Code)
 	}
 }
+
+func TestYanMagaLibraryIdentity(t *testing.T) {
+	one := "https://yanmaga.jp/viewer/comics/GLITCH_WITCH/chapter-one/?utm_source=site&cid=first#page=8"
+	if got := libraryIdentity(one); got != "https://yanmaga.jp/viewer/comics/GLITCH_WITCH/chapter-one?cid=first" {
+		t.Fatal(got)
+	}
+	if libraryIdentity(one) == libraryIdentity("https://yanmaga.jp/viewer/comics/GLITCH_WITCH/chapter-one?cid=second") {
+		t.Fatal("different chapters share cache identity")
+	}
+	if got := libraryWork(libraryIdentity(one)); got != "https://yanmaga.jp/viewer/comics/GLITCH_WITCH" {
+		t.Fatal(got)
+	}
+	if libraryWork(libraryIdentity(one)) != libraryWork("https://yanmaga.jp/viewer/comics/GLITCH_WITCH/chapter-two?cid=second") {
+		t.Fatal("chapters not grouped by work")
+	}
+}

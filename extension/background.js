@@ -67,7 +67,7 @@ chrome.runtime.onMessage.addListener((msg,sender,respond)=>{
       case 'page-panel-closed':await globalThis.MangaPagePanels?.closed(sender);return true;
       case 'settings':return settings();
       case 'readerMetadata':{
-        if(!Number.isInteger(sender.tab?.id)||sender.frameId!==0||!/^https:\/\/(?:manga-one\.com\/manga\/\d+\/chapter\/\d+|manga-mee\.jp\/detail\/\d+|palcy\.jp\/comics\/\d+|www\.manga-up\.com\/titles\/\d+\/chapters\/\d+|www\.pixiv\.net\/(?:[a-z]{2}\/)?artworks\/\d+)(?:[/?#]|$)/.test(sender.url||''))return null;
+        if(!Number.isInteger(sender.tab?.id)||sender.frameId!==0||!/^https:\/\/(?:manga-one\.com\/manga\/\d+\/chapter\/\d+|manga-mee\.jp\/detail\/\d+|palcy\.jp\/comics\/\d+|www\.manga-up\.com\/titles\/\d+\/chapters\/\d+|www\.pixiv\.net\/(?:[a-z]{2}\/)?artworks\/\d+|yanmaga\.jp\/viewer\/comics\/[^/?#]+\/[^/?#]+)(?:[/?#]|$)/.test(sender.url||''))return null;
         const result=await chrome.scripting.executeScript({target:{tabId:sender.tab.id,frameIds:[0]},world:'MAIN',func:MangaReaders.metadata,args:[msg.command?.action==='locate'&&Number.isInteger(msg.command.slot)?{action:'locate',slot:msg.command.slot}:null]});
         return result[0]?.result||null;
       }

@@ -6,6 +6,7 @@
  function pageIdentity(value=location.href){const u=new URL(value);u.hash='';
   if(u.hostname==='vw.mangaz.com'&&/^\/virgo\/view\/\d+/.test(u.pathname)){u.pathname=u.pathname.match(/^\/virgo\/view\/\d+/)[0];u.search='';}
   if(u.hostname==='comic-walker.com'&&/\/episodes\//.test(u.pathname)||['tonarinoyj.jp','www.sunday-webry.com','shonenjumpplus.com','comic-days.com','comic-earthstar.com'].includes(u.hostname)&&/^\/episode\//.test(u.pathname))u.search='';
+  if(u.hostname==='yanmaga.jp'&&/^\/viewer\/comics\/[^/]+\/[^/]+\/?$/.test(u.pathname)){u.pathname=u.pathname.replace(/\/$/,'');const cid=u.searchParams.get('cid');u.search='';if(cid)u.searchParams.set('cid',cid);}
   const old=u.hostname==='urasunday.com'&&u.pathname.match(/^\/title\/(\d+)\/(\d+)\/?$/);
   if(old){u.hostname='manga-one.com';u.pathname=`/manga/${old[1]}/chapter/${old[2]}`;}
   if(u.hostname==='manga-one.com'&&/^\/manga\/\d+\/chapter\/\d+\/?$/.test(u.pathname)){u.pathname=u.pathname.replace(/\/$/,'');u.search='';}
@@ -39,8 +40,24 @@
  }
  // Executed in the page's MAIN world by the background worker. Read only the
  // already-authorized viewer's page types/indices; never copy URLs, crypto
- // material, account data, or call the viewer's state/authorization functions.
+ // material, account data, or call authorization functions. Navigation uses public viewer controls.
  async function metadata(command){
+  if(location.hostname==='yanmaga.jp'&&/^\/viewer\/comics\/[^/]+\/[^/]+\/?$/.test(location.pathname)){
+   // Only expose the opened viewer's artwork indices, never its image sources
+   // or decoding data. Reading uses the tiles the site has already rendered.
+   const root=document.querySelector('#content.pages');let viewer,list;try{viewer=root&&window.SpeedBinb?.getInstance?.('content');list=viewer?.content?.page;}catch{return null;}
+   if(!Array.isArray(list)||!list.length||list.length>2000||!Array.isArray(window.__sreaderFunc__?.currentPageInfo?.pageIdxs))return null;
+   const end=Number.isInteger(viewer.recommendPageIndex)&&viewer.recommendPageIndex>=0?Math.min(viewer.recommendPageIndex,list.length):list.length,slots=[],positions=[],seen=new Set();
+   for(let i=0;i<end;i++){const slot=list[i]?.index;if(Number.isInteger(slot)&&slot>=0&&slot<2000&&!seen.has(slot)){seen.add(slot);slots.push(slot);positions.push(i);}}
+   if(command?.action==='locate'&&Number.isInteger(command.slot)&&slots.includes(command.slot)){
+    const node=document.getElementById('slider'),slider=window.jQuery?.(node);if(!node||typeof slider?.slider!=='function')throw Error('얀마가 페이지 이동 슬라이더가 없습니다.');
+    const min=slider.slider('option','min'),max=slider.slider('option','max'),position=positions[slots.indexOf(command.slot)],value=slider.slider('option','range')==='max'?max-position:min+position,stop=slider.slider('option','stop');
+    if(!Number.isInteger(min)||!Number.isInteger(max)||value<min||value>max||typeof stop!=='function')throw Error('얀마가 페이지 이동 범위가 올바르지 않습니다.');
+    slider.slider('value',value);stop.call(node,new Event('slidestop'),{value});
+   }
+   return {url:location.href,total:list.length,slots,positions};
+  }
+
   if(location.hostname==='www.pixiv.net'&&/^\/(?:[a-z]{2}\/)?artworks\/\d+\/?$/.test(location.pathname)){const id=location.pathname.match(/artworks\/(\d+)/)[1],response=await fetch('/ajax/illust/'+id+'/pages',{credentials:'include',signal:AbortSignal.timeout(15000)});if(!response.ok)throw Error('Pixiv 원본 목록 HTTP '+response.status);const data=await response.json();if(data.error||!Array.isArray(data.body)||!data.body.length||data.body.length>2000)throw Error('Pixiv 원본 목록을 읽을 수 없습니다.');return {url:location.href,pages:data.body.map(p=>({url:p.urls?.original,width:p.width,height:p.height}))};}
 
   if(location.hostname==='www.manga-up.com'&&/^\/titles\/\d+\/chapters\/\d+\/?$/.test(location.pathname)){
@@ -74,6 +91,43 @@
   if(!Array.isArray(src)||!src.length||src.length>2000)return null;
   // Linked image cards are viewer promotions, not chapter artwork.
   return {url:location.href,total:src.length,slots:src.flatMap((page,slot)=>page?.type==='image'&&!page.anchor?[slot]:[])};
+ }
+ function yanmagaReader({onWait,cancelled,metadata:readMetadata}={}){
+  if(location.hostname!=='yanmaga.jp'||!/^\/viewer\/comics\/[^/]+\/[^/]+\/?$/.test(location.pathname))return null;
+  const name='얀마가',identity=pageIdentity(),cache=new Map();let rows=null,preparing=null,chain=Promise.resolve(),bytes=0;
+  const check=()=>{if(cancelled?.())throw Error('작업이 중지되었습니다.');if(pageIdentity()!==identity)throw Error('다른 회차로 이동했습니다. 새로고침을 눌러주세요.');};
+  async function foreground(){let waiting=false;while(document.hidden){check();if(!waiting){onWait?.(name+' 탭으로 돌아오면 페이지 읽기를 이어갑니다.');waiting=true;}await sleep(150);}check();}
+  async function until(test,message,timeout=18000){let remaining=timeout;while(remaining>0){await foreground();const start=performance.now(),value=await test();check();if(value)return value;await sleep(100);if(!document.hidden)remaining-=performance.now()-start;}throw Error(message);}
+  const serial=fn=>{const pending=chain.catch(()=>{}).then(fn);chain=pending;return pending;};
+  async function prepare(){check();if(rows)return;if(preparing)return preparing;preparing=(async()=>{
+   const data=await until(async()=>{const value=await readMetadata?.();return value&&pageIdentity(value.url)===identity&&Number.isInteger(value.total)&&value.total>0&&value.total<=2000&&Array.isArray(value.slots)&&value.slots.length>0&&value.slots.length<=value.total&&Array.isArray(value.positions)&&value.positions.length===value.slots.length&&value.slots.every((slot,i)=>Number.isInteger(slot)&&slot>=0&&slot<2000&&(!i||slot>value.slots[i-1])&&Number.isInteger(value.positions[i])&&value.positions[i]>=0&&value.positions[i]<value.total&&(!i||value.positions[i]>value.positions[i-1]))?value:null;},'얀마가 본문 목록을 읽지 못했습니다. 읽기 뷰어를 연 뒤 새로고침하세요.');
+   rows=data.slots.map((slot,index)=>({index,slot,sourceURL:identity+'#manga-page='+slot,width:0,height:0}));
+  })().finally(()=>preparing=null);return preparing;}
+  const pages=()=>rows||[],element=page=>page?document.getElementById('content-p'+(page.slot+1))?.querySelector(':scope > .pt-img')||null:null;
+  function shown(page){const node=element(page),viewport=document.getElementById('content_base');if(!visible(node)||!viewport)return false;const r=node.getBoundingClientRect(),v=viewport.getBoundingClientRect();return Math.min(r.right,v.right)-Math.max(r.left,v.left)>Math.min(r.width,v.width)*.95&&Math.min(r.bottom,v.bottom)-Math.max(r.top,v.top)>Math.min(r.height,v.height)*.95;}
+  function currentIndex(){return Math.max(0,pages().findIndex(shown));}
+  function tiles(node){
+   if(!node?.isConnected)return null;const r=node.getBoundingClientRect(),images=[...node.querySelectorAll(':scope > div > img')];
+   if(!r.width||!r.height||!images.length||images.length>512||images.some(img=>!img.complete||!img.naturalWidth||!img.naturalHeight))return null;
+   const parts=images.map(img=>{const b=img.getBoundingClientRect();return {img,x:b.left-r.left,y:b.top-r.top,w:b.width,h:b.height};});if(parts.some(p=>p.w<=0||p.h<=0))return null;
+   const scale=Math.max(...parts.map(p=>p.img.naturalWidth/p.w)),tolerance=1/scale;
+   if(!Number.isFinite(scale)||scale<=0||parts.some(p=>Math.abs((p.img.naturalHeight/p.h)/scale-1)>.02||Math.abs((p.img.naturalWidth/p.w)/scale-1)>.02))return null;
+   // Check the rendered rectangles cover the complete page before composing it.
+   // The viewer deliberately overlaps tile edges; clipping at the page boundary
+   // removes this padding without dropping or duplicating manga pixels.
+   const ys=[...new Set([0,r.height,...parts.flatMap(p=>[Math.max(0,p.y),Math.min(r.height,p.y+p.h)]).filter(y=>y>=0&&y<=r.height)])].sort((a,b)=>a-b);
+   for(let i=1;i<ys.length;i++){if(ys[i]-ys[i-1]<=tolerance)continue;const y=(ys[i]+ys[i-1])/2,xs=parts.filter(p=>p.y<=y&&p.y+p.h>=y).map(p=>[Math.max(0,p.x),Math.min(r.width,p.x+p.w)]).sort((a,b)=>a[0]-b[0]);let edge=0;for(const [left,right]of xs){if(left>edge+tolerance)return null;edge=Math.max(edge,right);}if(edge<r.width-tolerance)return null;}
+   const width=Math.round(r.width*scale),height=Math.round(r.height*scale);if(width<1||height<1||width>16000||height>16000||width*height>40000000)throw Error('읽을 수 없는 페이지 크기입니다.');
+   return {parts,scale,width,height};
+  }
+  async function navigate(page){await foreground();await prepare();if(!rows.some(r=>r.slot===page?.slot&&r.sourceURL===page?.sourceURL))throw Error('현재 회차의 페이지가 아닙니다.');
+   await readMetadata?.({action:'locate',slot:page.slot});check();let nextAttempt=performance.now()+700;
+   return until(async()=>{const node=element(page);if(shown(page))return tiles(node)?node:null;if(performance.now()>=nextAttempt){await readMetadata?.({action:'locate',slot:page.slot});nextAttempt=performance.now()+700;}return null;},'얀마가 페이지 이미지가 아직 표시되지 않았습니다.');
+  }
+  return {kind:'yanmaga',name,identity,prepare,pages,element,placeholder,currentIndex,localAnchor:p=>element(p)?.parentElement||null,
+   position:()=>({index:currentIndex(),x:scrollX,y:scrollY}),restore:p=>serial(async()=>{if(pageIdentity()===identity&&pages()[p.index]){await navigate(pages()[p.index]);scrollTo({left:p.x,top:p.y,behavior:'instant'});}}),locate:p=>serial(()=>navigate(p)),
+   read:p=>serial(async()=>{check();await prepare();if(!rows.some(r=>r.index===p?.index&&r.slot===p?.slot&&r.sourceURL===p?.sourceURL))throw Error('현재 회차의 페이지가 아닙니다.');const saved=cache.get(p.index);if(saved)return saved;const node=await navigate(p),info=tiles(node);if(!info)throw Error('얀마가 페이지 이미지가 변경되었습니다. 다시 시도하세요.');const canvas=document.createElement('canvas');canvas.width=info.width;canvas.height=info.height;const ctx=canvas.getContext('2d');for(const part of info.parts)ctx.drawImage(part.img,part.x*info.scale,part.y*info.scale,part.w*info.scale,part.h*info.scale);const record=imageRecord(canvas);check();cache.set(p.index,record);bytes+=record.data.length;while(bytes>256*1024*1024&&cache.size>1){const [id,item]=cache.entries().next().value;cache.delete(id);bytes-=item.data.length;}return record;})
+  };
  }
  // These adapters index only artwork slots in the already-open public viewer.
  function extraReader({capture,onWait,cancelled,metadata:readMetadata}={}){
@@ -120,6 +174,7 @@
  }
  function create({capture,fetchImage,onWait,cancelled,metadata:readMetadata}={}){
   const host=location.hostname;
+  const yanmaga=yanmagaReader({onWait,cancelled,metadata:readMetadata});if(yanmaga)return yanmaga;
   const extra=extraReader({capture,fetchImage,onWait,cancelled,metadata:readMetadata});if(extra)return extra;
   let kind,name;
   if(host==='comic-walker.com'&&(/\/episodes\//.test(location.pathname)||/^\/detail\/[^/]+\/?$/.test(location.pathname))){kind='comicwalker';name='카도코미';}

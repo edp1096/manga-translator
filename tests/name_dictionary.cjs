@@ -19,3 +19,5 @@ console.log('PASS legacy migration, generic terms/readings/honorifics, target is
 assert.equal(names.identity('https://urasunday.com/title/28501/359545'),'https://manga-one.com/manga/28501');
 assert.equal(names.identity('https://manga-one.com/manga/28501/chapter/359545?type=chapter&page=1'),'https://manga-one.com/manga/28501');
 assert.notEqual(names.identity('https://manga-one.com/manga/1924/chapter/354658'),names.identity('https://manga-one.com/manga/28501/chapter/359545'));
+
+assert.equal(names.identity('https://yanmaga.jp/viewer/comics/GLITCH_WITCH/chapter-one?cid=first'),'https://yanmaga.jp/viewer/comics/GLITCH_WITCH');assert.equal(names.identity('https://yanmaga.jp/viewer/comics/GLITCH_WITCH/chapter-two?cid=second'),'https://yanmaga.jp/viewer/comics/GLITCH_WITCH');

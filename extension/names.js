@@ -13,6 +13,7 @@ function identity(value){
  const url=new URL(value);if(!['http:','https:'].includes(url.protocol))throw Error('만화의 웹 주소를 입력하세요.');url.hash='';
  const old=url.hostname==='urasunday.com'&&url.pathname.match(/^\/title\/(\d+)(?:\/\d+)?\/?$/),one=url.hostname==='manga-one.com'&&url.pathname.match(/^\/manga\/(\d+)(?:\/chapter\/\d+)?\/?$/);
  if(old||one)return 'https://manga-one.com/manga/'+(old||one)[1];
+ if(url.hostname==='yanmaga.jp'&&/^\/viewer\/comics\/[^/]+\/[^/]+\/?$/.test(url.pathname))return url.origin+url.pathname.match(/^\/viewer\/comics\/[^/]+/)[0];
  const comicWalker=url.pathname.match(/^(\/detail\/[^/]+)/),tonari=url.pathname.match(/^\/episode\/[^/]+/),mangaz=url.pathname.match(/^(\/virgo\/view\/\d+)/);
  if(comicWalker)return url.origin+comicWalker[1];
  if(mangaz)return url.origin+mangaz[1];
