@@ -78,7 +78,7 @@ const std::string listen_host=config.at("host");require(listen_host=="127.0.0.1"
  };
  server.set_pre_routing_handler([&](const httplib::Request&req,httplib::Response&res){auto origin=req.get_header_value("Origin");if(origin.rfind("chrome-extension://",0)==0){res.set_header("Access-Control-Allow-Origin",origin);res.set_header("Access-Control-Allow-Methods","GET,POST,OPTIONS");res.set_header("Access-Control-Allow-Headers","Authorization,Content-Type");res.set_header("Access-Control-Allow-Private-Network","true");res.set_header("Vary","Origin");}if(req.method=="OPTIONS"){res.status=204;return httplib::Server::HandlerResponse::Handled;}if(req.path.rfind("/api/",0)==0&&!token_equal(req.get_header_value("Authorization"),token)&&!device_authorized(req.get_header_value("Authorization"))){reply(res,{{"error","Invalid access token"}},401);return httplib::Server::HandlerResponse::Handled;}return httplib::Server::HandlerResponse::Unhandled;});
  server.set_exception_handler([&](const httplib::Request&,httplib::Response&res,std::exception_ptr ep){try{std::rethrow_exception(ep);}catch(const std::exception&e){reply(res,{{"error",std::string(e.what()).substr(0,1000)}},500);}catch(...){reply(res,{{"error","Internal error"}},500);}});
- server.Get("/health",[&](const httplib::Request&,httplib::Response&res){std::lock_guard<std::mutex> lock(mutex);reply(res,{{"ok",true},{"version","0.5.8-native"},{"native",true},{"jobLocksVersion",1},{"jobStore",jobs.u8string()},{"restorationBackend",config.value("inpaint_backend",std::string("onnx"))},{"restorationReady",bool(pipeline.resident_restorer)},{"active",active.size()+manual_active.load()},{"maxRssMiB",peak_rss_mib()},{"models",{{"layout",config.at("layout_model")},{"ocr",config.at("ocr_dir")},{"ocrBackend",config.value("ocr_backend",std::string("litert"))},{"translation",config.at("llm_model")}}}});});
+ server.Get("/health",[&](const httplib::Request&,httplib::Response&res){std::lock_guard<std::mutex> lock(mutex);reply(res,{{"ok",true},{"version","0.5.9-native"},{"native",true},{"jobLocksVersion",1},{"jobStore",jobs.u8string()},{"restorationBackend",config.value("inpaint_backend",std::string("onnx"))},{"restorationReady",bool(pipeline.resident_restorer)},{"active",active.size()+manual_active.load()},{"maxRssMiB",peak_rss_mib()},{"models",{{"layout",config.at("layout_model")},{"ocr",config.at("ocr_dir")},{"ocrBackend",config.value("ocr_backend",std::string("litert"))},{"translation",config.at("llm_model")}}}});});
  server.Post("/api/jobs",[&](const httplib::Request&req,httplib::Response&res){
   if(stopping){reply(res,{{"error","Server stopping"}},503);return;}
   if(!req.has_file("image")){reply(res,{{"error","Missing image"}},400);return;}
@@ -173,7 +173,7 @@ const std::string listen_host=config.at("host");require(listen_host=="127.0.0.1"
   if(action=="correct")reply(response,pipeline.correct_names(input.at("result"),dictionary));
   else reply(response,pipeline.suggest_name(input.at("source"),input.at("translation")));
  });
- server.Get("/api/ping",[&](const httplib::Request&,httplib::Response&res){reply(res,{{"ok",true},{"version","0.5.8-native"},{"manualDraftVersion",1}});});
+ server.Get("/api/ping",[&](const httplib::Request&,httplib::Response&res){reply(res,{{"ok",true},{"version","0.5.9-native"},{"manualDraftVersion",1}});});
  server.Post("/api/shutdown",[&](const httplib::Request&,httplib::Response&res){reply(res,{{"ok",true}});stop_requested=1;});
  std::signal(SIGINT,request_stop);std::signal(SIGTERM,request_stop);
 #ifdef _WIN32

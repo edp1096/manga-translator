@@ -831,18 +831,22 @@ function bubbleRestorationCandidate(region,result,geometry){
 function forceCandidate(r){return r.mode==='tooltip'&&r.type==='text'&&!r.manual&&!r.displayOverride&&!r.truncated&&!r.ocrTruncated&&!r.automaticPunctuation&&r.fontStyle?.role!=='impact'&&!['EFFECT','LABEL','UNCERTAIN'].includes(r.textVerification?.role)&&!!r.text?.trim()&&!!r.translation?.trim();}
 // Detector interaction metadata is only a spatial prior. Actual source pixels
 // and the protected-neighbor mask must independently support every erased stroke.
-async function forceInkMask(result,r,allowed,source,bubble){
- const im=await image(source);if(im.width!==result.width||im.height!==result.height)return null;
+async function forceInkMask(result,r,allowed,source,bubble,current=()=>true){
+ const im=await image(source);if(!current()||im.width!==result.width||im.height!==result.height)return null;
  const b=allowed.bounds,w=b[2]-b[0],h=b[3]-b[1],size=w*h,c=document.createElement('canvas');c.width=w;c.height=h;
  const ctx=c.getContext('2d',{willReadFrequently:true});ctx.drawImage(im,-b[0],-b[1]);const rgba=ctx.getImageData(0,0,w,h).data;c.width=c.height=0;
+ let deadline=performance.now()+8;
+ const yieldWork=async()=>{await new Promise(resolve=>setTimeout(resolve,0));deadline=performance.now()+8;return current();};
  const permit=new Uint8Array(size);for(let i=0;i<allowed.runs.length;i+=2)permit.fill(1,allowed.runs[i],allowed.runs[i]+allowed.runs[i+1]);
  if(bubble){
   let bg;try{bg=whiteMask(bubble);}catch{return null;}
   const bw=bubble.width,bh=bubble.height;
-  for(let y=0;y<h;y++)for(let x=0;x<w;x++){
-   const gx=Math.min(bw-1,Math.floor((b[0]+x+.5)*bw/result.width)),gy=Math.min(bh-1,Math.floor((b[1]+y+.5)*bh/result.height));let inside=true;
-   if(!bg.bits[gy*bw+gx])inside=false;
-   if(!inside)permit[y*w+x]=0;
+  for(let y=0;y<h;y++){
+   for(let x=0;x<w;x++){
+    const gx=Math.min(bw-1,Math.floor((b[0]+x+.5)*bw/result.width)),gy=Math.min(bh-1,Math.floor((b[1]+y+.5)*bh/result.height));
+    if(!bg.bits[gy*bw+gx])permit[y*w+x]=0;
+   }
+   if((y&15)===15&&performance.now()>deadline&&!await yieldWork())return null;
   }
  }
  const m=r.hitMask;let grid;
@@ -852,12 +856,15 @@ async function forceInkMask(result,r,allowed,source,bubble){
   for(let i=0;i<m.runs.length;i+=2){const start=m.runs[i],length=m.runs[i+1];if(!Number.isInteger(start)||!Number.isInteger(length)||start<end||length<1||start+length>grid.length||start%m.width+length>m.width)return null;grid.fill(1,start,start+length);end=start+length;}
  }
  const ink=new Uint8Array(size),dark=new Uint8Array(size);let whites=0,count=0;
- for(let y=0;y<h;y++)for(let x=0;x<w;x++){
-  const n=y*w+x,j=n*4,lo=Math.min(rgba[j],rgba[j+1],rgba[j+2]),hi=Math.max(rgba[j],rgba[j+1],rgba[j+2]);
-  if(lo>=230)whites++;if(hi>=190||hi-lo>50)continue;dark[n]=1;
-  if(!permit[n])continue;
-  if(grid){const gx=Math.min(m.width-1,Math.floor((b[0]+x+.5)*m.width/result.width)),gy=Math.min(m.height-1,Math.floor((b[1]+y+.5)*m.height/result.height));let near=false;for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++){const xx=gx+dx,yy=gy+dy;if(xx>=0&&xx<m.width&&yy>=0&&yy<m.height&&grid[yy*m.width+xx])near=true;}if(!near)continue;}
-  ink[n]=1;count++;
+ for(let y=0;y<h;y++){
+  for(let x=0;x<w;x++){
+   const n=y*w+x,j=n*4,lo=Math.min(rgba[j],rgba[j+1],rgba[j+2]),hi=Math.max(rgba[j],rgba[j+1],rgba[j+2]);
+   if(lo>=230)whites++;if(hi>=190||hi-lo>50)continue;dark[n]=1;
+   if(!permit[n])continue;
+   if(grid){const gx=Math.min(m.width-1,Math.floor((b[0]+x+.5)*m.width/result.width)),gy=Math.min(m.height-1,Math.floor((b[1]+y+.5)*m.height/result.height));let near=false;for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++){const xx=gx+dx,yy=gy+dy;if(xx>=0&&xx<m.width&&yy>=0&&yy<m.height&&grid[yy*m.width+xx])near=true;}if(!near)continue;}
+   ink[n]=1;count++;
+  }
+  if((y&15)===15&&performance.now()>deadline&&!await yieldWork())return null;
  }
  // Patterned, dark, colored or unsupported crops retain their original pixels.
  if(whites<size*.25||count<4||count>size*.7)return null;
@@ -865,29 +872,50 @@ async function forceInkMask(result,r,allowed,source,bubble){
   // Without a detector prior, accept only isolated ink components wholly inside
   // the source crop. Boundary-connected art is never authorized by a rectangle.
   const seen=new Uint8Array(size);let kept=0;
-  for(let n=0;n<size;n++){if(!ink[n]||seen[n])continue;const q=[n];seen[n]=1;let edge=false;
-   for(let at=0;at<q.length;at++){const k=q[at],x=k%w,y=Math.floor(k/w);edge||=x<2||y<2||x>=w-2||y>=h-2;
-    for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++){const xx=x+dx,yy=y+dy,k=yy*w+xx;if(xx<0||yy<0||xx>=w||yy>=h||!ink[k]||seen[k])continue;seen[k]=1;q.push(k);}}
+  for(let n=0;n<size;n++){
+   if((n&4095)===4095&&performance.now()>deadline&&!await yieldWork())return null;
+   if(!ink[n]||seen[n])continue;const q=[n];seen[n]=1;let edge=false;
+   for(let at=0;at<q.length;at++){
+    const k=q[at],x=k%w,y=Math.floor(k/w);edge||=x<2||y<2||x>=w-2||y>=h-2;
+    for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++){const xx=x+dx,yy=y+dy,k=yy*w+xx;if(xx<0||yy<0||xx>=w||yy>=h||!ink[k]||seen[k])continue;seen[k]=1;q.push(k);}
+    if((at&2047)===2047&&performance.now()>deadline&&!await yieldWork())return null;
+   }
    if(edge||q.length<3)for(const k of q)ink[k]=0;else kept+=q.length;
   }
   if(kept<count*.98||kept<4)return null;
  }
  const selected=new Uint8Array(size),radius=Math.max(2,Math.min(4,Math.round(Math.min(result.width,result.height)/300)));
- for(let n=0;n<size;n++)if(ink[n]){const x=n%w,y=Math.floor(n/w);for(let dy=-radius;dy<=radius;dy++)for(let dx=-radius;dx<=radius;dx++){const xx=x+dx,yy=y+dy,k=yy*w+xx;if(xx<0||yy<0||xx>=w||yy>=h||dx*dx+dy*dy>radius*radius||!permit[k]||dark[k]&&!ink[k])continue;selected[k]=1;}}
- // Fit inside the reconstructed light interior, not the detector rectangle.
- const heights=new Uint32Array(w);let bestArea=0,layoutBox;
+ for(let n=0;n<size;n++){
+  if(ink[n]){const x=n%w,y=Math.floor(n/w);for(let dy=-radius;dy<=radius;dy++)for(let dx=-radius;dx<=radius;dx++){const xx=x+dx,yy=y+dy,k=yy*w+xx;if(xx<0||yy<0||xx>=w||yy>=h||dx*dx+dy*dy>radius*radius||!permit[k]||dark[k]&&!ink[k])continue;selected[k]=1;}}
+  if((n&4095)===4095&&performance.now()>deadline&&!await yieldWork())return null;
+ }
+ // A taller rectangle with the same width fits every layout the shorter one
+ // can fit. Keep only that rectangle per width, then try largest areas first.
+ // This preserves the largest-fitting-box rule without fitting fonts at every
+ // histogram pop; equal-area candidates retain their original traversal order.
+ const heights=new Uint32Array(w),rectangles=new Array(w+1);let order=0,layoutBox;
  for(let y=0;y<h;y++){
   for(let x=0;x<w;x++){const n=y*w+x,j=n*4;heights[x]=permit[n]&&(selected[n]||Math.min(rgba[j],rgba[j+1],rgba[j+2])>=230)?heights[x]+1:0;}
   const stack=[];for(let x=0;x<=w;x++){const value=x===w?0:heights[x];let start=x;
-   while(stack.length&&stack[stack.length-1].height>value){const v=stack.pop(),area=(x-v.start)*v.height;start=v.start;
-    if(area>bestArea&&x-v.start>=12&&v.height>=12){const box=[b[0]+v.start+2,b[1]+y-v.height+3,b[0]+x-2,b[1]+y-1];if(textLayout({...r,mode:'restore',layoutOverride:true,displayOverride:true,box})){bestArea=area;layoutBox=box;}}}
+   while(stack.length&&stack[stack.length-1].height>value){const v=stack.pop(),width=x-v.start;start=v.start;
+    if(width>=12&&v.height>=12){const candidateOrder=order++,prior=rectangles[width];if(!prior||v.height>prior.height)rectangles[width]={height:v.height,area:width*v.height,order:candidateOrder,box:[b[0]+v.start+2,b[1]+y-v.height+3,b[0]+x-2,b[1]+y-1]};}}
    if(value&&(!stack.length||stack[stack.length-1].height<value))stack.push({start,height:value});
   }
+  if((y&15)===15&&performance.now()>deadline&&!await yieldWork())return null;
  }
- if(!layoutBox)return null;
- let x0=w,y0=h,x1=0,y1=0;for(let n=0;n<size;n++)if(selected[n]){const x=n%w,y=Math.floor(n/w);x0=Math.min(x0,x);y0=Math.min(y0,y);x1=Math.max(x1,x+1);y1=Math.max(y1,y+1);}
+ const measures=new Map(),wraps=new Map(),segments=new Map(),candidateRegion={...r,mode:'restore',layoutOverride:true,displayOverride:true};
+ for(const candidate of rectangles.filter(Boolean).sort((a,b)=>b.area-a.area||a.order-b.order)){
+  if(performance.now()>deadline&&!await yieldWork())return null;
+  // Font caches are shared only across this crop's fitting attempts. Restore
+  // the synchronous presentation's globals before yielding or returning.
+  const previousMeasures=presentationMeasures,previousWraps=presentationWraps,previousSegments=presentationSegments;presentationMeasures=measures;presentationWraps=wraps;presentationSegments=segments;
+  try{candidateRegion.box=candidate.box;if(textLayout(candidateRegion)){layoutBox=candidate.box;break;}}
+  finally{presentationMeasures=previousMeasures;presentationWraps=previousWraps;presentationSegments=previousSegments;}
+ }
+ if(!layoutBox||!current())return null;
+ let x0=w,y0=h,x1=0,y1=0;for(let n=0;n<size;n++){if(selected[n]){const x=n%w,y=Math.floor(n/w);x0=Math.min(x0,x);y0=Math.min(y0,y);x1=Math.max(x1,x+1);y1=Math.max(y1,y+1);}if((n&16383)===16383&&performance.now()>deadline&&!await yieldWork())return null;}
  if(x1<=x0||y1<=y0)return null;const width=x1-x0,height=y1-y0,runs=[];let start=-1;
- for(let n=0;n<width*height;n++){const on=selected[(y0+Math.floor(n/width))*w+x0+n%width];if(on&&start<0)start=n;if(start>=0&&(!on||n===width*height-1)){runs.push(start,n-start+(on?1:0));start=-1;}}
+ for(let n=0;n<width*height;n++){const on=selected[(y0+Math.floor(n/width))*w+x0+n%width];if(on&&start<0)start=n;if(start>=0&&(!on||n===width*height-1)){runs.push(start,n-start+(on?1:0));start=-1;}if((n&16383)===16383&&performance.now()>deadline&&!await yieldWork())return null;}
  if(runs.length>200000)return null;
  return {width:result.width,height:result.height,bounds:[b[0]+x0,b[1]+y0,b[0]+x1,b[1]+y1],runs,layoutBox};
 }
@@ -938,7 +966,7 @@ async function forceRestore(result,job,request,current,progress,geometry){
  const plan=forcePlan(result,r);if(!plan){failed++;continue;}
  progress();try{
  source??=await request({type:'asset',id:job,name:'original.png'});if(!current())return null;
- const ink=await forceInkMask(result,r,plan.mask,source,sourceBubble(geometry,r));if(!current())return null;if(!ink){delete saved[r.id];failed++;continue;}plan.row.box=ink.layoutBox;delete ink.layoutBox;plan.mask=ink;
+ const ink=await forceInkMask(result,r,plan.mask,source,sourceBubble(geometry,r),current);if(!current())return null;if(!ink){delete saved[r.id];failed++;continue;}plan.row.box=ink.layoutBox;delete ink.layoutBox;plan.mask=ink;
  const ref={...await request({type:'manualRestoration',id:job,mask:plan.mask}),job};if(!current())return null;
  checkedManual(ref,result);if(JSON.stringify(ref.mask.bounds)!==JSON.stringify(plan.mask.bounds)||JSON.stringify(ref.mask.runs)!==JSON.stringify(plan.mask.runs))throw Error('복원 영역 불일치');
  const patch=await manualImage(ref,result);if(!current())return null;if(patch.width!==plan.mask.bounds[2]-plan.mask.bounds[0]||patch.height!==plan.mask.bounds[3]-plan.mask.bounds[1])throw Error('복원 이미지 크기 불일치');

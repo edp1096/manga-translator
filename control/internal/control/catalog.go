@@ -15,7 +15,7 @@ import (
 	"strings"
 )
 
-var Version = "0.5.8"
+var Version = "0.5.9"
 
 const ControlPort = 8794
 const VisionPort = 8793
