@@ -92,8 +92,12 @@ func (m *Manager) artifactsForSettings(ids []string, application bool, settings 
 		for _, a := range model.Artifacts {
 			wanted[a] = true
 		}
+		dependencySettings := settings
+		if model.LLM != nil && model.LLM.CPUOnly {
+			dependencySettings.LLMExecution = "cpu"
+		}
 		for _, dependency := range model.Dependencies {
-			if r := m.runtimeForSettings(dependency, settings); r != nil {
+			if r := m.runtimeForSettings(dependency, dependencySettings); r != nil {
 				for _, artifactID := range r.artifactIDs() {
 					wanted[artifactID] = true
 				}
@@ -209,6 +213,9 @@ func (m *Manager) SelectModel(id string) error {
 		settings.OCR = id
 	default:
 		settings.Model = id
+		if model.LLM != nil && model.LLM.CPUOnly {
+			settings.LLMExecution = "cpu"
+		}
 	}
 	if err := writeJSON(filepath.Join(m.root, "config", "control.json"), settings); err != nil {
 		return err

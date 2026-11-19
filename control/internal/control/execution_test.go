@@ -53,6 +53,12 @@ func TestExecutionProfilesSelectMatchingRuntimeArtifacts(t *testing.T) {
 					}
 				}
 			}
+			if profile.ID == "cpu" && (s.LLMExecution != "cpu" || !ids["plamo-08b"] || ids["gemma"]) {
+				t.Fatal("CPU low-memory preset must only install PLaMo", platform, s)
+			}
+			if (profile.ID == "gpu-mixed" || profile.ID == "gpu-balanced") && (!ids["gemma"] || ids["plamo-08b"]) {
+				t.Fatal("Gemma GPU profiles must keep E2B", platform, profile.ID, s)
+			}
 			if s.LLMExecution == "vulkan" && ids["llama-"+platform] {
 				t.Fatal("CPU llama downloaded for GPU profile")
 			}

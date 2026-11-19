@@ -33,6 +33,33 @@ inline bool valid(const std::string& translated,const std::string& target,const 
  }
  return !foreign(remainder,target);
 }
+// PLaMo can carry a Japanese elongation mark across the translation boundary.
+inline std::string normalize_plamo(std::string text, const std::string& target, const json& approvals) {
+ if (target != "Korean" || text.empty()) return text;
+ const auto chars = codepoints(text);
+ const auto length = [](uint32_t cp) { return cp < 0x80 ? 1 : cp < 0x800 ? 2 : cp < 0x10000 ? 3 : 4; };
+ size_t index = chars.size(), end = text.size();
+ while (index > 0) {
+  const auto cp = chars[index - 1];
+  if (cp != '?' && cp != '!' && cp != '.' && cp != '"' && cp != '\'' &&
+      cp != ' ' && cp != 0x2026 && cp != 0x201d && cp != 0xff01 && cp != 0xff1f) break;
+  end -= length(cp);
+  --index;
+ }
+ size_t start = end;
+ while (index > 0 && (chars[index - 1] == 0x30fc || chars[index - 1] == 0xff70)) {
+  start -= length(chars[--index]);
+ }
+ if (start == end || index == 0 || !hangul(chars[index - 1])) return text;
+ for (const auto& approval : approvals) {
+  const auto spelling = approval.value("required", std::string{});
+  if (spelling.empty()) continue;
+  const auto position = text.rfind(spelling, end - 1);
+  if (position != std::string::npos && position + spelling.size() > start) return text;
+ }
+ text.replace(start, end - start, "…");
+ return text;
+}
 inline bool effect(const json& region){
  if(region.value("type",std::string{})!="effect")return false;
  const auto proof=region.find("textVerification");if(proof!=region.end()&&proof->is_object()){const auto role=proof->value("role",std::string{});if(role=="DIALOGUE"||role=="LABEL")return false;}

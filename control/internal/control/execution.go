@@ -34,6 +34,9 @@ func (m *Manager) validateExecution(s Settings) error {
 	if execution(s.LLMExecution) != "cpu" && s.LLMExecution != "vulkan" && s.LLMExecution != "cuda" {
 		return fmt.Errorf("지원하지 않는 번역 실행 방식")
 	}
+	if model := m.modelForGroup(s.Model, "translation"); model != nil && model.LLM != nil && model.LLM.CPUOnly && execution(s.LLMExecution) != "cpu" {
+		return fmt.Errorf("선택한 번역 모델은 CPU 전용입니다")
+	}
 	for _, b := range []string{s.LayoutExecution, s.OCRExecution} {
 		switch execution(b) {
 		case "cpu", "cuda", "directml":
@@ -74,10 +77,11 @@ func (m *Manager) executionProfiles() []ExecutionProfile {
 }
 
 func (m *Manager) executionProfilesFor(hardware HardwareInfo) []ExecutionProfile {
-	base := Settings{Layout: "koharu-768", OCR: "hayai-int8", Model: "gemma", ThreadsAuto: true, Threads: detectedCPU().RecommendedThreads, LLMExecution: "cpu", LayoutExecution: "cpu", OCRExecution: "cpu", Profile: "cpu"}
-	profiles := []ExecutionProfile{{ID: "cpu", Name: "CPU · 저메모리", Note: "Koharu 768 / Hayai INT8 / Gemma E2B · 성능 코어 기준 자동 스레드", Recommended: true, Settings: base}}
+	base := Settings{Layout: "koharu-768", OCR: "hayai-int8", Model: "plamo-08b", ThreadsAuto: true, Threads: detectedCPU().RecommendedThreads, LLMExecution: "cpu", LayoutExecution: "cpu", OCRExecution: "cpu", Profile: "cpu"}
+	profiles := []ExecutionProfile{{ID: "cpu", Name: "CPU · 저메모리", Note: "Koharu 768 / Hayai INT8 / PLaMo 0.8B · 성능 코어 기준 자동 스레드", Recommended: true, Settings: base}}
 	if m.runtimeByID("llama-vulkan") != nil {
 		gpu := base
+		gpu.Model = "gemma"
 		gpu.Profile = "gpu-mixed"
 		gpu.LLMExecution = "vulkan"
 		profiles = append(profiles, ExecutionProfile{ID: gpu.Profile, Name: "CPU/GPU 병행 · 저용량", Note: "탐지·OCR은 CPU, Gemma E2B는 Vulkan GPU", Settings: gpu})

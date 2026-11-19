@@ -581,6 +581,9 @@ func (m *Manager) writeNativeConfig() error {
 		return err
 	}
 	cfg := map[string]any{"host": m.listenHost(), "port": VisionPort, "data_dir": "data/native_api", "layout_model": m.selectedPath("layout"), "ocr_dir": m.selectedPath("ocr"), "ocr_backend": m.selectedOCRBackend(), "threads": threads, "llm_host": "127.0.0.1", "llm_port": LLMPort, "llm_model": modelID, "llm_key_file": "data/api-key"}
+	if model := m.modelForGroup(modelID, "translation"); model != nil && model.LLM != nil && model.LLM.Protocol != "" {
+		cfg["llm_protocol"] = model.LLM.Protocol
+	}
 	cfg["llm_execution"] = execution(settings.LLMExecution)
 	cfg["layout_execution"] = execution(settings.LayoutExecution)
 	cfg["ocr_execution"] = execution(settings.OCRExecution)

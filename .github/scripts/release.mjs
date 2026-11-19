@@ -24,7 +24,7 @@ async function dependency(work, name, url, sha) {
   const archive = path.join(work, name);
   run('curl', ['--fail', '--location', '--retry', '5', '--connect-timeout', '30', '--max-time', '600', '--output', archive, url]);
   assert(hash(archive) === sha, `${name}: SHA256 mismatch`);
-  if (name.endsWith('.zip') || name.endsWith('.whl')) {
+  if (name.endsWith('.zip') || name.endsWith('.whl') || name.endsWith('.nupkg')) {
     if (process.platform === 'win32') run(path.join(process.env.SystemRoot || 'C:/Windows', 'System32', 'tar.exe'), ['-xf', archive, '-C', work]);
     else run('unzip', ['-q', archive, '-d', work]);
   }
@@ -49,7 +49,18 @@ if (mode === 'version') {
   const header = template.replace(/^#cmakedefine01 (LITERT_BUILD_CONFIG_DISABLE_(?:GPU|NPU))$/gm, '#define $1 1');
   assert(!header.includes('#cmakedefine'), 'Unrecognized LiteRT build configuration');
   fs.writeFileSync(configHeader, header);
-  const ortRoot = path.join(work, archive.replace(/\.(tgz|zip)$/, ''));
+  let ortRoot = path.join(work, archive.replace(/\.(tgz|zip)$/, ''));
+  if (archive.endsWith('.nupkg')) {
+    ortRoot = path.join(work, 'build', 'native');
+    if (platform !== 'windows-amd64') {
+      const arch = platform === 'linux-arm64' ? 'arm64' : 'x64';
+      const lib = path.join(ortRoot, 'lib');
+      fs.mkdirSync(lib, { recursive: true });
+      fs.copyFileSync(path.join(work, 'runtimes', `linux-${arch}`, 'native', 'libonnxruntime.so'), path.join(lib, 'libonnxruntime.so'));
+      // The shared library has a versioned SONAME even though NuGet ships an unversioned filename.
+      fs.copyFileSync(path.join(lib, 'libonnxruntime.so'), path.join(lib, 'libonnxruntime.so.1'));
+    }
+  }
   const config = ['-S', path.join(source, 'native'), '-B', path.join(work, 'build'), '-DCMAKE_BUILD_TYPE=Release', `-DORT_ROOT=${ortRoot}`, `-DLITERT_SDK=${work}/LiteRT-2.3.1`, `-DWEBP_SOURCE_DIR=${work}/libwebp-1.6.0`];
   if (platform === 'windows-amd64') config.push('-DCMAKE_SYSTEM_NAME=Windows', '-DCMAKE_SYSTEM_PROCESSOR=x86_64', '-DCMAKE_C_COMPILER=x86_64-w64-mingw32-gcc-posix', '-DCMAKE_CXX_COMPILER=x86_64-w64-mingw32-g++-posix', '-DCMAKE_RC_COMPILER=x86_64-w64-mingw32-windres');
   run('cmake', config);

@@ -141,6 +141,25 @@
       "note": "가벼운 기본 모델 · Orange Pi 추론 검증 완료"
     },
     {
+      "llm": {
+        "cpuOnly": true,
+        "protocol": "pfml3"
+      },
+      "group": "translation",
+      "artifacts": [
+        "plamo-08b"
+      ],
+      "dependencies": [
+        "llama",
+        "vcredist"
+      ],
+      "path": "models/plamo-3-translate-0.8b-GGUF/plamo-3-translate-0.8b-Q4_K_M.gguf",
+      "id": "plamo-08b",
+      "name": "PLaMo 3 Translate 0.8B · Q4_K_M",
+      "memoryGiB": 4,
+      "note": "초경량 CPU 전용 · 용어집 지원 · 문맥에 따른 이름 판별 및 자동 글꼴 분류 제한"
+    },
+    {
       "group": "translation",
       "artifacts": [
         "gemma-e4b"
@@ -236,7 +255,7 @@
       "version": "1.31.0",
       "platform": "linux-arm64",
       "artifact": "ort-linux-arm64",
-      "releaseUrl": "https://github.com/microsoft/onnxruntime/releases/tag/v1.31.0",
+      "releaseUrl": "https://www.nuget.org/packages/Microsoft.ML.OnnxRuntime/1.31.0",
       "library": "runtime/onnxruntime-linux-aarch64-1.31.0/lib/libonnxruntime.so.1",
       "libraryDirs": [
         "runtime/onnxruntime-linux-aarch64-1.31.0/lib"
@@ -276,7 +295,7 @@
       "version": "1.31.0",
       "platform": "windows-amd64",
       "artifact": "ort-windows-amd64",
-      "releaseUrl": "https://github.com/microsoft/onnxruntime/releases/tag/v1.31.0",
+      "releaseUrl": "https://www.nuget.org/packages/Microsoft.ML.OnnxRuntime/1.31.0",
       "library": "runtime/onnxruntime-win-x64-1.31.0/lib/onnxruntime.dll",
       "libraryDirs": [
         "runtime/onnxruntime-win-x64-1.31.0/lib"
@@ -536,35 +555,35 @@
       ]
     }
   ],
-  "version": "0.5.9",
+  "version": "0.5.10",
   "artifacts": [
     {
       "id": "ort-linux-arm64",
       "name": "ONNX Runtime 1.31.0",
       "group": "runtime",
       "platform": "linux-arm64",
-      "url": "https://github.com/microsoft/onnxruntime/releases/download/v1.31.0/onnxruntime-linux-aarch64-1.31.0.tgz",
-      "sha256": "c5b8b3cca31f3d643a3b313b8f42e2d0f16a4fcefd02cda343d97bd5306afaab",
-      "size": 10331104,
-      "format": "tgz",
+      "url": "https://api.nuget.org/v3-flatcontainer/microsoft.ml.onnxruntime/1.31.0/microsoft.ml.onnxruntime.1.31.0.nupkg",
+      "sha256": "7e35fdb4f5adb62f01e60798e2e5ed05108f5fbbe1cca03fbcc37903cf7c5e3b",
+      "size": 159626085,
+      "format": "zip",
       "files": [
         {
-          "entry": "onnxruntime-linux-aarch64-1.31.0/lib/libonnxruntime.so.1.31.0",
+          "entry": "runtimes/linux-arm64/native/libonnxruntime.so",
           "path": "runtime/onnxruntime-linux-aarch64-1.31.0/lib/libonnxruntime.so.1",
           "sha256": "595c7f7a6775f5c7b3d567c3ed94c04f722092575abcc092560f5208a54daf99",
           "size": 25266408
         },
         {
-          "entry": "onnxruntime-linux-aarch64-1.31.0/LICENSE",
+          "entry": "LICENSE",
           "path": "runtime/onnxruntime-linux-aarch64-1.31.0/LICENSE",
-          "sha256": "2f07c72751aed99790b8a4869cf2311df85a860b22ded05fa22803587a48922c",
-          "size": 1073
+          "sha256": "c250d6278f0b47a6439fb7592b08b58a55eb9f535aa49a1db63211c3f982b674",
+          "size": 1094
         },
         {
-          "entry": "onnxruntime-linux-aarch64-1.31.0/ThirdPartyNotices.txt",
+          "entry": "ThirdPartyNotices.txt",
           "path": "runtime/onnxruntime-linux-aarch64-1.31.0/ThirdPartyNotices.txt",
-          "sha256": "143764b952fdb1a7c69ce653bfba74a7744d6a8a573bfb73e235fba356c83de3",
-          "size": 338088
+          "sha256": "c53a76501ef60db6f865f20599f220761201ac4057683acefdab37d861b86622",
+          "size": 344457
         }
       ]
     },
@@ -706,14 +725,14 @@
       "group": "application",
       "platform": "linux-arm64",
       "url": "embedded:engine/linux-arm64.gz",
-      "sha256": "a05bc853531c048414ff08ce3f80ebe59b1f1f93cffa56d1ffc6c7e7c9030c8b",
-      "size": 1500039,
+      "sha256": "d2670395db09f934e596529d9944f06ee903abf25d3000f493aa5c70fbf5f9c7",
+      "size": 1587478,
       "format": "gzip",
       "files": [
         {
           "path": "bin/manga-translator-server",
-          "sha256": "3dfd8d154059b2a40e0bf08bbb2f93947f284ddb9fb2d927a41985d9aff3b101",
-          "size": 3448968,
+          "sha256": "7fcace7907c94a231ad3d7b4427056aa66f9fcd4e31f1c9f584e40ed5734d0de",
+          "size": 3450656,
           "executable": true
         }
       ]
@@ -723,31 +742,31 @@
       "name": "ONNX Runtime 1.31.0",
       "group": "runtime",
       "platform": "windows-amd64",
-      "url": "https://github.com/microsoft/onnxruntime/releases/download/v1.31.0/onnxruntime-win-x64-1.31.0.zip",
-      "sha256": "3958d8a44984160692c1b4ffd0de3cb48f8c39f9d34bb31e433db06e30b82195",
-      "size": 82887349,
+      "url": "https://api.nuget.org/v3-flatcontainer/microsoft.ml.onnxruntime/1.31.0/microsoft.ml.onnxruntime.1.31.0.nupkg",
+      "sha256": "7e35fdb4f5adb62f01e60798e2e5ed05108f5fbbe1cca03fbcc37903cf7c5e3b",
+      "size": 159626085,
       "format": "zip",
       "files": [
         {
-          "entry": "onnxruntime-win-x64-1.31.0/lib/onnxruntime.dll",
+          "entry": "runtimes/win-x64/native/onnxruntime.dll",
           "path": "runtime/onnxruntime-win-x64-1.31.0/lib/onnxruntime.dll",
           "sha256": "0c42dc4e278f0968fdf9ebf1b1e54a74c657a9942e70803e453c91993451cf4c",
           "size": 17253176
         },
         {
-          "entry": "onnxruntime-win-x64-1.31.0/lib/onnxruntime_providers_shared.dll",
+          "entry": "runtimes/win-x64/native/onnxruntime_providers_shared.dll",
           "path": "runtime/onnxruntime-win-x64-1.31.0/lib/onnxruntime_providers_shared.dll",
           "sha256": "e45d471ea2a842b268c51291b96d53568b0dae10807f43d1fb7dc0eb84e83723",
           "size": 21816
         },
         {
-          "entry": "onnxruntime-win-x64-1.31.0/LICENSE",
+          "entry": "LICENSE",
           "path": "runtime/onnxruntime-win-x64-1.31.0/LICENSE",
           "sha256": "c250d6278f0b47a6439fb7592b08b58a55eb9f535aa49a1db63211c3f982b674",
           "size": 1094
         },
         {
-          "entry": "onnxruntime-win-x64-1.31.0/ThirdPartyNotices.txt",
+          "entry": "ThirdPartyNotices.txt",
           "path": "runtime/onnxruntime-win-x64-1.31.0/ThirdPartyNotices.txt",
           "sha256": "c53a76501ef60db6f865f20599f220761201ac4057683acefdab37d861b86622",
           "size": 344457
@@ -1043,14 +1062,14 @@
       "group": "application",
       "platform": "windows-amd64",
       "url": "embedded:engine/windows-amd64.gz",
-      "sha256": "50350075cf806e6c25742a5824e4f0896c83165743b12dc45940e3024adcd716",
-      "size": 2258952,
+      "sha256": "82b0456c28d665c0f4923b0fc7b4da4e7063698231435f90ec99600a3c345f00",
+      "size": 2452906,
       "format": "gzip",
       "files": [
         {
           "path": "bin/manga-translator-server.exe",
-          "sha256": "2fb333b707b0dc9dfa2db071952c825c8a8005e16eb91c849d220081c02fe24a",
-          "size": 7418217,
+          "sha256": "05368fe0915779bcc7965e6fc3c44a7ced4c4d8dcd31fd9d8f4d6dd2f1066f05",
+          "size": 7584163,
           "executable": true
         }
       ]
@@ -1173,6 +1192,23 @@
           "path": "models/gemma-4-E2B-it-GGUF/gemma-4-E2B-it-Q4_0.gguf",
           "sha256": "8e30dff3ac4c8434c49a7036fa15564bdbb6044e42bf04550bf1a096ad7e6a52",
           "size": 2841481184
+        }
+      ]
+    },
+    {
+      "id": "plamo-08b",
+      "name": "PLaMo 3 Translate 0.8B · Q4_K_M",
+      "group": "translation",
+      "platform": "all",
+      "url": "https://huggingface.co/pfnet/plamo-3-translate-0.8b-GGUF/resolve/7de4409f84a9d70e3a5e87b81e84883d49f77b58/plamo-3-translate-0.8b-Q4_K_M.gguf",
+      "sha256": "70891ec70dc7ab4205745a38307867c2881b99239f20327927633abfe4bc9ec6",
+      "size": 573126848,
+      "format": "raw",
+      "files": [
+        {
+          "path": "models/plamo-3-translate-0.8b-GGUF/plamo-3-translate-0.8b-Q4_K_M.gguf",
+          "sha256": "70891ec70dc7ab4205745a38307867c2881b99239f20327927633abfe4bc9ec6",
+          "size": 573126848
         }
       ]
     },
@@ -1951,34 +1987,34 @@
       "name": "ONNX Runtime 1.31.0",
       "group": "runtime",
       "platform": "linux-amd64",
-      "url": "https://github.com/microsoft/onnxruntime/releases/download/v1.31.0/onnxruntime-linux-x64-1.31.0.tgz",
-      "sha256": "cc5c72baf5ae5c8238a6841f0897227be2d02826b9cf98eaf02fdefaeeb03a57",
-      "size": 11408003,
-      "format": "tgz",
+      "url": "https://api.nuget.org/v3-flatcontainer/microsoft.ml.onnxruntime/1.31.0/microsoft.ml.onnxruntime.1.31.0.nupkg",
+      "sha256": "7e35fdb4f5adb62f01e60798e2e5ed05108f5fbbe1cca03fbcc37903cf7c5e3b",
+      "size": 159626085,
+      "format": "zip",
       "files": [
         {
-          "entry": "onnxruntime-linux-x64-1.31.0/lib/libonnxruntime_providers_shared.so",
+          "entry": "runtimes/linux-x64/native/libonnxruntime_providers_shared.so",
           "path": "runtime/onnxruntime-linux-x64-1.31.0/lib/libonnxruntime_providers_shared.so",
           "sha256": "086ec1d5388f64153d9c63470d126693db9a182c8ce236d3a1119068471b8a0d",
           "size": 14632
         },
         {
-          "entry": "onnxruntime-linux-x64-1.31.0/lib/libonnxruntime.so.1.31.0",
+          "entry": "runtimes/linux-x64/native/libonnxruntime.so",
           "path": "runtime/onnxruntime-linux-x64-1.31.0/lib/libonnxruntime.so.1",
           "sha256": "469849977cb60744ea160927e1a3a0643fd4c55c0aff743251c6d293402e334e",
           "size": 29345384
         },
         {
-          "entry": "onnxruntime-linux-x64-1.31.0/ThirdPartyNotices.txt",
+          "entry": "ThirdPartyNotices.txt",
           "path": "runtime/onnxruntime-linux-x64-1.31.0/ThirdPartyNotices.txt",
-          "sha256": "143764b952fdb1a7c69ce653bfba74a7744d6a8a573bfb73e235fba356c83de3",
-          "size": 338088
+          "sha256": "c53a76501ef60db6f865f20599f220761201ac4057683acefdab37d861b86622",
+          "size": 344457
         },
         {
-          "entry": "onnxruntime-linux-x64-1.31.0/LICENSE",
+          "entry": "LICENSE",
           "path": "runtime/onnxruntime-linux-x64-1.31.0/LICENSE",
-          "sha256": "2f07c72751aed99790b8a4869cf2311df85a860b22ded05fa22803587a48922c",
-          "size": 1073
+          "sha256": "c250d6278f0b47a6439fb7592b08b58a55eb9f535aa49a1db63211c3f982b674",
+          "size": 1094
         }
       ]
     },
@@ -2335,14 +2371,14 @@
       "group": "application",
       "platform": "linux-amd64",
       "url": "embedded:engine/linux-amd64.gz",
-      "sha256": "161c1464747d372ba147d6f04ce9b273bfee1e91a079e77c6e8e7990cd9ca61a",
-      "size": 1582964,
+      "sha256": "98003a7d1224f71914ce5eba6ca61901704fea39fafcc0c153d77bcd15a0777d",
+      "size": 1672520,
       "format": "gzip",
       "files": [
         {
           "path": "bin/manga-translator-server",
-          "sha256": "e0e93ba4903980ba5376325c3b71dad055f2e8d1a3bf282b61a1f9425f3c10ad",
-          "size": 3838200,
+          "sha256": "b8dd0a01ebcf94503acd42fad04e8fb53519e7be6a75a371ab732f660b765881",
+          "size": 3857856,
           "executable": true
         }
       ]
@@ -4849,6 +4885,11 @@
       "name": "Gemma",
       "url": "https://ai.google.dev/gemma/terms",
       "license": "Gemma Terms"
+    },
+    {
+      "name": "PLaMo 3 Translate",
+      "url": "https://plamo.preferredai.jp/info/plamo-community-license-en",
+      "license": "PLaMo Community License"
     },
     {
       "name": "ONNX Runtime",

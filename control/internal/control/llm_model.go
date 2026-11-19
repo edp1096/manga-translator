@@ -4,6 +4,8 @@ import "fmt"
 
 // Options belong to the selected model. Ordinary models retain their arguments.
 type LLMModelOptions struct {
+	CPUOnly        bool              `json:"cpuOnly,omitempty"`
+	Protocol       string            `json:"protocol,omitempty"`
 	FlashAttention map[string]string `json:"flashAttention,omitempty"`
 	DraftPath      string            `json:"draftPath,omitempty"`
 	DraftTokens    int               `json:"draftTokens,omitempty"`
@@ -17,6 +19,9 @@ func validateLLMModel(model Model, artifacts []Artifact) error {
 	}
 	if model.Group != "translation" {
 		return fmt.Errorf("LLM options on non-translation model %s", model.ID)
+	}
+	if o.Protocol != "" && (o.Protocol != "pfml3" || !o.CPUOnly || o.DraftPath != "") {
+		return fmt.Errorf("invalid translation protocol for %s", model.ID)
 	}
 	validBackend := func(s string) bool { return s == "cpu" || s == "vulkan" || s == "cuda" }
 	for backend, mode := range o.FlashAttention {
