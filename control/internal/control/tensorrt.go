@@ -30,6 +30,29 @@ func measuredTensorRTOCR(platform, ocr string, g GPUInfo) bool {
 	return false
 }
 
+// Include the automatic GPU choice only if it resolves to a supported device.
+func (m *Manager) tensorRTOCRGPUs(ocr string, gpus []GPUInfo) []string {
+	if m.runtimeByID("tensorrt") == nil {
+		return nil
+	}
+	var ids []string
+	for _, gpu := range gpus {
+		if measuredTensorRTOCR(m.platform, ocr, gpu) {
+			ids = append(ids, gpu.ID)
+		}
+	}
+	if len(ids) > 0 {
+		s := Settings{LLMExecution: "cuda", OCRExecution: "cuda"}
+		if m.platform == "windows-amd64" {
+			s.OCRExecution = "directml"
+		}
+		if gpu, err := selectedGPU(s, gpus); err == nil && measuredTensorRTOCR(m.platform, ocr, gpu) {
+			ids = append(ids, "")
+		}
+	}
+	return ids
+}
+
 // Building and executing a serialized engine requires the same precision override.
 func (m *Manager) tensorRTEnvironment(env []string, s Settings) []string {
 	if m.platform != "windows-amd64" && s.OCR == "hayai-onnx-fp32-kv" {

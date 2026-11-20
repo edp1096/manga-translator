@@ -210,7 +210,6 @@ func (m *Manager) SelectModel(id string) error {
 	}
 	settings := m.settings
 	settings.Profile = "custom"
-	settings.PageOCR = ""
 	switch model.Group {
 	case "layout":
 		settings.Layout = id
@@ -218,11 +217,18 @@ func (m *Manager) SelectModel(id string) error {
 		if err := validateOCRExecution(model, execution(settings.OCRExecution)); err != nil {
 			return err
 		}
+		if settings.PageOCR != "" && settings.OCR != id {
+			gpu, err := selectedGPU(settings, executionGPUs(probeGPUs()))
+			if err != nil || !measuredTensorRTOCR(m.platform, id, gpu) {
+				settings.PageOCR = ""
+			}
+		}
 		settings.OCR = id
 	default:
 		settings.Model = id
 		if model.LLM != nil && model.LLM.CPUOnly {
 			settings.LLMExecution = "cpu"
+			settings.PageOCR = ""
 		}
 	}
 	if err := writeJSON(filepath.Join(m.root, "config", "control.json"), settings); err != nil {
@@ -291,12 +297,12 @@ func (m *Manager) ClearModel(id string) error {
 	}
 	settings := m.settings
 	settings.Profile = "custom"
-	settings.PageOCR = ""
 	switch model.Group {
 	case "layout":
 		settings.Layout = ""
 	case "ocr":
 		settings.OCR = ""
+		settings.PageOCR = ""
 	default:
 		settings.Model = ""
 	}

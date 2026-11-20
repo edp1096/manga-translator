@@ -41,7 +41,19 @@ const {chromium}=require(process.env.MANGA_PLAYWRIGHT||'playwright');
   assert.equal(state.settings.model,'plamo-08b');
   assert.equal(state.settings.llmExecution,'cpu');
   assert(!calls.some(c=>c[0]==='POST'&&/download|setup/.test(c[1])),'selecting a preset started a download');
-  for(const width of [1440,390]){await page.setViewportSize({width,height:1000});const labels=page.locator('.threads-label');assert.equal(await labels.count(),5);for(const label of await labels.all()){const title=await label.locator('span').boundingBox(),select=await label.locator('select').boundingBox();assert(title&&select&&select.y>=title.y+title.height,'setting label and select share a line');}assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'settings overflow');await page.locator('.settings-card').screenshot({path:path.join(evidence,`settings-${width}.png`)});}
+  for(const [width,columns] of [[1440,3],[1024,2],[390,1]]){
+   await page.setViewportSize({width,height:1000});
+   const fields=page.locator('.settings-fields .threads-label'),tops=[];
+   assert.equal(await fields.count(),6);
+   for(const field of await fields.all()){
+    const title=await field.locator(':scope > span, :scope > .setting-heading').boundingBox(),select=await field.locator('select').boundingBox();
+    assert(title&&select&&select.y>=title.y+title.height,'setting label overlaps selector');
+    tops.push(Math.round(select.y));
+   }
+   for(let i=0;i<tops.length;i++)assert.equal(tops[i],tops[i-i%columns],'selectors in a row must align');
+   assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'settings overflow');
+   await page.locator('.settings-card').screenshot({path:path.join(evidence,`settings-${width}.png`)});
+  }
   await page.setViewportSize({width:390,height:844});await page.screenshot({path:path.join(evidence,'profiles-mixed-mobile.png'),fullPage:true});assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'mobile horizontal overflow');assert.deepEqual(errors,[]);
   const report={ok:true,fixture:'GPU hardware simulated; production UI bundle served unchanged',cpuOnlyOCRDisabledInGPUProfile:true,mixedProfileKeepsLiteRT:true,cpuPresetSelectsPLaMo:true,downloadsRemainExplicit:true,baberuCudaSelectable:true,baberuDirectMLDisabled:true,modelOrderLightToHeavy:true,settingsLabelsAboveSelectors:true,mobileOverflow:false,consoleErrors:errors};fs.writeFileSync(path.join(evidence,'profiles-browser.json'),JSON.stringify(report,null,2)+'\n');console.log(JSON.stringify(report));
  }finally{await browser.close();await new Promise(r=>server.close(r));}

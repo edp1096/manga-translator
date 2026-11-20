@@ -69,25 +69,26 @@ type ServiceState struct {
 type Snapshot struct {
 	Profiles []ExecutionProfile `json:"profiles"`
 
-	Runtimes      []RuntimeState `json:"runtimes"`
-	Models        []ModelState   `json:"models"`
-	Version       string         `json:"version"`
-	Platform      string         `json:"platform"`
-	Supported     bool           `json:"supported"`
-	Root          string         `json:"root"`
-	Ready         bool           `json:"ready"`
-	Busy          bool           `json:"busy"`
-	Phase         string         `json:"phase"`
-	Error         string         `json:"error,omitempty"`
-	Progress      Progress       `json:"progress"`
-	Components    []Component    `json:"components"`
-	Services      []ServiceState `json:"services"`
-	Settings      Settings       `json:"settings"`
-	ExtensionID   string         `json:"extensionId"`
-	ExtensionPath string         `json:"extensionPath"`
-	Licenses      []License      `json:"licenses"`
-	System        SystemInfo     `json:"system"`
-	Hardware      HardwareInfo   `json:"hardware"`
+	Runtimes        []RuntimeState `json:"runtimes"`
+	Models          []ModelState   `json:"models"`
+	Version         string         `json:"version"`
+	Platform        string         `json:"platform"`
+	Supported       bool           `json:"supported"`
+	Root            string         `json:"root"`
+	Ready           bool           `json:"ready"`
+	Busy            bool           `json:"busy"`
+	Phase           string         `json:"phase"`
+	Error           string         `json:"error,omitempty"`
+	Progress        Progress       `json:"progress"`
+	Components      []Component    `json:"components"`
+	Services        []ServiceState `json:"services"`
+	Settings        Settings       `json:"settings"`
+	ExtensionID     string         `json:"extensionId"`
+	ExtensionPath   string         `json:"extensionPath"`
+	Licenses        []License      `json:"licenses"`
+	System          SystemInfo     `json:"system"`
+	TensorRTOCRGPUs []string       `json:"tensorRTOCRGPUs,omitempty"`
+	Hardware        HardwareInfo   `json:"hardware"`
 }
 type managedProcess struct {
 	cmd      *exec.Cmd
@@ -659,22 +660,16 @@ func (m *Manager) writeNativeConfig() error {
 	return writeJSON(filepath.Join(m.root, "config", "native_api.json"), cfg)
 }
 func (m *Manager) UpdateSettings(settings Settings) error {
-	if settings.Profile == "custom" && settings.PageOCR != "" {
-		m.mu.Lock()
-		previous := m.settings
-		m.mu.Unlock()
-		if settings.GPU != previous.GPU || settings.OCR != previous.OCR || settings.LayoutExecution != previous.LayoutExecution ||
-			settings.OCRExecution != previous.OCRExecution || settings.LLMExecution != previous.LLMExecution ||
-			settings.Model != previous.Model || settings.RestorationBackend != previous.RestorationBackend {
-			settings.PageOCR = ""
-		}
-	}
 	if err := m.validateExecution(settings); err != nil {
 		return err
 	}
 	if usesGPU(settings) {
-		if _, err := selectedGPU(settings, executionGPUs(probeGPUs())); err != nil {
+		gpu, err := selectedGPU(settings, executionGPUs(probeGPUs()))
+		if err != nil {
 			return err
+		}
+		if settings.PageOCR == "tensorrt" && !measuredTensorRTOCR(m.platform, settings.OCR, gpu) {
+			return fmt.Errorf("선택한 GPU와 OCR 모델 조합은 TensorRT 페이지 OCR을 지원하지 않습니다")
 		}
 	}
 	if settings.Model != "" && m.modelForGroup(settings.Model, "translation") == nil {
@@ -1099,7 +1094,8 @@ func (m *Manager) Snapshot() Snapshot {
 		}
 		services = append(services, s)
 	}
-	return Snapshot{Profiles: m.executionProfiles(), Runtimes: runtimes, Models: models, Version: Version, Platform: m.platform, Supported: supportedPlatform(m.platform), Root: m.root, Ready: ready, Busy: m.busy, Phase: m.phase, Error: m.lastError, Progress: m.progress, Components: components, Services: services, Settings: snapshotSettings, ExtensionID: m.extensionID, ExtensionPath: filepath.Join(m.root, "extension"), Licenses: m.catalog.Licenses, System: systemInfo(m.root), Hardware: hardwareSnapshot()}
+	hardware := hardwareSnapshot()
+	return Snapshot{TensorRTOCRGPUs: m.tensorRTOCRGPUs(snapshotSettings.OCR, hardware.GPUs), Profiles: m.executionProfilesFor(hardware), Runtimes: runtimes, Models: models, Version: Version, Platform: m.platform, Supported: supportedPlatform(m.platform), Root: m.root, Ready: ready, Busy: m.busy, Phase: m.phase, Error: m.lastError, Progress: m.progress, Components: components, Services: services, Settings: snapshotSettings, ExtensionID: m.extensionID, ExtensionPath: filepath.Join(m.root, "extension"), Licenses: m.catalog.Licenses, System: systemInfo(m.root), Hardware: hardware}
 }
 func (m *Manager) ReadLog(name string) (string, error) {
 	if name != "control" && name != "llm" && name != "vision" {

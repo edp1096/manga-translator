@@ -7,6 +7,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"slices"
 	"testing"
 )
 
@@ -30,6 +31,13 @@ func TestMeasuredPageOCRPresets(t *testing.T) {
 		m := Manager{catalog: c, platform: tc.platform}
 		g := GPUInfo{ID: "gpu", Name: tc.name, Vendor: "10de", MemoryTotal: &mem, CUDAIndex: &index, DirectMLIndex: &index, VulkanIndex: &index, CUDAComputeCapability: tc.cc, CUDADriverVersion: 13000}
 		profiles := m.executionProfilesFor(HardwareInfo{GPUs: []GPUInfo{g}, RAMAvailable: 64 << 30})
+		for _, model := range []string{"hayai-onnx-fp32-kv", "hayai-supernova-fp32", "hayai-int8"} {
+			ids := m.tensorRTOCRGPUs(model, []GPUInfo{g})
+			eligible := tc.want && model != "hayai-int8" && (tc.platform != "linux-amd64" || model == "hayai-onnx-fp32-kv")
+			if slices.Contains(ids, "") != eligible || slices.Contains(ids, g.ID) != eligible {
+				t.Fatalf("%s %s: unexpected manual OCR options %v", tc.platform, model, ids)
+			}
+		}
 		found := map[string]bool{}
 		for _, p := range profiles {
 			s := p.Settings
