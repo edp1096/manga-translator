@@ -25,6 +25,7 @@ import (
 )
 
 type Settings struct {
+	PageOCR            string `json:"pageOCR,omitempty"`
 	RestorationBackend string `json:"restorationBackend,omitempty"`
 	GPU                string `json:"gpu,omitempty"`
 	Profile            string `json:"profile,omitempty"`
@@ -193,7 +194,18 @@ func NewManager(root string, bundle fs.FS, logger *log.Logger) (*Manager, error)
 			}
 		}
 	}
-	if legacySettings {
+	upgradePageOCR := false
+	if m.settings.PageOCR == "" && (m.settings.Profile == "gpu-balanced" || m.settings.Profile == "gpu-12gb") {
+		for _, profile := range m.executionProfilesFor(HardwareReport()) {
+			current, updated := m.settings, profile.Settings
+			if profile.ID == current.Profile && updated.PageOCR == "tensorrt" && updated.GPU == current.GPU && updated.Model == current.Model && updated.Layout == current.Layout && updated.OCR == current.OCR && updated.OCRExecution == current.OCRExecution && updated.LayoutExecution == current.LayoutExecution && updated.LLMExecution == current.LLMExecution {
+				m.settings.PageOCR = updated.PageOCR
+				upgradePageOCR = true
+				break
+			}
+		}
+	}
+	if legacySettings || upgradePageOCR {
 		if err := writeJSON(filepath.Join(absolute, "config", "control.json"), m.settings); err != nil {
 			cancel()
 			return nil, err
@@ -599,7 +611,7 @@ func (m *Manager) writeNativeConfig() error {
 	}
 	// The verifier runs only for a single unstable Han glyph; the selected
 	// primary OCR and its execution backend stay unchanged.
-	if m.selectedOCRBackend() == "onnx-v2-kv" {
+	if backend := m.selectedOCRBackend(); backend == "onnx-v2-kv" || backend == "onnx-v27-kv" {
 		if verifier := m.modelForGroup("baberu-int4", "ocr"); verifier != nil {
 			cfg["ocr_verifier_dir"] = verifier.Path
 			cfg["ocr_verifier_execution"] = "cpu"
@@ -620,6 +632,15 @@ func (m *Manager) writeNativeConfig() error {
 	}
 	cfg["gpu_index"] = onnxGPUIndex(settings, gpu)
 	cfg["gpu_name"] = gpu.Name
+	if settings.PageOCR == "tensorrt" {
+		if !measuredTensorRTOCR(m.platform, settings.OCR, gpu) {
+			return fmt.Errorf("현재 GPU는 이 TensorRT 프리셋을 지원하지 않습니다")
+		}
+		cfg["page_ocr_engine"] = "tensorrt"
+		cfg["tensorrt_plan_dir"] = m.tensorRTCache(settings, gpu)
+		cfg["tensorrt_device"] = *gpu.CUDAIndex
+		cfg["reuse_cuda_sessions"] = m.platform == "linux-arm64"
+	}
 	if settings.RestorationBackend == "libtorch" {
 		model := m.modelForGroup("manga-lama-torch", "restoration")
 		runtime := m.runtimeByID("torch-cuda")
@@ -638,6 +659,16 @@ func (m *Manager) writeNativeConfig() error {
 	return writeJSON(filepath.Join(m.root, "config", "native_api.json"), cfg)
 }
 func (m *Manager) UpdateSettings(settings Settings) error {
+	if settings.Profile == "custom" && settings.PageOCR != "" {
+		m.mu.Lock()
+		previous := m.settings
+		m.mu.Unlock()
+		if settings.GPU != previous.GPU || settings.OCR != previous.OCR || settings.LayoutExecution != previous.LayoutExecution ||
+			settings.OCRExecution != previous.OCRExecution || settings.LLMExecution != previous.LLMExecution ||
+			settings.Model != previous.Model || settings.RestorationBackend != previous.RestorationBackend {
+			settings.PageOCR = ""
+		}
+	}
 	if err := m.validateExecution(settings); err != nil {
 		return err
 	}
@@ -783,6 +814,16 @@ func (m *Manager) start(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
+	visionBinary := filepath.Join(m.root, "bin", "manga-translator-server"+ext)
+	if settings.PageOCR == "tensorrt" {
+		visionBinary, err = m.runtimeExecutable("tensorrt")
+		if err != nil {
+			return err
+		}
+		if err = m.prepareTensorRT(ctx, settings); err != nil {
+			return err
+		}
+	}
 	if e := m.launch("llm", binary, args); e != nil {
 		return e
 	}
@@ -792,7 +833,7 @@ func (m *Manager) start(ctx context.Context) error {
 	if e := m.checkVisionStartupMemory(systemInfo(m.root)); e != nil {
 		return e
 	}
-	if e := m.launch("vision", filepath.Join(m.root, "bin", "manga-translator-server"+ext), []string{"--root", m.root}); e != nil {
+	if e := m.launch("vision", visionBinary, []string{"--root", m.root}); e != nil {
 		return e
 	}
 	timeout := 45 * time.Second
@@ -829,6 +870,9 @@ func (m *Manager) launch(name, binary string, args []string) error {
 	m.mu.Lock()
 	settings := m.settings
 	m.mu.Unlock()
+	if name == "vision" && settings.PageOCR == "tensorrt" {
+		cmd.Env = m.tensorRTEnvironment(cmd.Env, settings)
+	}
 	if name == "llm" && execution(settings.LLMExecution) != "cpu" {
 		gpu, err := selectedGPU(settings, executionGPUs(probeGPUs()))
 		if err != nil {

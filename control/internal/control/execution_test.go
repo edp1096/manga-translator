@@ -59,6 +59,12 @@ func TestExecutionProfilesSelectMatchingRuntimeArtifacts(t *testing.T) {
 			if (profile.ID == "gpu-mixed" || profile.ID == "gpu-balanced") && (!ids["gemma"] || ids["plamo-08b"]) {
 				t.Fatal("Gemma GPU profiles must keep E2B", platform, profile.ID, s)
 			}
+			if profile.ID == "gpu-12b-qat" && (s.OCR != "hayai-supernova-fp32" || !ids["ocr-supernova-hayai-prefill-onnx"] || ids["ocr-kv-fp32-hayai_encoder_onnx"]) {
+				t.Fatal("highest preset must install Supernova", platform, s)
+			}
+			if (profile.ID == "gpu-balanced" || profile.ID == "gpu-12gb") && s.OCR != "hayai-onnx-fp32-kv" {
+				t.Fatal("middle GPU presets must retain v2.1", platform, s)
+			}
 			if s.LLMExecution == "vulkan" && ids["llama-"+platform] {
 				t.Fatal("CPU llama downloaded for GPU profile")
 			}

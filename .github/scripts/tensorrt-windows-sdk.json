@@ -1,0 +1,21 @@
+{
+  "source": "https://developer.download.nvidia.com/compute/machine-learning/tensorrt/10.14.1/zip/TensorRT-10.14.1.48.Windows.win10.cuda-13.0.zip",
+  "files": {
+    "TensorRT-10.14.1.48/include/NvInferLegacyDims.h": "99a80d98a7cdcac515d64a5f48dafe2a6d4f920c4513ec3f2b07bacf7c4ab09f",
+    "TensorRT-10.14.1.48/include/NvOnnxConfig.h": "a64a532c86d5ab9e12b009541541ad54531ce39eeecdc53d7b46cb3b7954d746",
+    "TensorRT-10.14.1.48/include/NvInferPlugin.h": "3ab7107afc15e4317a17a57b31d7d42d677091380918bfc2dc45eb4ab38570ad",
+    "TensorRT-10.14.1.48/include/NvInferRuntimeCommon.h": "c2f97d350090f106e995bf4522a89dd19ab0c15441023408ac6bf19fe7506688",
+    "TensorRT-10.14.1.48/include/NvInferImpl.h": "7ec23dec11d581d889d2a088f131dab94a7d4eb46d730a0bd83ec2aa2696daa1",
+    "TensorRT-10.14.1.48/include/NvInferPluginBase.h": "6088613d4657d17eff6f351c196c5bd79c264636f2979a9f7e83e4c445c16efa",
+    "TensorRT-10.14.1.48/include/NvInferVersion.h": "83022acb30561aafafba200d739b9885db135c55d413e00730c8223ddc8af17a",
+    "TensorRT-10.14.1.48/include/NvInferRuntimePlugin.h": "940c39b8d35045cd91970abc023e9f5deaadc8783aa4ec778f042a74531c8ecb",
+    "TensorRT-10.14.1.48/include/NvInferRuntimeBase.h": "89bacc49de201fd46227828dd7dfb7dab35c95445842b989772f99a2f4385328",
+    "TensorRT-10.14.1.48/include/NvInferPluginUtils.h": "367f961bbb3126e59cfd415650d077023f4d7d697d21f3ee92fef8b1b4ec7d28",
+    "TensorRT-10.14.1.48/include/NvInferRuntime.h": "fd0df629a9f433db84df0aa5b6861997d6d66b1c81991c945bfd36330739fc9b",
+    "TensorRT-10.14.1.48/include/NvInfer.h": "6c88466e9ede5a31efedc745c7dd10de8f4b679f619ec8eb64dc339ffbdb8f41",
+    "TensorRT-10.14.1.48/include/NvOnnxParser.h": "195fe795f7b4cf6951336451b6966c143672078da4c114f688abe85d5a5072bd",
+    "TensorRT-10.14.1.48/include/impl/NvInferPythonPlugin.h": "c831f221650825cab96bec7288621c59c4b777ac6942299aa4f47b23a520cb6c",
+    "TensorRT-10.14.1.48/lib/nvonnxparser_10.lib": "9641836c844b4904c6500c315bbf6198ea270cc53f683e9188e167e723278c1c",
+    "TensorRT-10.14.1.48/lib/nvinfer_10.lib": "d82f3df5c78df1cea8e16dc418921c0ac0fbcc11e6db449264cd14304c03b40a"
+  }
+}

@@ -6,6 +6,7 @@
  function pageIdentity(value=location.href){const u=new URL(value);u.hash='';
   if(u.hostname==='vw.mangaz.com'&&/^\/virgo\/view\/\d+/.test(u.pathname)){u.pathname=u.pathname.match(/^\/virgo\/view\/\d+/)[0];u.search='';}
   if(u.hostname==='comic-walker.com'&&/\/episodes\//.test(u.pathname)||['tonarinoyj.jp','www.sunday-webry.com','shonenjumpplus.com','comic-days.com','comic-earthstar.com'].includes(u.hostname)&&/^\/episode\//.test(u.pathname))u.search='';
+  if(u.hostname==='ynjn.jp'&&/^\/viewer\/\d+\/\d+\/?$/.test(u.pathname)){u.pathname=u.pathname.replace(/\/$/,'');u.search='';}
   if(u.hostname==='yanmaga.jp'&&/^\/viewer\/comics\/[^/]+\/[^/]+\/?$/.test(u.pathname)){u.pathname=u.pathname.replace(/\/$/,'');const cid=u.searchParams.get('cid');u.search='';if(cid)u.searchParams.set('cid',cid);}
   const old=u.hostname==='urasunday.com'&&u.pathname.match(/^\/title\/(\d+)\/(\d+)\/?$/);
   if(old){u.hostname='manga-one.com';u.pathname=`/manga/${old[1]}/chapter/${old[2]}`;}
@@ -42,6 +43,27 @@
  // already-authorized viewer's page types/indices; never copy URLs, crypto
  // material, account data, or call authorization functions. Navigation uses public viewer controls.
  async function metadata(command){
+  if(location.hostname==='ynjn.jp'&&/^\/viewer\/\d+\/\d+\/?$/.test(location.pathname)){
+   const viewer=document.querySelector('.swiper-initialized:has(canvas)')?.swiper;
+   const comic=document.getElementById('__nuxt')?.__vue_app__?.config.globalProperties.$pinia?._s?.get('viewerComic');
+   const list=matchMedia('(min-width: 640px)').matches?comic?.slideList:comic?.spSlideList;
+   if(!viewer||!Array.isArray(list)||!list.length||list.length>2000||viewer.slides.length!==list.length)return null;
+   // Page numbers survive spread/single-page layout changes; slide offsets do not.
+   const slots=[],seen=new Set();let target;
+   for(let i=0;i<list.length;i++){
+    const number=list[i]?.mangaPage?.pageNumber,slide=viewer.slides[i];
+    if(number==null){delete slide.dataset.mangaYnjnPage;continue;}
+    if(!Number.isSafeInteger(number)||number<1||seen.has(number))return null;
+    seen.add(number);slots.push(number);slide.dataset.mangaYnjnPage=String(number);
+    if(number===command?.slot)target=i;
+   }
+   if(command?.action==='locate'&&target!==undefined){
+    if(viewer.isVertical())viewer.slides[target].scrollIntoView({block:'center',behavior:'instant'});
+    else viewer.slideTo(target,0);
+   }
+   return {url:location.href,total:slots.length,slots:slots.sort((a,b)=>a-b)};
+  }
+
   if(location.hostname==='yanmaga.jp'&&/^\/viewer\/comics\/[^/]+\/[^/]+\/?$/.test(location.pathname)){
    // Only expose the opened viewer's artwork indices, never its image sources
    // or decoding data. Reading uses the tiles the site has already rendered.
@@ -132,32 +154,33 @@
  // These adapters index only artwork slots in the already-open public viewer.
  function extraReader({capture,onWait,cancelled,metadata:readMetadata}={}){
   const host=location.hostname,path=location.pathname;
-  const kind=host==='pocket.shonenmagazine.com'&&/^\/title\/\d+\/episode\/\d+\/?$/.test(path)?'pocket':host==='palcy.jp'&&/^\/comics\/\d+\/?$/.test(path)?'palcy':host==='www.manga-up.com'&&/^\/titles\/\d+\/chapters\/\d+\/?$/.test(path)?'mangaup':null;
+  const kind=host==='ynjn.jp'&&/^\/viewer\/\d+\/\d+\/?$/.test(path)?'ynjn':host==='pocket.shonenmagazine.com'&&/^\/title\/\d+\/episode\/\d+\/?$/.test(path)?'pocket':host==='palcy.jp'&&/^\/comics\/\d+\/?$/.test(path)?'palcy':host==='www.manga-up.com'&&/^\/titles\/\d+\/chapters\/\d+\/?$/.test(path)?'mangaup':null;
   if(!kind)return null;
-  const name={pocket:'매거진 포켓',palcy:'팔시',mangaup:'망가업'}[kind],identity=pageIdentity(),images=new Map(),cache=new Map();let rows=null,preparing=null,chain=Promise.resolve(),bytes=0;
+  const name={ynjn:'영점프+',pocket:'매거진 포켓',palcy:'팔시',mangaup:'망가업'}[kind],identity=pageIdentity(),images=new Map(),cache=new Map();let rows=null,preparing=null,chain=Promise.resolve(),bytes=0;
   const check=()=>{if(cancelled?.())throw Error('작업이 중지되었습니다.');if(pageIdentity()!==identity)throw Error('다른 회차로 이동했습니다. 새로고침을 눌러주세요.');};
   async function foreground(){let told=false;while(document.hidden){check();if(!told){onWait?.(name+' 탭으로 돌아오면 페이지 읽기를 이어갑니다.');told=true;}await sleep(150);}check();}
   async function until(test,message,timeout=18000){let remaining=timeout;while(remaining>0){await foreground();const start=performance.now(),value=await test();check();if(value)return value;await sleep(100);if(!document.hidden)remaining-=performance.now()-start;}throw Error(message);}
   const serial=fn=>{const pending=chain.catch(()=>{}).then(fn);chain=pending;return pending;};
   const pocketSlots=()=>[...document.querySelectorAll('.c-viewer__pages-item')];
+  const ynjnRoot=()=>document.querySelector('.swiper-initialized:has(canvas)');
   const upRoot=()=>[...document.querySelectorAll('.swiper')].find(n=>n.querySelector('img[alt^="マンガページ"]'));
   function background(node){const value=getComputedStyle(node).backgroundImage,match=value.match(/^url\(["']?(blob:[^"')]+)["']?\)$/);return match?.[1];}
-  async function prepare(){if(rows)return;if(preparing)return preparing;preparing=(async()=>{
+  async function prepare(){if(rows&&(kind!=='ynjn'||ynjnRoot()?.querySelector('[data-manga-ynjn-page]')))return;if(preparing)return preparing;preparing=(async()=>{
    const slots=await until(async()=>{
     if(kind==='pocket'){const list=pocketSlots();return list.some(n=>n.querySelector('.c-viewer__comic-item-image'))?list.flatMap((n,i)=>n.querySelector('.c-viewer__comic-item-image')?[i]:[]):null;}
-    if(kind==='palcy'){const data=await readMetadata?.();return data&&pageIdentity(data.url)===identity&&Number.isInteger(data.total)&&data.total>0&&data.total<=2000&&Array.isArray(data.slots)&&data.slots.length===data.total&&data.slots.every((n,i)=>Number.isInteger(n)&&n>=1&&(!i||n>data.slots[i-1]))?data.slots:null;}
+    if(kind==='palcy'||kind==='ynjn'){const data=await readMetadata?.();return data&&pageIdentity(data.url)===identity&&Number.isInteger(data.total)&&data.total>0&&data.total<=2000&&Array.isArray(data.slots)&&data.slots.length===data.total&&data.slots.every((n,i)=>Number.isInteger(n)&&n>=1&&(!i||n>data.slots[i-1]))?data.slots:null;}
     const value=await readMetadata?.();if(value&&pageIdentity(value.url)===identity&&Number.isInteger(value.total)&&value.total>0&&value.total<=2000&&Array.isArray(value.slots)&&value.slots.length&&value.slots.every((s,i)=>Number.isInteger(s)&&s>=0&&s<value.total&&(!i||s>value.slots[i-1])))return value.slots;
    },name+' 본문 목록을 읽지 못했습니다. 읽기 뷰어를 연 뒤 새로고침하세요.');
    if(slots.length>2000)throw Error('본문 페이지 수가 너무 많습니다.');rows=slots.map((slot,index)=>({index,slot,sourceURL:identity+'#manga-page='+slot,width:0,height:0}));
   })().finally(()=>preparing=null);return preparing;}
   const pages=()=>rows||[];
-  function element(page){if(!page)return null;if(kind==='pocket')return pocketSlots()[page.slot]?.querySelector('.c-viewer__comic-item-image canvas')||null;if(kind==='palcy')return document.getElementById('page-'+page.slot);return upRoot()?.querySelectorAll('.swiper-slide')[page.slot]?.querySelector('img[alt^="マンガページ"]')||null;}
+  function element(page){if(!page)return null;if(kind==='ynjn')return document.querySelector('.swiper-slide[data-manga-ynjn-page="'+page.slot+'"] canvas');if(kind==='pocket')return pocketSlots()[page.slot]?.querySelector('.c-viewer__comic-item-image canvas')||null;if(kind==='palcy')return document.getElementById('page-'+page.slot);return upRoot()?.querySelectorAll('.swiper-slide')[page.slot]?.querySelector('img[alt^="マンガページ"]')||null;}
   function bounds(page){const node=element(page);if(!node)return null;const rect=node.getBoundingClientRect();if(kind!=='palcy')return rect;const image=images.get(page.slot);if(!image)return rect;const factor=Math.min(rect.width/image.naturalWidth,rect.height/image.naturalHeight),width=image.naturalWidth*factor,height=image.naturalHeight*factor,css=getComputedStyle(node),x=css.backgroundPositionX==='0%'||css.backgroundPositionX==='left'?0:css.backgroundPositionX==='100%'||css.backgroundPositionX==='right'?rect.width-width:(rect.width-width)/2;return {left:rect.left+x,top:rect.top+(rect.height-height)/2,width,height,right:rect.left+x+width,bottom:rect.top+(rect.height+height)/2};}
-  function shown(page){const node=element(page);if(!visible(node))return false;const r=node.getBoundingClientRect(),viewport=kind==='pocket'?document.querySelector('.c-viewer__pages-wrap'):kind==='mangaup'?upRoot():node.parentElement,v=viewport?.getBoundingClientRect()||{left:0,right:innerWidth,top:0,bottom:innerHeight};return Math.min(r.right,v.right)-Math.max(r.left,v.left)>r.width*.9&&Math.min(r.bottom,v.bottom)-Math.max(r.top,v.top)>Math.min(r.height,v.height||innerHeight)*.8;}
+  function shown(page){const node=element(page);if(!visible(node))return false;const r=node.getBoundingClientRect(),viewport=kind==='ynjn'?node.closest('.swiper'):kind==='pocket'?document.querySelector('.c-viewer__pages-wrap'):kind==='mangaup'?upRoot():node.parentElement,v=viewport?.getBoundingClientRect()||{left:0,right:innerWidth,top:0,bottom:innerHeight};return Math.min(r.right,v.right)-Math.max(r.left,v.left)>r.width*.9&&Math.min(r.bottom,v.bottom)-Math.max(r.top,v.top)>Math.min(r.height,v.height||innerHeight)*.8;}
   const currentIndex=()=>Math.max(0,pages().findIndex(shown));
   async function navigate(page){await foreground();await prepare();if(!rows.some(r=>r.sourceURL===page?.sourceURL))throw Error('현재 회차의 페이지가 아닙니다.');
    if(kind==='palcy'){element(page)?.scrollIntoView({inline:'nearest',block:'nearest',behavior:'instant'});}
-   else if(kind==='mangaup'){await readMetadata?.({action:'locate',slot:page.slot});upRoot()?.scrollIntoView({block:'nearest',inline:'nearest',behavior:'instant'});}
+   else if(kind==='mangaup'||kind==='ynjn'){await readMetadata?.({action:'locate',slot:page.slot});(kind==='ynjn'?ynjnRoot():upRoot())?.scrollIntoView({block:'nearest',inline:'nearest',behavior:'instant'});}
    else{
     const toggle=document.querySelector('.c-viewer__nav-btn--page');let slider=document.querySelector('input.c-viewer__range'),opened=false;if(!slider){toggle?.click();opened=true;slider=await until(()=>document.querySelector('input.c-viewer__range'),'페이지 이동 슬라이더를 찾지 못했습니다.',3000);}
     const min=Number(slider.min),step=Number(slider.step)||1,value=min+Math.floor((page.slot+1-min)/step)*step;

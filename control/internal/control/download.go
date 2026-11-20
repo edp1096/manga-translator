@@ -8,6 +8,7 @@ import (
 	"context"
 	"crypto/sha256"
 	"encoding/hex"
+	"encoding/json"
 	"fmt"
 	"io"
 	"io/fs"
@@ -275,6 +276,38 @@ func (w *limitedWriter) Write(p []byte) (int, error) {
 	w.Remaining -= int64(n)
 	return n, e
 }
+
+// The pinned Supernova exports encode allowzero=1 on Reshape nodes.
+// Replace only those verified bytes and stream model weights to disk.
+func patchONNXReshape(src io.Reader, dst io.Writer, size int64, offsets []int64) error {
+	if len(offsets) == 0 {
+		return fmt.Errorf("empty ONNX compatibility patch")
+	}
+	var position int64
+	var value [1]byte
+	for _, offset := range offsets {
+		if offset < position || offset >= size {
+			return fmt.Errorf("invalid ONNX compatibility patch offset")
+		}
+		if _, err := io.CopyN(dst, src, offset-position); err != nil {
+			return err
+		}
+		if _, err := io.ReadFull(src, value[:]); err != nil {
+			return err
+		}
+		if value[0] != 1 {
+			return fmt.Errorf("unexpected ONNX reshape attribute byte")
+		}
+		value[0] = 0
+		if _, err := dst.Write(value[:]); err != nil {
+			return err
+		}
+		position = offset + 1
+	}
+	_, err := io.CopyN(dst, src, size-position)
+	return err
+}
+
 func installArtifact(ctx context.Context, root string, a Artifact, source string, bundle fs.FS) error {
 	if a.Format == "msvc-cab" {
 		return installMSVCCabinet(ctx, root, a, source)
@@ -299,7 +332,7 @@ func installArtifact(ctx context.Context, root string, a Artifact, source string
 		}
 		return os.Rename(source, dest)
 	}
-	if a.Format == "gzip" || a.Format == "patch" {
+	if a.Format == "gzip" || a.Format == "patch" || a.Format == "onnx-reshape-patch" {
 		if len(a.Files) != 1 {
 			return fmt.Errorf("converted artifact requires one output")
 		}
@@ -323,6 +356,15 @@ func installArtifact(ctx context.Context, root string, a Artifact, source string
 		sum := sha256.Sum256(data)
 		if hex.EncodeToString(sum[:]) != a.PatchSHA256 {
 			return fmt.Errorf("model conversion patch checksum mismatch")
+		}
+		if a.Format == "onnx-reshape-patch" {
+			var offsets []int64
+			if err := json.Unmarshal(data, &offsets); err != nil {
+				return err
+			}
+			return installOutput(ctx, root, a.Files[0], func(w io.Writer) error {
+				return patchONNXReshape(contextReader{ctx, input}, w, a.Size, offsets)
+			})
 		}
 		return installOutput(ctx, root, a.Files[0], func(w io.Writer) error { return binarydist.Patch(contextReader{ctx, input}, w, bytes.NewReader(data)) })
 	}

@@ -21,7 +21,7 @@
     }))).catch(error=>{assets=undefined;throw error;});
     const [html,css]=await assets;
     const target={tabId:tab.id,frameIds:[0]};
-    await chrome.scripting.executeScript({target,files:['panel_embed.js']});
+    await chrome.scripting.executeScript({target,files:['appearance.js','panel_embed.js']});
     const [result]=await chrome.scripting.executeScript({target,func:options=>MangaPagePanel.mount(options),args:[{tabId:tab.id,html,css,toggle}]});
     if(result.result.initialize)await chrome.scripting.executeScript({target,files:['zip.js','panel.js']});
     if(result.result.open)openedTabs.add(tab.id);else openedTabs.delete(tab.id);

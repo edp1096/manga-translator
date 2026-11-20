@@ -32,7 +32,7 @@ async function dependency(work, name, url, sha) {
 }
 if (mode === 'version') {
   console.log(version(path.resolve(args[0]), args[1]));
-} else if (mode === 'native') {
+} else if (mode === 'native' || mode === 'tensorrt') {
   const [sourceArg, platform, workArg] = args;
   const source = path.resolve(sourceArg), work = path.resolve(workArg);
   fs.mkdirSync(work, { recursive: true });
@@ -62,13 +62,17 @@ if (mode === 'version') {
     }
   }
   const config = ['-S', path.join(source, 'native'), '-B', path.join(work, 'build'), '-DCMAKE_BUILD_TYPE=Release', `-DORT_ROOT=${ortRoot}`, `-DLITERT_SDK=${work}/LiteRT-2.3.1`, `-DWEBP_SOURCE_DIR=${work}/libwebp-1.6.0`];
-  if (platform === 'windows-amd64') config.push('-DCMAKE_SYSTEM_NAME=Windows', '-DCMAKE_SYSTEM_PROCESSOR=x86_64', '-DCMAKE_C_COMPILER=x86_64-w64-mingw32-gcc-posix', '-DCMAKE_CXX_COMPILER=x86_64-w64-mingw32-g++-posix', '-DCMAKE_RC_COMPILER=x86_64-w64-mingw32-windres');
+  if (mode==='tensorrt') {
+    const {tensorrtSDK}=await import('./tensorrt-sdk.mjs');
+    config.push(...await tensorrtSDK(source,work,platform));
+    if (platform==='windows-amd64') config.push('-A','x64');
+  } else if (platform === 'windows-amd64') config.push('-DCMAKE_SYSTEM_NAME=Windows', '-DCMAKE_SYSTEM_PROCESSOR=x86_64', '-DCMAKE_C_COMPILER=x86_64-w64-mingw32-gcc-posix', '-DCMAKE_CXX_COMPILER=x86_64-w64-mingw32-g++-posix', '-DCMAKE_RC_COMPILER=x86_64-w64-mingw32-windres');
   run('cmake', config);
-  run('cmake', ['--build', path.join(work, 'build'), '--parallel', '2']);
+  run('cmake', ['--build', path.join(work, 'build'), '--config','Release','--parallel', '2']);
   const name = `manga-translator-server${platform.startsWith('windows') ? '.exe' : ''}`;
   fs.mkdirSync(path.join(work, 'out'), { recursive: true });
-  fs.copyFileSync(path.join(work, 'build', name), path.join(work, 'out', name));
-  if (!platform.startsWith('windows')) {
+  fs.copyFileSync(path.join(work, 'build', ...(mode==='tensorrt' && platform==='windows-amd64'?['Release']:[]),name), path.join(work, 'out', name));
+  if (!platform.startsWith('windows') && mode==='native') {
     fs.chmodSync(path.join(work, 'out', name), 0o755);
     const r = spawnSync(path.join(work, 'out', name), [], { encoding: 'utf8', env: { ...process.env, LD_LIBRARY_PATH: path.join(ortRoot, 'lib') }, timeout: 30000 });
     assert(r.status === 1 && `${r.stdout}${r.stderr}`.includes('Usage:'), `Native startup failed: ${r.error || r.stderr}`);

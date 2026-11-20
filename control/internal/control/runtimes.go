@@ -42,6 +42,9 @@ func (m *Manager) runtimeForSettings(family string, settings Settings) *Runtime 
 		}
 		if backend != "cpu" {
 			id = "ort-" + backend
+			if settings.PageOCR == "tensorrt" && backend == "cuda" && m.platform == "linux-amd64" {
+				id = "ort-cuda13"
+			}
 		}
 	}
 	return m.runtimeByID(id)
@@ -186,6 +189,9 @@ func (m *Manager) runtimeLibraryDirs(service string) ([]string, error) {
 	m.mu.Lock()
 	settings := m.settings
 	m.mu.Unlock()
+	if service == "vision" && settings.PageOCR == "tensorrt" {
+		ids = append(ids, "tensorrt")
+	}
 	if service == "vision" && settings.RestorationBackend == "libtorch" {
 		ids = append(ids, "torch-cuda")
 	}

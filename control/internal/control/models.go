@@ -84,6 +84,13 @@ func (m *Manager) artifactsFor(ids []string, application bool) []Artifact {
 }
 func (m *Manager) artifactsForSettings(ids []string, application bool, settings Settings) []Artifact {
 	wanted := map[string]bool{}
+	if application && settings.PageOCR == "tensorrt" {
+		if r := m.runtimeByID("tensorrt"); r != nil {
+			for _, id := range r.artifactIDs() {
+				wanted[id] = true
+			}
+		}
+	}
 	for _, id := range ids {
 		model := m.modelByID(id)
 		if model == nil {
@@ -203,6 +210,7 @@ func (m *Manager) SelectModel(id string) error {
 	}
 	settings := m.settings
 	settings.Profile = "custom"
+	settings.PageOCR = ""
 	switch model.Group {
 	case "layout":
 		settings.Layout = id
@@ -283,6 +291,7 @@ func (m *Manager) ClearModel(id string) error {
 	}
 	settings := m.settings
 	settings.Profile = "custom"
+	settings.PageOCR = ""
 	switch model.Group {
 	case "layout":
 		settings.Layout = ""
@@ -327,7 +336,7 @@ func (m *Manager) visionRequirements() (int64, int64) {
 	// The KV OCR pipeline also loads an independent CPU verifier for uncertain
 	// glyphs and restoration. Budget both models, even when the primary uses
 	// DirectML/CUDA; GPU execution does not eliminate their host allocations.
-	if model := m.modelForGroup(settings.OCR, "ocr"); model != nil && model.Backend == "onnx-v2-kv" && m.modelForGroup("baberu-int4", "ocr") != nil {
+	if model := m.modelForGroup(settings.OCR, "ocr"); model != nil && (model.Backend == "onnx-v2-kv" || model.Backend == "onnx-v27-kv") && m.modelForGroup("baberu-int4", "ocr") != nil {
 		limit = max(limit, 3*1024*1024*1024)
 		available = max(available, 4*1024*1024*1024)
 	}

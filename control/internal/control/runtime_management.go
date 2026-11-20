@@ -25,6 +25,9 @@ type RuntimeState struct {
 
 func (m *Manager) requiredRuntimeIDs(settings Settings) map[string]bool {
 	result := map[string]bool{}
+	if settings.PageOCR == "tensorrt" {
+		result["tensorrt"] = true
+	}
 	if settings.RestorationBackend == "libtorch" {
 		result["torch-cuda"] = true
 	}

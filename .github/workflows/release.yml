@@ -24,6 +24,8 @@ jobs:
       tag: ${{ steps.release.outputs.tag }}
       commit: ${{ steps.release.outputs.commit }}
       torch: ${{ steps.release.outputs.torch }}
+      tensorrt: ${{ steps.release.outputs.tensorrt }}
+      tensorrt_x64: ${{ steps.release.outputs.tensorrt_x64 }}
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
@@ -53,6 +55,8 @@ jobs:
           node automation/.github/scripts/release.mjs version source "$TAG"
           echo "tag=$TAG" >> "$GITHUB_OUTPUT"
           echo "commit=$(git -C source rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+          if grep -q '"tensorrt-libs-linux-amd64"' source/control/internal/assets/bundle/catalog.json; then echo "tensorrt_x64=true" >> "$GITHUB_OUTPUT"; fi
+          if [[ -f source/native/hayai_tensorrt.hpp ]]; then echo "tensorrt=true" >> "$GITHUB_OUTPUT"; fi
           if [[ -f source/native/torch_restoration/CMakeLists.txt ]]; then echo "torch=true" >> "$GITHUB_OUTPUT"; else echo "torch=false" >> "$GITHUB_OUTPUT"; fi
 
   native:
@@ -142,9 +146,52 @@ jobs:
           if-no-files-found: error
           retention-days: 7
 
+  tensorrt:
+    needs: prepare
+    if: needs.prepare.outputs.tensorrt == 'true'
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: windows-amd64
+            runner: windows-2025
+          - platform: linux-arm64
+            runner: ubuntu-24.04-arm
+          - platform: linux-amd64
+            runner: ubuntu-24.04
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          ref: ${{ github.workflow_sha }}
+          path: automation
+          persist-credentials: false
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          ref: ${{ needs.prepare.outputs.commit }}
+          path: source
+          persist-credentials: false
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: '24'
+      - name: Build the TensorRT page server
+        if: matrix.platform != 'linux-amd64' || needs.prepare.outputs.tensorrt_x64 == 'true'
+        shell: bash
+        env:
+          PLATFORM: ${{ matrix.platform }}
+        run: node automation/.github/scripts/release.mjs tensorrt source "$PLATFORM" tensorrt-build
+      - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
+        if: matrix.platform != 'linux-amd64' || needs.prepare.outputs.tensorrt_x64 == 'true'
+        with:
+          name: tensorrt-${{ matrix.platform }}
+          path: tensorrt-build/out/*
+          if-no-files-found: error
+          retention-days: 7
+
   package:
-    needs: [prepare, native, torch]
-    if: ${{ !cancelled() && needs.prepare.result == 'success' && needs.native.result == 'success' && (needs.torch.result == 'success' || needs.torch.result == 'skipped') }}
+    needs: [prepare, native, torch, tensorrt]
+    if: ${{ !cancelled() && needs.prepare.result == 'success' && needs.native.result == 'success' && (needs.torch.result == 'success' || needs.torch.result == 'skipped') && (needs.tensorrt.result == 'success' || needs.tensorrt.result == 'skipped') }}
     runs-on: ubuntu-22.04
     timeout-minutes: 45
     env:
@@ -179,11 +226,22 @@ jobs:
         with:
           pattern: torch-*
           path: bridges
+      - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131
+        if: needs.prepare.outputs.tensorrt == 'true'
+        with:
+          pattern: tensorrt-*
+          path: tensorrt
       - name: Test and package all platforms
         run: |
           torch_args=()
           if [[ -d bridges ]]; then
             torch_args+=(--windows-torch "$PWD/bridges/torch-windows-amd64/manga_lama_torch.dll" --linux-arm64-torch "$PWD/bridges/torch-linux-arm64/libmanga_lama_torch.so")
+          fi
+          if [[ -d tensorrt/tensorrt-linux-amd64 ]]; then
+            torch_args+=(--linux-x64-tensorrt "$PWD/tensorrt/tensorrt-linux-amd64/manga-translator-server")
+          fi
+          if [[ -d tensorrt ]]; then
+            torch_args+=(--windows-tensorrt "$PWD/tensorrt/tensorrt-windows-amd64/manga-translator-server.exe" --linux-arm64-tensorrt "$PWD/tensorrt/tensorrt-linux-arm64/manga-translator-server")
           fi
           bash source/build.sh "${torch_args[@]}" \
             --linux-native "$PWD/engines/native-linux-arm64/manga-translator-server" \

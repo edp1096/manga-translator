@@ -263,7 +263,7 @@ func TestOnlyApprovedOCRChoicesAreShipped(t *testing.T) {
 			seen[m.ID] = true
 		}
 	}
-	if len(seen) != 4 || !seen["hayai-onnx-fp32-kv"] || !seen["hayai-int8"] || !seen["baberu-int4"] || !seen["baberu-fp16"] {
+	if len(seen) != 5 || !seen["hayai-supernova-fp32"] || !seen["hayai-onnx-fp32-kv"] || !seen["hayai-int8"] || !seen["baberu-int4"] || !seen["baberu-fp16"] {
 		t.Fatalf("unexpected OCR choices: %v", seen)
 	}
 	for _, a := range c.Artifacts {

@@ -15,7 +15,7 @@ import (
 	"strings"
 )
 
-var Version = "0.5.10"
+var Version = "0.6.0"
 
 const ControlPort = 8794
 const VisionPort = 8793
@@ -137,7 +137,7 @@ func loadCatalog(bundle fs.FS, platform string) (Catalog, error) {
 			}
 		}
 		switch a.Format {
-		case "raw", "zip", "tgz", "gzip", "patch", "msvc-cab":
+		case "raw", "zip", "tgz", "gzip", "patch", "onnx-reshape-patch", "msvc-cab":
 		default:
 			return result, fmt.Errorf("invalid format %q", a.Format)
 		}
@@ -158,7 +158,10 @@ func loadCatalog(bundle fs.FS, platform string) (Catalog, error) {
 				return result, err
 			}
 		}
-		if a.Format == "patch" {
+		if a.Format == "onnx-reshape-patch" && (len(a.Files) != 1 || a.Files[0].Size != a.Size) {
+			return result, fmt.Errorf("ONNX compatibility patch requires equal input and output sizes")
+		}
+		if a.Format == "patch" || a.Format == "onnx-reshape-patch" {
 			if !checksum.MatchString(a.PatchSHA256) {
 				return result, fmt.Errorf("invalid patch checksum")
 			}
@@ -180,7 +183,7 @@ func loadCatalog(bundle fs.FS, platform string) (Catalog, error) {
 		if !identifier.MatchString(model.ID) || modelIDs[model.ID] || len(model.Artifacts) == 0 {
 			return result, fmt.Errorf("invalid model %q", model.ID)
 		}
-		if model.Group == "ocr" && model.Backend != "litert" && model.Backend != "onnx-v2-kv" && model.Backend != "baberu-int4" && model.Backend != "baberu-fp16" {
+		if model.Group == "ocr" && model.Backend != "litert" && model.Backend != "onnx-v2-kv" && model.Backend != "onnx-v27-kv" && model.Backend != "baberu-int4" && model.Backend != "baberu-fp16" {
 			return result, fmt.Errorf("unsupported OCR backend %q", model.Backend)
 		}
 		if model.Group != "layout" && model.Group != "ocr" && model.Group != "translation" && model.Group != "restoration" {

@@ -201,3 +201,19 @@ func TestStalledBodyTimesOutAndPreservesPartial(t *testing.T) {
 		t.Fatalf("partial %q", data)
 	}
 }
+
+func TestPatchONNXReshape(t *testing.T) {
+	var output bytes.Buffer
+	src := []byte{9, 1, 33, 1, 4}
+	if err := patchONNXReshape(bytes.NewReader(src), &output, int64(len(src)), []int64{1, 3}); err != nil {
+		t.Fatal(err)
+	}
+	if !bytes.Equal(output.Bytes(), []byte{9, 0, 33, 0, 4}) {
+		t.Fatal("Unexpected patched bytes:", output.Bytes())
+	}
+	for _, offsets := range [][]int64{{}, {0}, {3, 1}, {1, 1}, {5}} {
+		if err := patchONNXReshape(bytes.NewReader(src), &bytes.Buffer{}, int64(len(src)), offsets); err == nil {
+			t.Fatal("Accepted invalid offsets:", offsets)
+		}
+	}
+}

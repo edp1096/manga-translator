@@ -22,7 +22,30 @@ static std::string random_hex(size_t bytes){auto data=secure_bytes(bytes);std::o
 static std::string job_id(){auto s=random_hex(16);s[12]='4';s[16]="89ab"[std::stoi(s.substr(16,1),nullptr,16)%4];return s.substr(0,8)+"-"+s.substr(8,4)+"-"+s.substr(12,4)+"-"+s.substr(16,4)+"-"+s.substr(20);}
 static void atomic_json(const fs::path&p,const json&j){atomic_job_json(p,j);}
 static bool token_equal(const std::string&a,const std::string&b){size_t diff=a.size()^b.size();for(size_t i=0;i<std::max(a.size(),b.size());++i)diff|=(i<a.size()?static_cast<unsigned char>(a[i]):0)^(i<b.size()?static_cast<unsigned char>(b[i]):0);return diff==0;}
+#ifdef MANGA_HAYAI_TRT
+#include "hayai_tensorrt_builder.hpp"
+#endif
 int run(int argc,char**argv){try{
+#ifdef MANGA_HAYAI_TRT
+ if(argc==5 && (std::string(argv[1])=="--build-hayai" || std::string(argv[1])=="--build-hayai-v21")){
+  const auto model=fs::absolute(fs::u8path(argv[2]));
+  const auto output=fs::absolute(fs::u8path(argv[3]));
+  hayai_trt::check(cudaSetDevice(std::stoi(argv[4])));
+  fs::current_path(model);
+  if (std::string(argv[1])=="--build-hayai-v21") {
+   using hayai_trt::Graph;
+   hayai_trt::build_plan("hayai_encoder.onnx",output/"encoder.plan",Graph::V21Encoder);
+   hayai_trt::build_plan("hayai_decoder_kv_prefill.onnx",output/"prefill.plan",Graph::V21Prefill);
+   hayai_trt::build_plan("hayai_decoder_kv_step.onnx",output/"decode.plan",Graph::V21Step);
+   hayai_trt::V21PageOcr verify(model,output);
+   return 0;
+  }
+  hayai_trt::build_plan("hayai_prefill.onnx",output/"prefill.plan");
+  hayai_trt::build_plan("hayai_decode.onnx",output/"decode.plan");
+  hayai_trt::PageOcr verify(model,output);
+  return 0;
+ }
+#endif
  require(argc==3&&std::string(argv[1])=="--root","Usage: manga-translator-server --root ABSOLUTE_DATA_DIRECTORY");fs::path root=fs::u8path(argv[2]);require(root.is_absolute(),"Data directory must be absolute");root=root.lexically_normal();
  auto config=read_json(root/"config/native_api.json");
 #ifdef _WIN32
@@ -78,7 +101,7 @@ const std::string listen_host=config.at("host");require(listen_host=="127.0.0.1"
  };
  server.set_pre_routing_handler([&](const httplib::Request&req,httplib::Response&res){auto origin=req.get_header_value("Origin");if(origin.rfind("chrome-extension://",0)==0){res.set_header("Access-Control-Allow-Origin",origin);res.set_header("Access-Control-Allow-Methods","GET,POST,OPTIONS");res.set_header("Access-Control-Allow-Headers","Authorization,Content-Type");res.set_header("Access-Control-Allow-Private-Network","true");res.set_header("Vary","Origin");}if(req.method=="OPTIONS"){res.status=204;return httplib::Server::HandlerResponse::Handled;}if(req.path.rfind("/api/",0)==0&&!token_equal(req.get_header_value("Authorization"),token)&&!device_authorized(req.get_header_value("Authorization"))){reply(res,{{"error","Invalid access token"}},401);return httplib::Server::HandlerResponse::Handled;}return httplib::Server::HandlerResponse::Unhandled;});
  server.set_exception_handler([&](const httplib::Request&,httplib::Response&res,std::exception_ptr ep){try{std::rethrow_exception(ep);}catch(const std::exception&e){reply(res,{{"error",std::string(e.what()).substr(0,1000)}},500);}catch(...){reply(res,{{"error","Internal error"}},500);}});
- server.Get("/health",[&](const httplib::Request&,httplib::Response&res){std::lock_guard<std::mutex> lock(mutex);reply(res,{{"ok",true},{"version","0.5.10-native"},{"native",true},{"jobLocksVersion",1},{"jobStore",jobs.u8string()},{"restorationBackend",config.value("inpaint_backend",std::string("onnx"))},{"restorationReady",bool(pipeline.resident_restorer)},{"active",active.size()+manual_active.load()},{"maxRssMiB",peak_rss_mib()},{"models",{{"layout",config.at("layout_model")},{"ocr",config.at("ocr_dir")},{"ocrBackend",config.value("ocr_backend",std::string("litert"))},{"translation",config.at("llm_model")}}}});});
+ server.Get("/health",[&](const httplib::Request&,httplib::Response&res){std::lock_guard<std::mutex> lock(mutex);reply(res,{{"ok",true},{"version","0.6.0-native"},{"native",true},{"pageOcrEngine",config.value("page_ocr_engine",std::string("default"))},{"jobLocksVersion",1},{"jobStore",jobs.u8string()},{"restorationBackend",config.value("inpaint_backend",std::string("onnx"))},{"restorationReady",bool(pipeline.resident_restorer)},{"active",active.size()+manual_active.load()},{"maxRssMiB",peak_rss_mib()},{"models",{{"layout",config.at("layout_model")},{"ocr",config.at("ocr_dir")},{"ocrBackend",config.value("ocr_backend",std::string("litert"))},{"translation",config.at("llm_model")}}}});});
  server.Post("/api/jobs",[&](const httplib::Request&req,httplib::Response&res){
   if(stopping){reply(res,{{"error","Server stopping"}},503);return;}
   if(!req.has_file("image")){reply(res,{{"error","Missing image"}},400);return;}
@@ -173,7 +196,7 @@ const std::string listen_host=config.at("host");require(listen_host=="127.0.0.1"
   if(action=="correct")reply(response,pipeline.correct_names(input.at("result"),dictionary));
   else reply(response,pipeline.suggest_name(input.at("source"),input.at("translation")));
  });
- server.Get("/api/ping",[&](const httplib::Request&,httplib::Response&res){reply(res,{{"ok",true},{"version","0.5.10-native"},{"manualDraftVersion",1}});});
+ server.Get("/api/ping",[&](const httplib::Request&,httplib::Response&res){reply(res,{{"ok",true},{"version","0.6.0-native"},{"manualDraftVersion",1}});});
  server.Post("/api/shutdown",[&](const httplib::Request&,httplib::Response&res){reply(res,{{"ok",true}});stop_requested=1;});
  std::signal(SIGINT,request_stop);std::signal(SIGTERM,request_stop);
 #ifdef _WIN32

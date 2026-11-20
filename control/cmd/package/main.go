@@ -107,7 +107,7 @@ func updateEngine(catalog *control.Catalog, bundle, platform, source string) err
 	catalog.Artifacts = append(catalog.Artifacts, control.Artifact{ID: "engine-" + platform, Name: "Manga 이미지 API", Group: "application", Platform: platform, URL: "embedded:engine/" + platform + ".gz", SHA256: sum(compressed), Size: int64(len(compressed)), Format: "gzip", Files: []control.OutputFile{{Path: "bin/manga-translator-server", SHA256: sum(data), Size: int64(len(data)), Executable: true}}})
 	return nil
 }
-func updateTorch(catalog *control.Catalog, bundle, platform, source string) error {
+func updateRuntimeBinary(catalog *control.Catalog, bundle, id, source string) error {
 	if source == "" {
 		return nil
 	}
@@ -126,9 +126,9 @@ func updateTorch(catalog *control.Catalog, bundle, platform, source string) erro
 	compressed := buffer.Bytes()
 	for i := range catalog.Artifacts {
 		a := &catalog.Artifacts[i]
-		if a.ID == "manga-lama-torch-native-"+platform {
+		if a.ID == id {
 			if !strings.HasPrefix(a.URL, "embedded:engine/") || len(a.Files) != 1 {
-				return fmt.Errorf("invalid Torch bridge catalog")
+				return fmt.Errorf("invalid embedded runtime catalog")
 			}
 			if err = write(filepath.Join(bundle, strings.TrimPrefix(a.URL, "embedded:")), compressed, 0644); err != nil {
 				return err
@@ -140,7 +140,7 @@ func updateTorch(catalog *control.Catalog, bundle, platform, source string) erro
 			return nil
 		}
 	}
-	return fmt.Errorf("missing Torch bridge catalog for %s", platform)
+	return fmt.Errorf("missing runtime catalog for %s", id)
 }
 
 func archive(app, path string, names []string) error {
@@ -261,6 +261,9 @@ func main() {
 	linuxX64 := flag.String("linux-x64-native", "", "optional rebuilt Linux AMD64 native server")
 	windows := flag.String("windows-native", "", "optional rebuilt Windows AMD64 native server")
 	torchWindows := flag.String("windows-torch", "", "optional rebuilt Windows LibTorch CUDA bridge")
+	trtWindows := flag.String("windows-tensorrt", "", "optional rebuilt Windows TensorRT page server")
+	trtX64 := flag.String("linux-x64-tensorrt", "", "optional rebuilt Linux AMD64 TensorRT page server")
+	trtARM := flag.String("linux-arm64-tensorrt", "", "optional rebuilt Linux ARM64 TensorRT page server")
 	torchARM := flag.String("linux-arm64-torch", "", "optional rebuilt Linux ARM64 LibTorch CUDA bridge")
 	output := flag.String("output", "", "release output folder (default: project/dist)")
 	flag.Parse()
@@ -287,8 +290,11 @@ func main() {
 	must(updateEngine(&catalog, bundle, "linux-arm64", *linux))
 	must(updateEngine(&catalog, bundle, "linux-amd64", *linuxX64))
 	must(updateEngine(&catalog, bundle, "windows-amd64", *windows))
-	must(updateTorch(&catalog, bundle, "windows-amd64", *torchWindows))
-	must(updateTorch(&catalog, bundle, "linux-arm64", *torchARM))
+	must(updateRuntimeBinary(&catalog, bundle, "manga-lama-torch-native-windows-amd64", *torchWindows))
+	must(updateRuntimeBinary(&catalog, bundle, "manga-lama-torch-native-linux-arm64", *torchARM))
+	must(updateRuntimeBinary(&catalog, bundle, "tensorrt-server-windows-amd64", *trtWindows))
+	must(updateRuntimeBinary(&catalog, bundle, "tensorrt-server-linux-amd64", *trtX64))
+	must(updateRuntimeBinary(&catalog, bundle, "tensorrt-server-linux-arm64", *trtARM))
 	data, err = json.MarshalIndent(catalog, "", "  ")
 	must(err)
 	must(write(filepath.Join(bundle, "catalog.json"), append(data, '\n'), 0644))

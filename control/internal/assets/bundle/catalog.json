@@ -121,9 +121,35 @@
       ],
       "path": "models/vadik82__hayai-ocr-v2-onnx/onnx",
       "id": "hayai-onnx-fp32-kv",
-      "name": "Hayai v2 · ONNX FP32 + KV",
+      "name": "Hayai v2.1 · ONNX FP32 + KV",
       "memoryGiB": 2,
       "note": "FP32 정밀도 · KV 캐시 · 한 글자 인식이 불안정할 때 Baberu로 재검증"
+    },
+    {
+      "backend": "onnx-v27-kv",
+      "group": "ocr",
+      "artifacts": [
+        "ocr-supernova-hayai-prefill-onnx",
+        "ocr-supernova-hayai-decode-onnx",
+        "ocr-supernova-hayai-onnx-config-json",
+        "ocr-supernova-pos-embedding-npy",
+        "ocr-supernova-tokenizer-json",
+        "ocr-baberu-license",
+        "ocr-baberu-readme-md",
+        "ocr-baberu-tokenizer-vocab-json",
+        "ocr-baberu-onnx-decoder-prefill-int8-onnx",
+        "ocr-baberu-onnx-decoder-step-int8-onnx",
+        "ocr-baberu-onnx-vision-int4-onnx"
+      ],
+      "dependencies": [
+        "ort",
+        "vcredist"
+      ],
+      "path": "models/hayai-v27-supernova-onnx",
+      "id": "hayai-supernova-fp32",
+      "name": "Hayai v2.7 Supernova · ONNX FP32 + KV",
+      "memoryGiB": 4,
+      "note": "고난도 글자·손글씨·효과음 인식 강화 · CPU, CUDA, DirectML · DirectML 호환 모델 자동 설치"
     },
     {
       "group": "translation",
@@ -553,9 +579,79 @@
       "additionalArtifacts": [
         "llama-cudart-linux-arm64"
       ]
+    },
+    {
+      "id": "tensorrt",
+      "version": "10.14.1",
+      "platform": "windows-amd64",
+      "artifact": "tensorrt-libs-windows-amd64",
+      "releaseUrl": "https://developer.nvidia.com/tensorrt",
+      "executable": "runtime/tensorrt/10.14.1/manga-translator-trt.exe",
+      "libraryDirs": [
+        "runtime/tensorrt/10.14.1"
+      ],
+      "family": "tensorrt",
+      "backend": "cuda",
+      "additionalArtifacts": [
+        "tensorrt-server-windows-amd64"
+      ]
+    },
+    {
+      "id": "tensorrt",
+      "version": "10.14.1",
+      "platform": "linux-arm64",
+      "artifact": "tensorrt-libs-linux-arm64",
+      "releaseUrl": "https://developer.nvidia.com/tensorrt",
+      "executable": "runtime/tensorrt/10.14.1/manga-translator-trt",
+      "libraryDirs": [
+        "runtime/tensorrt/10.14.1"
+      ],
+      "family": "tensorrt",
+      "backend": "cuda",
+      "additionalArtifacts": [
+        "tensorrt-server-linux-arm64"
+      ]
+    },
+    {
+      "id": "ort-cuda13",
+      "version": "1.31.0",
+      "platform": "linux-amd64",
+      "artifact": "ort-cuda13-linux-amd64",
+      "releaseUrl": "https://pypi.org/project/onnxruntime-gpu/1.31.0/",
+      "library": "runtime/onnxruntime-cuda13-1.31.0/libonnxruntime.so.1",
+      "libraryDirs": [
+        "runtime/onnxruntime-cuda13-1.31.0",
+        "runtime/cuda13/lib"
+      ],
+      "family": "ort",
+      "backend": "cuda",
+      "additionalArtifacts": [
+        "nvidia-cublas-linux-amd64",
+        "nvidia-cuda-runtime-linux-amd64",
+        "nvidia-curand-linux-amd64",
+        "nvidia-cudnn-cu13-linux-amd64",
+        "nvidia-cuda-nvrtc-linux-amd64",
+        "nvidia-nvjitlink-linux-amd64"
+      ]
+    },
+    {
+      "id": "tensorrt",
+      "version": "10.14.1",
+      "platform": "linux-amd64",
+      "artifact": "tensorrt-libs-linux-amd64",
+      "releaseUrl": "https://developer.nvidia.com/tensorrt",
+      "executable": "runtime/tensorrt/10.14.1/manga-translator-trt",
+      "libraryDirs": [
+        "runtime/tensorrt/10.14.1"
+      ],
+      "family": "tensorrt",
+      "backend": "cuda",
+      "additionalArtifacts": [
+        "tensorrt-server-linux-amd64"
+      ]
     }
   ],
-  "version": "0.5.10",
+  "version": "0.6.0",
   "artifacts": [
     {
       "id": "ort-linux-arm64",
@@ -725,14 +821,14 @@
       "group": "application",
       "platform": "linux-arm64",
       "url": "embedded:engine/linux-arm64.gz",
-      "sha256": "d2670395db09f934e596529d9944f06ee903abf25d3000f493aa5c70fbf5f9c7",
-      "size": 1587478,
+      "sha256": "fad3170c947bcd8b740e9214635ad1a21550f3b1607697064810241cae1a1478",
+      "size": 1597449,
       "format": "gzip",
       "files": [
         {
           "path": "bin/manga-translator-server",
-          "sha256": "7fcace7907c94a231ad3d7b4427056aa66f9fcd4e31f1c9f584e40ed5734d0de",
-          "size": 3450656,
+          "sha256": "b789e1c633852b6b73f9a62315b34d6aa5281449abe89ccf07430fef6d859012",
+          "size": 3453112,
           "executable": true
         }
       ]
@@ -1062,14 +1158,14 @@
       "group": "application",
       "platform": "windows-amd64",
       "url": "embedded:engine/windows-amd64.gz",
-      "sha256": "82b0456c28d665c0f4923b0fc7b4da4e7063698231435f90ec99600a3c345f00",
-      "size": 2452906,
+      "sha256": "3575eaa81647ae34313969faf37463d01042cd61282259a9c0924d5a9d32524a",
+      "size": 2461163,
       "format": "gzip",
       "files": [
         {
           "path": "bin/manga-translator-server.exe",
-          "sha256": "05368fe0915779bcc7965e6fc3c44a7ced4c4d8dcd31fd9d8f4d6dd2f1066f05",
-          "size": 7584163,
+          "sha256": "7c1009c1ebb690b340d73863700dcee127f5ac3e24d249caea6a65c41fd8d08b",
+          "size": 7602464,
           "executable": true
         }
       ]
@@ -1177,6 +1273,95 @@
       ],
       "patch": "koharu-768.patch",
       "patchSha256": "93fa7b78464b031a41d7b178932b2ae50a6ba6d2ff29a54524c0a6dd5f560237"
+    },
+    {
+      "id": "ocr-supernova-hayai-prefill-onnx",
+      "name": "Hayai v2.7 · hayai_prefill.onnx",
+      "group": "ocr",
+      "platform": "all",
+      "url": "https://huggingface.co/JustANormalTinkerer/hayai-ocr-v2.7-supernova-onnx/resolve/bc1e39f962b6c500a4855bd8eb4e02f11483bedb/hayai_prefill.onnx",
+      "sha256": "bf631e02b3bcf23d433aac3b179990dfba1fefa5be0be2847ce670c88ff81c90",
+      "size": 605520218,
+      "format": "onnx-reshape-patch",
+      "files": [
+        {
+          "path": "models/hayai-v27-supernova-onnx/hayai_prefill.onnx",
+          "sha256": "ee8acb5ff8d54bf2b599eb6ebef638b83fff7011d6e6d421ed06bfd8ca5b5c32",
+          "size": 605520218
+        }
+      ],
+      "patch": "supernova-prefill-reshape.json",
+      "patchSha256": "00eed1656f0f0370efd8e5ba603ba8b01e3b635f3938644639e8bf6b7b311403"
+    },
+    {
+      "id": "ocr-supernova-hayai-decode-onnx",
+      "name": "Hayai v2.7 · hayai_decode.onnx",
+      "group": "ocr",
+      "platform": "all",
+      "url": "https://huggingface.co/JustANormalTinkerer/hayai-ocr-v2.7-supernova-onnx/resolve/bc1e39f962b6c500a4855bd8eb4e02f11483bedb/hayai_decode.onnx",
+      "sha256": "20f0123101048a41cb2a188d8cf9253bff5773c8df0aaca208cfc78b0f58e76c",
+      "size": 248743239,
+      "format": "onnx-reshape-patch",
+      "files": [
+        {
+          "path": "models/hayai-v27-supernova-onnx/hayai_decode.onnx",
+          "sha256": "9635ea071c58abd8240efac6a6d95db223680ab49a69811bf14a7295f1d6ff73",
+          "size": 248743239
+        }
+      ],
+      "patch": "supernova-decode-reshape.json",
+      "patchSha256": "c9a7c3900c8fb64f8e69fae88cd957005517704212c72298dfd1d2ae0fea7e14"
+    },
+    {
+      "id": "ocr-supernova-hayai-onnx-config-json",
+      "name": "Hayai v2.7 · hayai_onnx_config.json",
+      "group": "ocr",
+      "platform": "all",
+      "url": "https://huggingface.co/JustANormalTinkerer/hayai-ocr-v2.7-supernova-onnx/resolve/bc1e39f962b6c500a4855bd8eb4e02f11483bedb/hayai_onnx_config.json",
+      "sha256": "f864080a1a5e77fc904165ec8891b13200007c0b674b6d97e2c3937c3400d600",
+      "size": 193,
+      "format": "raw",
+      "files": [
+        {
+          "path": "models/hayai-v27-supernova-onnx/hayai_onnx_config.json",
+          "sha256": "f864080a1a5e77fc904165ec8891b13200007c0b674b6d97e2c3937c3400d600",
+          "size": 193
+        }
+      ]
+    },
+    {
+      "id": "ocr-supernova-pos-embedding-npy",
+      "name": "Hayai v2.7 · pos_embedding.npy",
+      "group": "ocr",
+      "platform": "all",
+      "url": "https://huggingface.co/JustANormalTinkerer/hayai-ocr-v2.7-supernova-onnx/resolve/bc1e39f962b6c500a4855bd8eb4e02f11483bedb/pos_embedding.npy",
+      "sha256": "39f018f1ad06c8183d0eaa1531186b7241706678304f1bf50814604211ac1039",
+      "size": 786560,
+      "format": "raw",
+      "files": [
+        {
+          "path": "models/hayai-v27-supernova-onnx/pos_embedding.npy",
+          "sha256": "39f018f1ad06c8183d0eaa1531186b7241706678304f1bf50814604211ac1039",
+          "size": 786560
+        }
+      ]
+    },
+    {
+      "id": "ocr-supernova-tokenizer-json",
+      "name": "Hayai v2.7 · tokenizer.json",
+      "group": "ocr",
+      "platform": "all",
+      "url": "https://huggingface.co/JustANormalTinkerer/hayai-ocr-v2.7-supernova-onnx/resolve/bc1e39f962b6c500a4855bd8eb4e02f11483bedb/tokenizer.json",
+      "sha256": "f8a0a909c628a684fe463094614e236a8b1d3609e7770f77e7beafaf1056bf13",
+      "size": 1247253,
+      "format": "raw",
+      "files": [
+        {
+          "path": "models/hayai-v27-supernova-onnx/tokenizer.json",
+          "sha256": "f8a0a909c628a684fe463094614e236a8b1d3609e7770f77e7beafaf1056bf13",
+          "size": 1247253
+        }
+      ]
     },
     {
       "id": "gemma",
@@ -2371,14 +2556,14 @@
       "group": "application",
       "platform": "linux-amd64",
       "url": "embedded:engine/linux-amd64.gz",
-      "sha256": "98003a7d1224f71914ce5eba6ca61901704fea39fafcc0c153d77bcd15a0777d",
-      "size": 1672520,
+      "sha256": "b4085a047c4a021c1365fac8de78595c0055615f120642850eb61cfeb62a7366",
+      "size": 1681766,
       "format": "gzip",
       "files": [
         {
           "path": "bin/manga-translator-server",
-          "sha256": "b8dd0a01ebcf94503acd42fad04e8fb53519e7be6a75a371ab732f660b765881",
-          "size": 3857856,
+          "sha256": "2382954ceebd37d8567446afe12578f32886a73011ac1b129a0094d7ad514e11",
+          "size": 3879456,
           "executable": true
         }
       ]
@@ -4863,6 +5048,426 @@
           "size": 793872
         }
       ]
+    },
+    {
+      "id": "tensorrt-libs-windows-amd64",
+      "name": "NVIDIA TensorRT 10.14.1",
+      "group": "runtime",
+      "platform": "windows-amd64",
+      "url": "https://pypi.nvidia.com/tensorrt-cu13-libs/tensorrt_cu13_libs-10.14.1.48-py2.py3-none-win_amd64.whl",
+      "sha256": "24750993c33de7b31afeb1dc7934ae98a86ef50ffbc240648a06ba4b03504025",
+      "size": 1628839587,
+      "format": "zip",
+      "files": [
+        {
+          "entry": "tensorrt_libs/nvinfer_10.dll",
+          "path": "runtime/tensorrt/10.14.1/nvinfer_10.dll",
+          "sha256": "c9423f7e0f6c25aa881f027983f40d41a41a9c329d07289a00ddb3b4b05b888b",
+          "size": 373573744
+        },
+        {
+          "entry": "tensorrt_libs/nvinfer_builder_resource_sm89_10.dll",
+          "path": "runtime/tensorrt/10.14.1/nvinfer_builder_resource_sm89_10.dll",
+          "sha256": "9b9beb5be8f0c49fd3a3551c476d82a4c1cfbe1f8ef1d1bb09081d000abfe406",
+          "size": 180329584
+        },
+        {
+          "entry": "tensorrt_libs/nvinfer_plugin_10.dll",
+          "path": "runtime/tensorrt/10.14.1/nvinfer_plugin_10.dll",
+          "sha256": "e374f0b850c59827623d080fe9b2de8a84bf22324a86cca386b2018a5e2569fb",
+          "size": 45709936
+        },
+        {
+          "entry": "tensorrt_libs/nvonnxparser_10.dll",
+          "path": "runtime/tensorrt/10.14.1/nvonnxparser_10.dll",
+          "sha256": "40215b800e851032b5ef842d1c3bf35d3ef85da92623f88cc232ad08986aa798",
+          "size": 3069040
+        }
+      ]
+    },
+    {
+      "id": "tensorrt-server-windows-amd64",
+      "name": "Hayai TensorRT 페이지 API",
+      "group": "runtime",
+      "platform": "windows-amd64",
+      "url": "embedded:engine/tensorrt-server-windows-amd64.gz",
+      "sha256": "b39ca5fa01bb83b7f079185f5d52ef9161a726d037d53d5a57afac34beb987bf",
+      "size": 1221362,
+      "format": "gzip",
+      "files": [
+        {
+          "path": "runtime/tensorrt/10.14.1/manga-translator-trt.exe",
+          "sha256": "abd07414d6ab1fe4df40640c42af0e548a821c2fd94af77094bbb1550e997706",
+          "size": 2522112,
+          "executable": true
+        }
+      ]
+    },
+    {
+      "id": "tensorrt-libs-linux-arm64",
+      "name": "NVIDIA TensorRT 10.14.1",
+      "group": "runtime",
+      "platform": "linux-arm64",
+      "url": "https://pypi.nvidia.com/tensorrt-cu13-libs/tensorrt_cu13_libs-10.14.1.48-py2.py3-none-manylinux_2_35_aarch64.whl",
+      "sha256": "0eea1af9d92e2494d46c8998a3aa8ee66997f448b35baff4b33cd733b2f31152",
+      "size": 2516764275,
+      "format": "zip",
+      "files": [
+        {
+          "entry": "tensorrt_libs/libnvinfer.so.10",
+          "path": "runtime/tensorrt/10.14.1/libnvinfer.so.10",
+          "sha256": "0d582b9c363a713c868fc99bf5b68966f25b0225de942e02f0d721268de8b872",
+          "size": 828084712
+        },
+        {
+          "entry": "tensorrt_libs/libnvinfer_builder_resource_sm120.so.10.14.1",
+          "path": "runtime/tensorrt/10.14.1/libnvinfer_builder_resource_sm120.so.10.14.1",
+          "sha256": "d66feba67e0e6e3ce924539460c71e843dd94858e779633a6de710d98de0ca30",
+          "size": 265891016
+        },
+        {
+          "entry": "tensorrt_libs/libnvinfer_plugin.so.10",
+          "path": "runtime/tensorrt/10.14.1/libnvinfer_plugin.so.10",
+          "sha256": "f9376aa67cfa1432c4e6d4deb946e7bb974d0e4be7d8d22ea68bf6cfb10ea89a",
+          "size": 47987136
+        },
+        {
+          "entry": "tensorrt_libs/libnvonnxparser.so.10",
+          "path": "runtime/tensorrt/10.14.1/libnvonnxparser.so.10",
+          "sha256": "cf0b0275cab051d505b28ea438be1b69af6f9d2b211f9aec57de599bf1cd2cd3",
+          "size": 4079840
+        }
+      ]
+    },
+    {
+      "id": "tensorrt-server-linux-arm64",
+      "name": "Hayai TensorRT 페이지 API",
+      "group": "runtime",
+      "platform": "linux-arm64",
+      "url": "embedded:engine/tensorrt-server-linux-arm64.gz",
+      "sha256": "c3786d77cfe77124846745b7638ca63a7ae6dbd483109b2d045e08667dc338a8",
+      "size": 1519266,
+      "format": "gzip",
+      "files": [
+        {
+          "path": "runtime/tensorrt/10.14.1/manga-translator-trt",
+          "sha256": "1f170ec538d2f29e05ebcd0fed06caef44a0943edfa447b2752c1cab09906ee1",
+          "size": 3382200,
+          "executable": true
+        }
+      ]
+    },
+    {
+      "id": "ort-cuda13-linux-amd64",
+      "name": "ONNX Runtime 1.31.0 · CUDA 13",
+      "group": "runtime",
+      "platform": "linux-amd64",
+      "url": "https://files.pythonhosted.org/packages/8f/48/6fbfdbce25e5756c7b9ff8f40645d98b166b8022cf00ede58a2bb4571b8e/onnxruntime_gpu-1.31.0-cp312-cp312-manylinux_2_28_x86_64.whl",
+      "sha256": "b52998a075de27ff30e46a125001822541fa5b03f5d31398ab0e50789d80c51c",
+      "size": 255569162,
+      "format": "zip",
+      "files": [
+        {
+          "entry": "onnxruntime/LICENSE",
+          "path": "runtime/onnxruntime-cuda13-1.31.0/LICENSE",
+          "sha256": "2f07c72751aed99790b8a4869cf2311df85a860b22ded05fa22803587a48922c",
+          "size": 1073
+        },
+        {
+          "entry": "onnxruntime/ThirdPartyNotices.txt",
+          "path": "runtime/onnxruntime-cuda13-1.31.0/ThirdPartyNotices.txt",
+          "sha256": "143764b952fdb1a7c69ce653bfba74a7744d6a8a573bfb73e235fba356c83de3",
+          "size": 338088
+        },
+        {
+          "entry": "onnxruntime/capi/libonnxruntime.so.1.31.0",
+          "path": "runtime/onnxruntime-cuda13-1.31.0/libonnxruntime.so.1",
+          "sha256": "e4523eb2bbe9caf1a12e0aa9205909529193c05bf019e291d0edf75429116d39",
+          "size": 29421832
+        },
+        {
+          "entry": "onnxruntime/capi/libonnxruntime_providers_cuda.so",
+          "path": "runtime/onnxruntime-cuda13-1.31.0/libonnxruntime_providers_cuda.so",
+          "sha256": "4d52a8f54e74f5cc276cf03dcdeb7b4d5f6e517ea17de38e136283027b5b1c9a",
+          "size": 284014752
+        },
+        {
+          "entry": "onnxruntime/capi/libonnxruntime_providers_shared.so",
+          "path": "runtime/onnxruntime-cuda13-1.31.0/libonnxruntime_providers_shared.so",
+          "sha256": "086ec1d5388f64153d9c63470d126693db9a182c8ce236d3a1119068471b8a0d",
+          "size": 14632
+        }
+      ]
+    },
+    {
+      "id": "nvidia-cublas-linux-amd64",
+      "name": "nvidia-cublas 13.8.1.7",
+      "group": "runtime",
+      "platform": "linux-amd64",
+      "url": "https://files.pythonhosted.org/packages/eb/1b/adc70acf3fde509b1f0ca29d1c0e8d9b00aaecd871f8cf877257c8b68d9c/nvidia_cublas-13.8.1.7-py3-none-manylinux_2_27_x86_64.whl",
+      "sha256": "c11a27fd4379510e5b1f84b367a2514d1e52fe5cc13442117a0e0a1addee3cf2",
+      "size": 439315821,
+      "format": "zip",
+      "files": [
+        {
+          "entry": "nvidia/cu13/lib/libcublas.so.13",
+          "path": "runtime/cuda13/lib/libcublas.so.13",
+          "sha256": "0d381da85431cfe42c9741452d92233b085b08cf0f237d0db2f4e03adff8842f",
+          "size": 57594520
+        },
+        {
+          "entry": "nvidia/cu13/lib/libcublasLt.so.13",
+          "path": "runtime/cuda13/lib/libcublasLt.so.13",
+          "sha256": "5c4b539a1df9ce975e042c852bfc80f7a7e439873d9298d4f699a28f6db112c4",
+          "size": 545528240
+        },
+        {
+          "entry": "nvidia/cu13/lib/libnvblas.so.13",
+          "path": "runtime/cuda13/lib/libnvblas.so.13",
+          "sha256": "54252e24c03ad110580bd91271effa23c79531fb60a1f2570a90ee4c4555b209",
+          "size": 737960
+        },
+        {
+          "entry": "nvidia_cublas-13.8.1.7.dist-info/licenses/License.txt",
+          "path": "runtime/cuda13/licenses/nvidia-cublas-linux-arm64/License.txt",
+          "sha256": "ad6f5853fba0ca0d159d0f58d49ae49830c2f8c93f7a92648b9ce90adb4c6ccd",
+          "size": 59262
+        }
+      ]
+    },
+    {
+      "id": "nvidia-cuda-runtime-linux-amd64",
+      "name": "nvidia-cuda-runtime 13.4.92",
+      "group": "runtime",
+      "platform": "linux-amd64",
+      "url": "https://files.pythonhosted.org/packages/98/8a/3431271f6344874b8f1ac03f16b3d679c91493f8da63f716160403e6d0a0/nvidia_cuda_runtime-13.4.92-py3-none-manylinux2014_x86_64.manylinux_2_17_x86_64.whl",
+      "sha256": "9641f797da20ce1dd8e779b6e96d08cf9ba564cec8e8225458811ee26423f3a5",
+      "size": 2494438,
+      "format": "zip",
+      "files": [
+        {
+          "entry": "nvidia/cu13/lib/libcudart.so.13",
+          "path": "runtime/cuda13/lib/libcudart.so.13",
+          "sha256": "7fb00519a24512bf677b59e87921e5c05aac8246ceb6a57435c0d9dfeef364f6",
+          "size": 798496
+        },
+        {
+          "entry": "nvidia_cuda_runtime-13.4.92.dist-info/licenses/License.txt",
+          "path": "runtime/cuda13/licenses/nvidia-cuda-runtime-linux-arm64/License.txt",
+          "sha256": "ad6f5853fba0ca0d159d0f58d49ae49830c2f8c93f7a92648b9ce90adb4c6ccd",
+          "size": 59262
+        }
+      ]
+    },
+    {
+      "id": "nvidia-curand-linux-amd64",
+      "name": "nvidia-curand 10.4.4.72",
+      "group": "runtime",
+      "platform": "linux-amd64",
+      "url": "https://files.pythonhosted.org/packages/07/73/3ee8e5b4cb891401e603ffd3a59b35c6afe785fd2de123afe7c7029603dc/nvidia_curand-10.4.4.72-py3-none-manylinux_2_27_x86_64.whl",
+      "sha256": "25c3457ae7a224fdd484dab90b0fc5dc0e842fab5db3012afa4a5bd2af4eb7e5",
+      "size": 61498332,
+      "format": "zip",
+      "files": [
+        {
+          "entry": "nvidia/cu13/lib/libcurand.so.10",
+          "path": "runtime/cuda13/lib/libcurand.so.10",
+          "sha256": "21bb4e5731e8bc3f1656b9c51f4a56ebcd27c3173e6ee80b82a2b3c0c8bd2473",
+          "size": 126468312
+        },
+        {
+          "entry": "nvidia_curand-10.4.4.72.dist-info/licenses/License.txt",
+          "path": "runtime/cuda13/licenses/nvidia-curand-linux-arm64/License.txt",
+          "sha256": "ad6f5853fba0ca0d159d0f58d49ae49830c2f8c93f7a92648b9ce90adb4c6ccd",
+          "size": 59262
+        }
+      ]
+    },
+    {
+      "id": "nvidia-cudnn-cu13-linux-amd64",
+      "name": "nvidia-cudnn-cu13 9.27.0.42",
+      "group": "runtime",
+      "platform": "linux-amd64",
+      "url": "https://files.pythonhosted.org/packages/af/75/96ea5c5368eb595c39d629cde08a66227a864e71ccb0e593add2612bb952/nvidia_cudnn_cu13-9.27.0.42-py3-none-manylinux_2_27_x86_64.whl",
+      "sha256": "9677e76f21862eb5da7ee5ed69d544738b2d8b5c3ce7e5ec125c5592e6cdbdc8",
+      "size": 536771498,
+      "format": "zip",
+      "files": [
+        {
+          "entry": "nvidia/cudnn/lib/libcudnn.so.9",
+          "path": "runtime/cuda13/lib/libcudnn.so.9",
+          "sha256": "4c3ccb552ee0c43aacca7498e12914fbda31be4fcb52cbdc1aaa87e78fb96e19",
+          "size": 133336
+        },
+        {
+          "entry": "nvidia/cudnn/lib/libcudnn_adv.so.9",
+          "path": "runtime/cuda13/lib/libcudnn_adv.so.9",
+          "sha256": "a82503cddeb8560597ad01e33a12df1845e94cf1d548733b40db11c5f0fb40ef",
+          "size": 109169128
+        },
+        {
+          "entry": "nvidia/cudnn/lib/libcudnn_cnn.so.9",
+          "path": "runtime/cuda13/lib/libcudnn_cnn.so.9",
+          "sha256": "4ca0f1d4fbb79f3a428cf4c56b98001c3e02ee254793366a9b4dee6bd6688f38",
+          "size": 4203992
+        },
+        {
+          "entry": "nvidia/cudnn/lib/libcudnn_engines_precompiled.so.9",
+          "path": "runtime/cuda13/lib/libcudnn_engines_precompiled.so.9",
+          "sha256": "0edc16383897f60dd4466776d2421d5351e023fd2950ac62bf5cf68ee399f42b",
+          "size": 272654912
+        },
+        {
+          "entry": "nvidia/cudnn/lib/libcudnn_engines_runtime_compiled.so.9",
+          "path": "runtime/cuda13/lib/libcudnn_engines_runtime_compiled.so.9",
+          "sha256": "334022cd6b47115ced9e3a289963d204705abfccefec052fd85234cb1d0e6355",
+          "size": 44075680
+        },
+        {
+          "entry": "nvidia/cudnn/lib/libcudnn_engines_tensor_ir.so.9",
+          "path": "runtime/cuda13/lib/libcudnn_engines_tensor_ir.so.9",
+          "sha256": "4b47408d368863e5f37aeb019d8a05224213cf74335ce3ca6a8ba11d39ce70b3",
+          "size": 216026256
+        },
+        {
+          "entry": "nvidia/cudnn/lib/libcudnn_ext.so.9",
+          "path": "runtime/cuda13/lib/libcudnn_ext.so.9",
+          "sha256": "baa699ebf17baa1bdb9c1720c373329a9caaab35d1050148d427186e1c7a7a00",
+          "size": 8402008
+        },
+        {
+          "entry": "nvidia/cudnn/lib/libcudnn_graph.so.9",
+          "path": "runtime/cuda13/lib/libcudnn_graph.so.9",
+          "sha256": "67df1f319154780e3ac7ef606d838c142b96f9c1b77e0ec95d7a5139d16e2800",
+          "size": 134437112
+        },
+        {
+          "entry": "nvidia/cudnn/lib/libcudnn_heuristic.so.9",
+          "path": "runtime/cuda13/lib/libcudnn_heuristic.so.9",
+          "sha256": "a24474ae86db461aa5ab7cc2470fb9b88e09449d8bd6a8bba5d26eff20db2e29",
+          "size": 96473904
+        },
+        {
+          "entry": "nvidia/cudnn/lib/libcudnn_ops.so.9",
+          "path": "runtime/cuda13/lib/libcudnn_ops.so.9",
+          "sha256": "d301a6ffb44b5d8cf04f67f3b49037e1a31801a5365892b03b74f171deba19e2",
+          "size": 39855912
+        },
+        {
+          "entry": "nvidia_cudnn_cu13-9.27.0.42.dist-info/licenses/License.txt",
+          "path": "runtime/cuda13/licenses/nvidia-cudnn-cu13-linux-arm64/License.txt",
+          "sha256": "49cf79bdb35734b52fe6203013b3bd759f81e998cd32aa2c65c51db9a88c61d2",
+          "size": 18174
+        }
+      ]
+    },
+    {
+      "id": "nvidia-cuda-nvrtc-linux-amd64",
+      "name": "nvidia-cuda-nvrtc 13.4.92",
+      "group": "runtime",
+      "platform": "linux-amd64",
+      "url": "https://files.pythonhosted.org/packages/56/9c/1342ebb460ce2afd014ec5a002adc99108e3c53a6b70f399cf64dd1f267d/nvidia_cuda_nvrtc-13.4.92-py3-none-manylinux2010_x86_64.manylinux_2_12_x86_64.whl",
+      "sha256": "5ce8c97b00b232c4f50c8c4b5a3b68cafee08bdb82ea86f2052ff01d03194f4a",
+      "size": 53301733,
+      "format": "zip",
+      "files": [
+        {
+          "entry": "nvidia/cu13/lib/libnvrtc-builtins.so.13.4",
+          "path": "runtime/cuda13/lib/libnvrtc-builtins.so.13.4",
+          "sha256": "86414f3c350953a8a09de5eca9b9e8fe919d6289426c5ba9dbab365a3fe827d6",
+          "size": 7108552
+        },
+        {
+          "entry": "nvidia/cu13/lib/libnvrtc.so.13",
+          "path": "runtime/cuda13/lib/libnvrtc.so.13",
+          "sha256": "d8f82e7019fe990bcd9efe4c5c444c036ddf2d5df95090d3965ae62be2009a2c",
+          "size": 126425752
+        },
+        {
+          "entry": "nvidia_cuda_nvrtc-13.4.92.dist-info/licenses/License.txt",
+          "path": "runtime/cuda13/licenses/nvidia-cuda-nvrtc-linux-arm64/License.txt",
+          "sha256": "ad6f5853fba0ca0d159d0f58d49ae49830c2f8c93f7a92648b9ce90adb4c6ccd",
+          "size": 59262
+        }
+      ]
+    },
+    {
+      "id": "nvidia-nvjitlink-linux-amd64",
+      "name": "nvidia-nvjitlink 13.4.92",
+      "group": "runtime",
+      "platform": "linux-amd64",
+      "url": "https://files.pythonhosted.org/packages/1d/6b/eef7a9e32872b8f41e145bf10cddc9af26e153c338852811fe9a9baddf9e/nvidia_nvjitlink-13.4.92-py3-none-manylinux2010_x86_64.manylinux_2_12_x86_64.whl",
+      "sha256": "e0391f24ed94ec879b84e3da4d4ec320c879aff681f2c7a638462f7199284323",
+      "size": 42452378,
+      "format": "zip",
+      "files": [
+        {
+          "entry": "nvidia/cu13/lib/libnvJitLink.so.13",
+          "path": "runtime/cuda13/lib/libnvJitLink.so.13",
+          "sha256": "3afdb9677477dd584d3712a9bf2978d085729f0ed6e6432027e925d1e312e3c9",
+          "size": 103602848
+        },
+        {
+          "entry": "nvidia_nvjitlink-13.4.92.dist-info/licenses/License.txt",
+          "path": "runtime/cuda13/licenses/nvidia-nvjitlink-linux-arm64/License.txt",
+          "sha256": "ad6f5853fba0ca0d159d0f58d49ae49830c2f8c93f7a92648b9ce90adb4c6ccd",
+          "size": 59262
+        }
+      ]
+    },
+    {
+      "id": "tensorrt-libs-linux-amd64",
+      "name": "NVIDIA TensorRT 10.14.1",
+      "group": "runtime",
+      "platform": "linux-amd64",
+      "url": "https://pypi.nvidia.com/tensorrt-cu13-libs/tensorrt_cu13_libs-10.14.1.48-py2.py3-none-manylinux_2_28_x86_64.whl",
+      "sha256": "93c488ebb5a30ff83ea53603e7818014de5b9328fb24965963d2368140765076",
+      "size": 3437501664,
+      "format": "zip",
+      "files": [
+        {
+          "entry": "tensorrt_libs/libnvinfer.so.10",
+          "path": "runtime/tensorrt/10.14.1/libnvinfer.so.10",
+          "sha256": "71e3f329437415ad059ff20094eec0bdfc81ccd394a89bbe9c50e67d1e9eb811",
+          "size": 634213104
+        },
+        {
+          "entry": "tensorrt_libs/libnvinfer_builder_resource_sm89.so.10.14.1",
+          "path": "runtime/tensorrt/10.14.1/libnvinfer_builder_resource_sm89.so.10.14.1",
+          "sha256": "173c4b50a0f0e37997f71a67c5b0ec8271ece1ad8befe09cd3ae3a3b3d47fd3e",
+          "size": 184584088
+        },
+        {
+          "entry": "tensorrt_libs/libnvinfer_plugin.so.10",
+          "path": "runtime/tensorrt/10.14.1/libnvinfer_plugin.so.10",
+          "sha256": "3323274087103a6f606d5e78d36096c32ec9477a8f71a01037dce59ce55d13d5",
+          "size": 46853000
+        },
+        {
+          "entry": "tensorrt_libs/libnvonnxparser.so.10",
+          "path": "runtime/tensorrt/10.14.1/libnvonnxparser.so.10",
+          "sha256": "d54f9c978cdbbe096a28aa6b243e5113e57e4122a0b4733a341cc3e3148fa686",
+          "size": 4703304
+        }
+      ]
+    },
+    {
+      "id": "tensorrt-server-linux-amd64",
+      "name": "Hayai TensorRT 페이지 API",
+      "group": "runtime",
+      "platform": "linux-amd64",
+      "url": "embedded:engine/tensorrt-server-linux-amd64.gz",
+      "sha256": "931ecb50fa921009451945249e9066c8365fc00efafab5277da86bbb9962e6dc",
+      "size": 1702015,
+      "format": "gzip",
+      "files": [
+        {
+          "path": "runtime/tensorrt/10.14.1/manga-translator-trt",
+          "sha256": "0162b12a04dc834a8409c640913b2dfd81699be29329ecf7d767f929f34d64d5",
+          "size": 3927352,
+          "executable": true
+        }
+      ]
     }
   ],
   "licenses": [
@@ -4879,6 +5484,11 @@
     {
       "name": "Hayai OCR",
       "url": "https://huggingface.co/JustANormalTinkerer/hayai-ocr-v2-tflite",
+      "license": "Apache-2.0"
+    },
+    {
+      "name": "Hayai v2.7 Supernova ONNX",
+      "url": "https://huggingface.co/JustANormalTinkerer/hayai-ocr-v2.7-supernova-onnx",
       "license": "Apache-2.0"
     },
     {
@@ -4945,6 +5555,11 @@
       "name": "AnimeMangaInpainting · original model",
       "url": "https://huggingface.co/dreMaz/AnimeMangaInpainting",
       "license": "MIT (model card)"
+    },
+    {
+      "name": "NVIDIA TensorRT",
+      "url": "https://docs.nvidia.com/deeplearning/tensorrt/latest/reference/eula.html",
+      "license": "NVIDIA TensorRT Software License Agreement"
     }
   ]
 }

@@ -25,6 +25,9 @@ type ExecutionProfile struct {
 }
 
 func (m *Manager) validateExecution(s Settings) error {
+	if s.PageOCR != "" && (s.PageOCR != "tensorrt" || (s.OCR != "hayai-supernova-fp32" && s.OCR != "hayai-onnx-fp32-kv") || execution(s.OCRExecution) == "cpu" || s.LLMExecution != "cuda" || m.runtimeByID("tensorrt") == nil) {
+		return fmt.Errorf("선택한 구성은 TensorRT 페이지 OCR을 지원하지 않습니다")
+	}
 	if s.RestorationBackend != "" && s.RestorationBackend != "onnx" && s.RestorationBackend != "libtorch" {
 		return fmt.Errorf("지원하지 않는 복원 실행 방식")
 	}
@@ -77,10 +80,11 @@ func (m *Manager) executionProfiles() []ExecutionProfile {
 }
 
 func (m *Manager) executionProfilesFor(hardware HardwareInfo) []ExecutionProfile {
-	base := Settings{Layout: "koharu-768", OCR: "hayai-int8", Model: "plamo-08b", ThreadsAuto: true, Threads: detectedCPU().RecommendedThreads, LLMExecution: "cpu", LayoutExecution: "cpu", OCRExecution: "cpu", Profile: "cpu"}
+	base := Settings{RestorationBackend: "onnx", Layout: "koharu-768", OCR: "hayai-int8", Model: "plamo-08b", ThreadsAuto: true, Threads: detectedCPU().RecommendedThreads, LLMExecution: "cpu", LayoutExecution: "cpu", OCRExecution: "cpu", Profile: "cpu"}
 	profiles := []ExecutionProfile{{ID: "cpu", Name: "CPU · 저메모리", Note: "Koharu 768 / Hayai INT8 / PLaMo 0.8B · 성능 코어 기준 자동 스레드", Recommended: true, Settings: base}}
 	if m.runtimeByID("llama-vulkan") != nil {
 		gpu := base
+		gpu.RestorationBackend = ""
 		gpu.Model = "gemma"
 		gpu.Profile = "gpu-mixed"
 		gpu.LLMExecution = "vulkan"
@@ -97,14 +101,15 @@ func (m *Manager) executionProfilesFor(hardware HardwareInfo) []ExecutionProfile
 			gpu.OCR = "hayai-onnx-fp32-kv"
 			gpu.LayoutExecution = backend
 			gpu.OCRExecution = backend
-			profiles = append(profiles, ExecutionProfile{ID: gpu.Profile, Name: "GPU · Gemma E2B", Note: "탐지·OCR·번역을 GPU로 실행 · Hayai FP32 + 작은 번역 모델", Settings: gpu})
+			profiles = append(profiles, ExecutionProfile{ID: gpu.Profile, Name: "GPU · Gemma E2B", Note: "탐지·OCR·번역을 GPU로 실행 · Hayai v2.1 FP32 + 작은 번역 모델", Settings: gpu})
 			gpu.Profile = "gpu-12gb"
 			gpu.Model = "gemma-e4b"
-			profiles = append(profiles, ExecutionProfile{ID: gpu.Profile, Name: "GPU · Gemma E4B", Note: "Hayai FP32 + 큰 번역 모델 · VRAM 8GB급 권장 (사용 환경에 따라 차이)", VRAMGiB: 8, Settings: gpu})
+			profiles = append(profiles, ExecutionProfile{ID: gpu.Profile, Name: "GPU · Gemma E4B", Note: "Hayai v2.1 FP32 + 큰 번역 모델 · VRAM 8GB급 권장 (사용 환경에 따라 차이)", VRAMGiB: 8, Settings: gpu})
 			if m.modelByID("gemma-12b-qat") != nil {
 				gpu.Profile = "gpu-12b-qat"
 				gpu.Model = "gemma-12b-qat"
-				profiles = append(profiles, ExecutionProfile{ID: gpu.Profile, Name: "GPU · Gemma 12B QAT", Note: "Hayai FP32 + 12B QAT · VRAM 12GB급 이상", VRAMGiB: 12, MemoryRequired: true, Settings: gpu})
+				gpu.OCR = "hayai-supernova-fp32"
+				profiles = append(profiles, ExecutionProfile{ID: gpu.Profile, Name: "GPU · Gemma 12B QAT", Note: "Hayai v2.7 Supernova FP32 + 12B QAT · VRAM 12GB급 이상", VRAMGiB: 12, MemoryRequired: true, Settings: gpu})
 			}
 		}
 	}
@@ -124,6 +129,15 @@ func (m *Manager) executionProfilesFor(hardware HardwareInfo) []ExecutionProfile
 			s.LLMExecution = "cuda"
 			if g, err := selectedGPU(s, gpus); err == nil {
 				s.GPU = g.ID
+				if m.runtimeByID("tensorrt") != nil && measuredTensorRTOCR(m.platform, s.OCR, g) {
+					s.PageOCR = "tensorrt"
+					profiles[i].Note += " · 페이지 OCR TensorRT FP32"
+					s.RestorationBackend = "onnx"
+					if s.Profile == "gpu-12b-qat" {
+						s.RestorationBackend = "libtorch"
+						profiles[i].Note += " · Manga LaMa LibTorch CUDA"
+					}
+				}
 				profiles[i].Settings = s
 				profiles[i].Note = strings.ReplaceAll(profiles[i].Note, "Vulkan", "CUDA") + " · 번역 CUDA"
 				if model := m.modelByID(s.Model); model != nil && model.LLM != nil && model.LLM.DraftBackend == "cuda" {

@@ -23,6 +23,8 @@ func TestRemoteControlAccess(t *testing.T) {
 		path, token, peer string
 		allowed           bool
 	}{
+		{"/appearance.js", "", "192.168.1.8:1234", true},
+		{"/assets/other.js", "", "192.168.1.8:1234", false},
 		{"/api/state", "", "192.168.1.8:1234", false},
 		{"/api/state", strings.TrimSpace(string(api)), "192.168.1.8:1234", false},
 		{"/api/library", strings.TrimSpace(string(api)), "192.168.1.8:1234", true},

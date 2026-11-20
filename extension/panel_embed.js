@@ -24,16 +24,17 @@
     host=document.createElement('div');
     host.dataset.mangaTranslatorPanel='page';
     host.setAttribute('role','complementary');host.setAttribute('aria-label','Manga Translator');
-    host.style.cssText='all:initial!important;position:fixed!important;top:0!important;bottom:0!important;height:100dvh!important;max-width:calc(100vw - 16px)!important;z-index:2147483645!important;display:block!important;visibility:visible!important;opacity:1!important;color:#19232f!important;font:15px/1.6 system-ui,sans-serif!important;color-scheme:light!important;';
+    host.style.cssText='all:initial!important;position:fixed!important;top:0!important;bottom:0!important;height:100dvh!important;max-width:calc(100vw - 16px)!important;z-index:2147483645!important;display:block!important;visibility:visible!important;opacity:1!important;color:light-dark(#19232f,#ecf1f3)!important;font:15px/1.6 system-ui,sans-serif!important;';
+    MangaAppearance.attach(host);
     root=host.attachShadow({mode:'closed'});
     const style=document.createElement('style');
     style.textContent=options.css+'\n'+[...parsed.querySelectorAll('style')].map(node=>node.textContent).join('\n')+`
-      :host{color:#19232f;font:15px/1.6 system-ui,sans-serif;color-scheme:light}
-      .page-titlebar{height:42px;display:flex;align-items:center;gap:6px;padding:3px 10px;background:#eef2f5;border-bottom:1px solid #ccd5dc;box-shadow:-3px 0 10px #0002}
+      :host{font:15px/1.6 system-ui,sans-serif}
+      .page-titlebar{height:42px;display:flex;align-items:center;gap:6px;padding:3px 10px;background:light-dark(#eef2f5,var(--night-raised));border-bottom:1px solid light-dark(#ccd5dc,var(--night-line));box-shadow:-3px 0 10px #0002}
       .page-titlebar strong{flex:1;font-size:14px}.page-titlebar button{padding:2px 10px;font-size:18px}
       main{height:calc(100dvh - 42px);width:100%;max-width:none;box-shadow:-3px 0 10px #0002}
       #list-scroll{overscroll-behavior:contain}.page-resize{position:absolute;top:42px;bottom:0;width:6px;cursor:ew-resize;touch-action:none}
-      .page-resize:focus-visible{background:#125c69}
+      .page-resize:focus-visible{background:light-dark(#125c69,var(--night-accent))}
     `;
     const titlebar=document.createElement('header');titlebar.className='page-titlebar';
     const title=document.createElement('strong');title.textContent='Manga Translator';
