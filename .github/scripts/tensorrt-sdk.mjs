@@ -1,3 +1,4 @@
+import { extractTar } from './extract-tar.mjs';
 import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
@@ -34,7 +35,7 @@ export async function tensorrtSDK(source,work,platform) {
     const folder=component+'-'+arch+'-13.0.48-archive';
     const name=folder+(win?'.zip':'.tar.xz'), file=path.join(work,name);
     await download(file,'https://developer.download.nvidia.com/compute/cuda/redist/'+component+'/'+arch+'/'+name,digest);
-    run('tar',['-xf',file,'-C',work]);
+    extractTar(file,work);
     cuda[component]=path.join(work,folder);
   }
   let trt;
@@ -42,7 +43,7 @@ export async function tensorrtSDK(source,work,platform) {
     const manifest=JSON.parse(fs.readFileSync(new URL('./tensorrt-windows-sdk.json',import.meta.url)));
     const archive=path.join(work,'trt-sdk.zip');
     await download(archive,manifest.source);
-    run('tar',['-xf',archive,'-C',sdk,...Object.keys(manifest.files)]);
+    extractTar(archive,sdk,Object.keys(manifest.files));
     for (const [entry,digest] of Object.entries(manifest.files)) await verify(path.join(sdk,entry),digest);
     trt=path.join(sdk,'TensorRT-10.14.1.48');
   } else {

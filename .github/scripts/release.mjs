@@ -2,6 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
 import { execFileSync, spawnSync } from 'node:child_process';
+import { extractTar } from './extract-tar.mjs';
 import { assertWindowsGUI } from './windows-gui.mjs';
 const [mode, ...args] = process.argv.slice(2);
 const read = p => JSON.parse(fs.readFileSync(p, 'utf8'));
@@ -24,11 +25,9 @@ async function dependency(work, name, url, sha) {
   const archive = path.join(work, name);
   run('curl', ['--fail', '--location', '--retry', '5', '--connect-timeout', '30', '--max-time', '600', '--output', archive, url]);
   assert(hash(archive) === sha, `${name}: SHA256 mismatch`);
-  if (name.endsWith('.zip') || name.endsWith('.whl') || name.endsWith('.nupkg')) {
-    if (process.platform === 'win32') run(path.join(process.env.SystemRoot || 'C:/Windows', 'System32', 'tar.exe'), ['-xf', archive, '-C', work]);
-    else run('unzip', ['-q', archive, '-d', work]);
-  }
-  else run('tar', ['-xzf', archive, '-C', work]);
+  const zip = /\.(zip|whl|nupkg)$/.test(name);
+  if (zip && process.platform !== 'win32') run('unzip', ['-q', archive, '-d', work]);
+  else extractTar(archive, work);
 }
 if (mode === 'version') {
   console.log(version(path.resolve(args[0]), args[1]));
