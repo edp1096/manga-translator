@@ -110,6 +110,27 @@ chrome.storage?.onChanged?.addListener((changes,area)=>{if(area!=='local')return
 const status=t=>message=t;
 const updateRow=()=>{};
 function urlOf(img){return img.currentSrc||img.getAttribute('data-src')||img.getAttribute('data-original')||img.src;}
+function currentPageKey(){
+ if(!entries.length||scannedURL!==pageIdentity())return null;
+ if(reader){
+  const entry=entries[reader.currentIndex()];
+  if(entry?.readerPage){
+   const node=reader.element(entry.readerPage),r=node?.getBoundingClientRect();
+   if(r&&r.width>0&&r.height>0&&r.right>0&&r.bottom>0&&r.left<innerWidth&&r.top<innerHeight&&node.checkVisibility({visibilityProperty:true}))return entry.key;
+  }
+ }
+ let best=null,area=0;
+ for(const entry of entries){
+  const node=entry.img;if(!node?.isConnected||(!entry.readerPage&&urlOf(node)!==entry.sourceURL))continue;
+  const r=node.getBoundingClientRect();
+  const width=Math.min(r.right,innerWidth)-Math.max(r.left,0);
+  const height=Math.min(r.bottom,innerHeight)-Math.max(r.top,0);
+  if(width>0&&height>0&&width*height>area&&node.checkVisibility({visibilityProperty:true})){
+   area=width*height;best=entry.key;
+  }
+ }
+ return best;
+}
 function snapshot(){return {message,running,editing:editOpening||entries.some(e=>e.applyingEdit),nameMessage,nameBusy,displayMode,outsideTextMode,lightweightDisplay,forceTooltipRestoration,displayBusy:displayBusy||!!displayTask,displayMessage,displayPaused,forceFailures:forceTooltipRestoration&&!lightweightDisplay?entries.reduce((n,e)=>n+(e.forceFailed||0),0):0,pageURL:location.href,pageIdentity:pageIdentity(),reader:reader?.name,items:entries.map(e=>({key:e.key,index:e.index,sourceURL:e.sourceURL||urlOf(e.img),state:e.state,done:!!e.result&&(!e.result.manualDraft||e.result.regions.some(r=>r.translation?.trim())),error:e.error,preview:e.readerPage?(e.readerPreview||MangaReaders.placeholder(e.index)):(e.sourceURL||urlOf(e.img)),title:e.title||e.img?.alt||`이미지 ${e.index+1}`,sourceWarnings:e.result?.ocrWarnings||[],width:e.readerWidth||e.img?.naturalWidth||e.img?.width||0,height:e.readerHeight||e.img?.naturalHeight||e.img?.height||0}))};}
 function readerScan(options={}){
  const previous=new Map(entries.map(e=>[e.sourceURL,e]));
@@ -507,7 +528,9 @@ chrome.runtime.onMessage.addListener((m,s,reply)=>{
     return {data,kind,warning,state:e.state};
    }
    if(m.action==='edit')await openEditor(m.key);
-   return snapshot();
+   const state=snapshot();
+   if(m.action==='status'&&m.followPage===true)state.currentPageKey=currentPageKey();
+   return state;
   })().then(reply,e=>reply({error:e.message}));return true;
  }
  if(m.type==='getEditState'){

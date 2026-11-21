@@ -40,6 +40,12 @@ function browserImage(url,referrer){
 }
 const pageCacheKey=url=>'page:'+MangaReaders.pageIdentity(url);
 async function nameContext(url,target){const saved=await chrome.storage.local.get('nameWorks'),works=saved.nameWorks||[];target=target||(await settings()).target;return {works,target,work:url?MangaNames.forURL(works,url,target):null};}
+async function checkDialectSupport(dictionary){
+ if(!dictionary?.dialects)return;
+ const info=await(await api('/api/ping')).json();
+ if(info.dialectMapping!==true)throw Error(info.dialectMapping===false?'작품의 사투리 설정을 사용하려면 번역 모델을 Gemma로 바꾸거나 사투리 설정을 해제하세요.':'사투리 번역을 지원하는 최신 관리 앱과 API를 실행하세요.');
+ if(dictionary.dialects.any==='auto'&&!info.automaticDialect)throw Error('사투리 자동 선택을 지원하는 최신 관리 앱과 API를 실행하세요.');
+}
 async function nameTargets(url){const context=await nameContext(url);if(!context.work)return [];const stored=await MangaJobCache.pages(),server=(await settings()).server;return Object.entries(stored).filter(([key,value])=>key.startsWith('page:')&&value?.server===server&&Date.now()-value.updated<86400000&&MangaNames.forURL(context.works,key.slice(5),context.target)?.id===context.work.id).flatMap(([key,value])=>(value.items||[]).filter(item=>item.result&&!item.pendingJob&&(item.result.target||'Korean')===context.target).map(item=>({cacheKey:key,pageURL:key.slice(5),sourceURL:item.sourceURL,key:item.key,id:item.id,result:item.result})));}
 function rememberNameTarget(msg,sender){const task=cacheWrites.catch(()=>{}).then(async()=>{const context=await nameContext(sender.tab?.url||'');if(!context.work||MangaNames.forURL(context.works,msg.target.pageURL,context.target)?.id!==context.work.id||(msg.target.result?.target||'Korean')!==context.target||(msg.result?.target||'Korean')!==context.target)throw Error('다른 작품의 결과에는 적용할 수 없습니다.');const key=pageCacheKey(msg.target.pageURL),saved=(await chrome.storage.local.get(key))[key];if(saved?.server!==(await settings()).server)return false;const item=saved.items?.find(item=>item.id===msg.target.id&&item.sourceURL===msg.target.sourceURL);if(!item||JSON.stringify(item.result)!==JSON.stringify(msg.target.result))return false;item.result=msg.result;item.updated=Date.now();saved.updated=Date.now();await MangaLibrary.remember(item);await MangaJobCache.writePage(key,saved).catch(error=>console.warn('명칭 표시 캐시:',error.message));const tabs=await chrome.tabs.query({});for(const tab of tabs)if(tab.id!==sender.tab?.id&&tab.url&&pageCacheKey(tab.url)===key)chrome.tabs.sendMessage(tab.id,{type:'namesApplied',id:item.id,sourceURL:item.sourceURL,before:msg.target.result,result:msg.result}).catch(()=>{});return true;});cacheWrites=task;return task;}
 let nameWrites=Promise.resolve();
@@ -103,7 +109,7 @@ chrome.runtime.onMessage.addListener((msg,sender,respond)=>{
       }
       case 'control':{
         if(!Number.isInteger(msg.tabId)||msg.tabId<0)throw Error('만화 페이지를 선택한 뒤 새로고침을 눌러주세요.');
-        const command={type:'control',action:msg.action,keys:msg.keys,key:msg.key,sourceURL:msg.sourceURL,mode:msg.mode,enabled:msg.enabled,scope:msg.scope};
+        const command={type:'control',action:msg.action,followPage:msg.followPage===true,keys:msg.keys,key:msg.key,sourceURL:msg.sourceURL,mode:msg.mode,enabled:msg.enabled,scope:msg.scope};
         if(msg.action==='locate')await chrome.tabs.update(msg.tabId,{active:true});
         try{return await chrome.tabs.sendMessage(msg.tabId,command);}
         catch(error){
@@ -141,9 +147,10 @@ chrome.runtime.onMessage.addListener((msg,sender,respond)=>{
         if(msg.type==='createDraft'&&(await(await api('/api/ping')).json()).manualDraftVersion!==1)throw Error('번역 전 편집을 지원하는 최신 관리 앱으로 실행하세요.');
         const blob=await (await fetch(msg.data)).blob(), form=new FormData();
         const options=await settings(),target=options.target,context=await nameContext(sender.tab?.url||'',target),dictionary=MangaNames.dictionary(context.work);
+        if(msg.type==='submit')await checkDialectSupport(dictionary);
         form.append('contextFonts',String(target==='Korean'&&!options.lightweightDisplay));form.append('image',blob,'page.png');form.append('target',target);form.append('pageURL',(sender.tab?.url||'').slice(0,8192));form.append('title',(sender.tab?.title||'').slice(0,1024));if(typeof msg.sourceURL==='string'&&msg.sourceURL.length<=8192)form.append('sourceURL',msg.sourceURL);if(Number.isInteger(msg.page)&&msg.page>0)form.append('page',String(msg.page));
         if(msg.type==='createDraft')form.append('draft','true');
-        if(dictionary?.entries.length)form.append('dictionary',JSON.stringify(dictionary));
+        if(dictionary?.entries.length||dictionary?.dialects)form.append('dictionary',JSON.stringify(dictionary));
         return (await api('/api/jobs',{method:'POST',body:form})).json();
       }
       case 'status':return (await api(`/api/jobs/${msg.id}`)).json();
@@ -155,6 +162,7 @@ chrome.runtime.onMessage.addListener((msg,sender,respond)=>{
         let pageURL=saved.pageURL;
         if(!pageURL)try{pageURL=(await chrome.tabs.get(saved.tabId)).url;}catch{}
         if(pageURL){const context=await nameContext(pageURL,saved.result?.target||'Korean');payload.dictionary=MangaNames.dictionary(context.work);}
+        await checkDialectSupport(payload.dictionary);
         return (await api(`/api/jobs/${msg.id}/recognize-region`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload),timeout:240000})).json();
       }
       case 'manualRestoration':return (await api(`/api/jobs/${msg.id}/restoration/manual`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(msg.mask),timeout:240000})).json();

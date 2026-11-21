@@ -23,9 +23,22 @@ function identity(value){
  if(tonari)return url.origin+url.pathname;
  return url.href;
 }
+const dialectSources={any:'식별된 사투리 기본값',kyushu:'일본 규슈권',kansai:'일본 간사이권',tohoku:'일본 도호쿠권'};
+const dialectTargets={gyeongsang:'경상도',jeolla:'전라도',chungcheong:'충청도'};
+function dialectRules(input,target){
+ const rules={};
+ if(target!=='Korean'||input==null)return rules;
+ if(typeof input!=='object'||Array.isArray(input))throw Error('사투리 설정 형식을 확인하세요.');
+ for(const [source,destination] of Object.entries(input)){
+  if(!Object.hasOwn(dialectSources,source)||!(Object.hasOwn(dialectTargets,destination)||(source==='any'&&destination==='auto')||(source!=='any'&&destination==='standard')))throw Error('지원하지 않는 사투리 대응입니다.');
+  rules[source]=destination;
+ }
+ return rules;
+}
 function validate(input){
  if(!input||typeof input!=='object'||new TextEncoder().encode(JSON.stringify(input)).length>262144)throw Error('사전 형식이 잘못되었거나 크기가 너무 큽니다.');
  const work={version:2,id:text(input.id||crypto.randomUUID()),title:text(input.title||'',200),target:input.target||'Korean',revision:text(input.revision||crypto.randomUUID()),scopes:[...new Set((input.scopes||[]).map(value=>identity(value)))],entries:[]};
+ const dialects=dialectRules(input.dialects,work.target);if(Object.keys(dialects).length)work.dialects=dialects;
  if(!work.title)throw Error('작품 이름을 입력하세요.');
  if(!Object.hasOwn(languages,work.target))throw Error('지원하지 않는 번역 언어입니다.');
  if(!Array.isArray(input.entries)||entries(input).length>500||work.scopes.length>100)throw Error('명칭은 500개, 연결 주소는 100개까지 저장할 수 있습니다.');
@@ -54,7 +67,7 @@ function validate(input){
  return work;
 }
 const forURL=(works,url,target='Korean')=>{let scope;try{scope=identity(url);}catch{return undefined;}return (works||[]).find(work=>(work.target||'Korean')===target&&(work.scopes||[]).includes(scope));};
-function dictionary(work){if(!work)return null;const saved=validate(work);const {id,title,target,revision}=saved;return {id,title,target,revision,entries:saved.entries.filter(entry=>entry.kind!=='honorific'),honorifics:saved.entries.filter(entry=>entry.kind==='honorific')};}
+function dictionary(work){if(!work)return null;const saved=validate(work);const {id,title,target,revision}=saved;return {id,title,target,revision,...(saved.dialects?{dialects:saved.dialects}:{}),entries:saved.entries.filter(entry=>entry.kind!=='honorific'),honorifics:saved.entries.filter(entry=>entry.kind==='honorific')};}
 function undo(result,workId){const copy=structuredClone(result);let changed=0;for(const region of copy.regions||[]){const edit=region.nameEdit;if(edit&&(!workId||edit.work===workId)&&region.translation===edit.after){region.translation=edit.before;delete region.nameEdit;changed++;}}if(changed){delete copy.nameDictionary;delete copy.nameWarnings;}return{result:copy,changed};}
-globalThis.MangaNames={identity,validate,forURL,dictionary,undo,entries,languages,kinds,defaultHonorifics};
+globalThis.MangaNames={identity,validate,forURL,dictionary,undo,entries,languages,kinds,defaultHonorifics,dialectSources,dialectTargets};
 })();

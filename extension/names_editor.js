@@ -24,8 +24,22 @@ function entryRow(entry={kind:'term'},open=false){
  node.querySelector('.suggest').onclick=async()=>{const button=node.querySelector('.suggest'),status=node.querySelector('.entry-status'),before=fields(node);if(!before.source||!before.translation){status.textContent='원문 풀네임과 확정 번역명을 먼저 입력하세요.';return;}button.disabled=true;status.textContent='성·이름 구분을 제안하는 중…';try{const result=await rpc({type:'namesSuggest',source:before.source,translation:before.translation});if(!node.isConnected||JSON.stringify(fields(node))!==JSON.stringify(before)){status.textContent='입력 내용이 바뀌었습니다. 다시 요청하세요.';return;}for(const key of ['givenSource','givenTranslation','familySource','familyTranslation'])node.querySelector('[data-field="'+key+'"]').value=result[key]||'';status.textContent='제안을 확인한 뒤 저장하세요.';}catch(error){status.textContent=error.message;}finally{button.disabled=false;}};
  kindChanged();expand(open);$('entries').append(node);return node;
 }
-function collect(validate=true){const work={version:2,id:selectedId||(validate?crypto.randomUUID():''),title:$('title').value,target:currentTarget,revision:crypto.randomUUID(),scopes:[...scopes,...(pageURL&&$('bind').checked?[pageURL]:[])],entries:[...$('entries').children].map(readEntry)};return validate?MangaNames.validate(work):work;}
-function show(work,target=currentTarget){selectedId=work?.id||'';currentTarget=work?.target||target;$('target').value=currentTarget;scopes=[...(work?.scopes||[])];$('title').value=work?.title||'';$('entries').replaceChildren();for(const entry of work?MangaNames.entries(work):MangaNames.defaultHonorifics(currentTarget).map(rule=>({...rule,kind:'honorific'})))entryRow(entry);$('scope-list').replaceChildren(...scopes.map(scope=>{const line=document.createElement('div');line.textContent=scope;return line;}));$('bind').checked=!!pageURL;page=0;$('search').value='';$('filter').value='';$('work').value=selectedId;filterEntries();notice('');}
+const dialectFields=new Map();
+for(const [source,label] of Object.entries(MangaNames.dialectSources)){
+ const field=document.createElement('label'),select=document.createElement('select');
+ field.append(label,select);select.add(new Option(source==='any'?'사용 안 함':'기본값 따름',''));
+ if(source==='any')select.add(new Option('자동','auto'));
+ else select.add(new Option('표준어','standard'));
+ for(const [value,name] of Object.entries(MangaNames.dialectTargets))select.add(new Option(name,value));
+ $('dialect-fields').append(field);dialectFields.set(source,select);
+}
+function readDialects(){
+ return Object.fromEntries([...dialectFields].filter(([,select])=>select.value).map(([source,select])=>[source,select.value]));
+}
+function collect(validate=true){const work={version:2,id:selectedId||(validate?crypto.randomUUID():''),title:$('title').value,target:currentTarget,dialects:readDialects(),revision:crypto.randomUUID(),scopes:[...scopes,...(pageURL&&$('bind').checked?[pageURL]:[])],entries:[...$('entries').children].map(readEntry)};return validate?MangaNames.validate(work):work;}
+function show(work,target=currentTarget){selectedId=work?.id||'';currentTarget=work?.target||target;$('target').value=currentTarget;$('dialect-tools').hidden=currentTarget!=='Korean';
+ for(const [source,select] of dialectFields)select.value=work?.dialects?.[source]||'';
+ scopes=[...(work?.scopes||[])];$('title').value=work?.title||'';$('entries').replaceChildren();for(const entry of work?MangaNames.entries(work):MangaNames.defaultHonorifics(currentTarget).map(rule=>({...rule,kind:'honorific'})))entryRow(entry);$('scope-list').replaceChildren(...scopes.map(scope=>{const line=document.createElement('div');line.textContent=scope;return line;}));$('bind').checked=!!pageURL;page=0;$('search').value='';$('filter').value='';$('work').value=selectedId;filterEntries();notice('');}
 function choices(){$('work').replaceChildren(new Option('새 사전',''),...works.map(work=>new Option(work.title+' · '+MangaNames.languages[work.target||'Korean'],work.id)));$('work').value=selectedId;}
 async function protect(operation){if(busy)return;busy=true;$('save').disabled=true;$('work').disabled=true;$('target').disabled=true;try{await operation();}catch(error){notice(error.message);}finally{busy=false;$('save').disabled=false;$('work').disabled=false;$('target').disabled=false;}}
 function rememberDraft(){drafts.set(selectedId||'new:'+currentTarget,collect(false));}

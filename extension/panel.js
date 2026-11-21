@@ -25,6 +25,36 @@ const helpTopics={
   '이미 직접 표시된 대사, 효과음으로 검출된 영역과 개별 편집은 변경하지 않습니다. 주변 글자를 가리거나 번역문이 들어가지 않는 영역은 툴팁으로 유지합니다.',
   '흰 배경은 그림을 가립니다. 이미지 복원은 원문을 지우고 가려진 그림을 추정하므로 선이나 무늬가 달라질 수 있습니다. 처음에는 복원 시간이 필요하고, 이후에는 재번역 없이 전환됩니다.']]
 };
+const follow=$('follow-page');
+let currentRow=null,followTouched=false;
+function followRow(key){
+ const row=key?rows.get(key)?.node:null;
+ if(currentRow===row)return;
+ currentRow?.removeAttribute('aria-current');
+ currentRow=row;
+ if(!row)return;
+ row.setAttribute('aria-current','page');
+ const list=$('list-scroll'),bounds=list.getBoundingClientRect(),r=row.getBoundingClientRect();
+ if(r.top<bounds.top)list.scrollTop+=r.top-bounds.top;
+ else if(r.bottom>bounds.bottom)list.scrollTop+=r.bottom-bounds.bottom;
+}
+function setFollow(enabled){
+ follow.checked=enabled;
+ if(!enabled)followRow(null);
+ else if(Number.isInteger(tabId))control('status');
+}
+follow.onchange=()=>{
+ followTouched=true;setFollow(follow.checked);
+ chrome.storage.local.set({followCurrentPage:follow.checked}).catch(error=>{noticeUntil=Date.now()+6000;$('status').textContent=error.message;});
+};
+chrome.storage?.local?.get?.('followCurrentPage').then(saved=>{if(!followTouched)setFollow(saved?.followCurrentPage===true);}).catch(()=>{});
+chrome.storage?.onChanged?.addListener((changes,area)=>{
+ if(area==='local'&&changes.followCurrentPage){
+  followTouched=true;
+  const enabled=changes.followCurrentPage.newValue===true;
+  if(follow.checked!==enabled)setFollow(enabled);
+ }
+});
 let helpButton=null,helpTopic='';
 const helpOpen=()=>$('panel-help').matches(':popover-open');
 function helpStatus(){
@@ -182,6 +212,7 @@ function display(s){
   if(expected!==r.node)$('items').insertBefore(r.node,expected);
   previous=r.node;thumbnail(r,e);
  }
+ if(follow.checked&&Object.hasOwn(s,'currentPageKey'))followRow(s.currentPageKey);
  selectionState();
 }
 let connection=null;
@@ -207,7 +238,9 @@ async function connect(){
 async function control(action,extra={}){
  try{
   if(!Number.isInteger(tabId)||action==='preload')await connect();
-  display(await rpc({type:'control',tabId,action,...extra}));
+  const target=tabId;
+  const state=await rpc({type:'control',tabId:target,action,followPage:action==='status'&&follow.checked,...extra});
+  if(tabId===target)display(state);
  }catch(e){noticeUntil=Date.now()+6000;$('status').textContent=e.message;}
 }
 $('preload').onclick=()=>control('preload');

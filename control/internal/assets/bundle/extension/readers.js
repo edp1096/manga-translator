@@ -297,12 +297,12 @@
    if(kind==='pixiv')return Math.max(0,Math.min(all.length-1,(Number(pixivSlider()?.value)||1)-1));
    if(kind==='mangaone'){const slot=mangaOneSlot(),index=all.findIndex(p=>p.slot>=slot);return index<0?Math.max(0,all.length-1):index;}
    if(kind==='comicwalker'){
-    const first=element(all[0]||{});if(first?.getAttribute('mode')!=='vertical'){const i=all.findIndex(p=>element(p)?.closest('.splide__slide')?.classList.contains('is-active'));return Math.max(0,i);}
+    const canvases=comicCanvases(),first=canvases[0];if(first?.getAttribute('mode')!=='vertical'){const i=canvases.findIndex(node=>node.closest('.splide__slide')?.classList.contains('is-active'));return Math.max(0,i);}
     const viewport=first?.closest('.splide__track,[data-radix-scroll-area-viewport]')?.getBoundingClientRect()||{left:0,right:innerWidth,top:0,bottom:innerHeight};let best=0,area=0;
-    for(const p of all){const node=element(p);if(!node)continue;const r=node.getBoundingClientRect(),size=Math.max(0,Math.min(r.right,viewport.right)-Math.max(r.left,viewport.left))*Math.max(0,Math.min(r.bottom,viewport.bottom)-Math.max(r.top,viewport.top));if(size>area){best=p.index;area=size;}}return best;
+    for(const p of all){const node=canvases[p.index];if(!node)continue;const r=node.getBoundingClientRect(),size=Math.max(0,Math.min(r.right,viewport.right)-Math.max(r.left,viewport.left))*Math.max(0,Math.min(r.bottom,viewport.bottom)-Math.max(r.top,viewport.top));if(size>area){best=p.index;area=size;}}return best;
    }
    if(kind==='mangaz'){const current=Number(document.querySelector('.current-number')?.textContent)-1;if(Number.isInteger(current)&&current>=0&&current<all.length)return current;const nums=[...document.querySelectorAll('#book img.image[no]')].filter(visible).map(x=>Number(x.getAttribute('no')));return nums.length?Math.min(...nums):0;}
-   const viewer=document.querySelector('.js-viewer')?.getBoundingClientRect();if(!viewer)return 0;let best=0,area=0;for(const p of all){const node=element(p);if(!node)continue;const r=node.getBoundingClientRect(),size=Math.max(0,Math.min(r.right,viewer.right)-Math.max(r.left,viewer.left))*Math.max(0,Math.min(r.bottom,viewer.bottom)-Math.max(r.top,viewer.top));if(size>area){best=p.index;area=size;}}return best;
+   const viewer=document.querySelector('.js-viewer')?.getBoundingClientRect();if(!viewer)return 0;const slots=[...document.querySelectorAll('.js-viewer .js-page-area')].filter(n=>!n.querySelector('.page-dummy'));let best=0,area=0;for(const p of all){const node=slots[p.slot]?.querySelector('canvas.js-page-image,img.js-page-image');if(!node)continue;const r=node.getBoundingClientRect(),size=Math.max(0,Math.min(r.right,viewer.right)-Math.max(r.left,viewer.left))*Math.max(0,Math.min(r.bottom,viewer.bottom)-Math.max(r.top,viewer.top));if(size>area){best=p.index;area=size;}}return best;
   }
   async function navigate(page){
    await foreground();

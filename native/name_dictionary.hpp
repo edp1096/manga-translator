@@ -17,6 +17,17 @@ inline json checked_dictionary(const json& input,const std::string& language){
  require(input.value("target",std::string("Korean"))==language,"Name dictionary language differs from translation language");
  require(input.contains("entries")&&input.at("entries").is_array()&&input.at("entries").size()<=500,"Invalid terminology list");
  json saved={{"id",name_string(input,"id")},{"title",name_string(input,"title",300)},{"target",language},{"revision",name_string(input,"revision")},{"entries",json::array()},{"honorifics",json::array()}};
+ if(input.contains("dialects")){
+  const auto& rules=input.at("dialects");
+  require(language=="Korean"&&rules.is_object(),"Invalid Korean dialect settings");
+  for(const auto& rule:rules.items()){
+   const auto& source=rule.key();const auto& dest=rule.value();
+   require(source=="any"||source=="kyushu"||source=="kansai"||source=="tohoku","Unknown source dialect");
+   require(dest=="gyeongsang"||dest=="jeolla"||dest=="chungcheong"||(source=="any"&&dest=="auto")||(source!="any"&&dest=="standard"),"Unknown target dialect");
+  }
+  if(rules.value("any",std::string{})=="auto")require(!saved.at("id").get<std::string>().empty(),"Automatic dialect selection requires a work ID");
+  if(!rules.empty())saved["dialects"]=rules;
+ }
  std::map<std::string,std::string> mappings;
  auto register_mapping=[&](const std::string& source,const std::string& target){require(!source.empty()&&!target.empty(),"Both original and translated names are required");auto found=mappings.find(source);require(found==mappings.end()||found->second==target,"Conflicting translations for the same original name");mappings[source]=target;};
  for(const auto& item:input.at("entries")){

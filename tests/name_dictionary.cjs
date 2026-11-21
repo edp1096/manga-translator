@@ -21,3 +21,14 @@ assert.equal(names.identity('https://manga-one.com/manga/28501/chapter/359545?ty
 assert.notEqual(names.identity('https://manga-one.com/manga/1924/chapter/354658'),names.identity('https://manga-one.com/manga/28501/chapter/359545'));
 
 assert.equal(names.identity('https://yanmaga.jp/viewer/comics/GLITCH_WITCH/chapter-one?cid=first'),'https://yanmaga.jp/viewer/comics/GLITCH_WITCH');assert.equal(names.identity('https://yanmaga.jp/viewer/comics/GLITCH_WITCH/chapter-two?cid=second'),'https://yanmaga.jp/viewer/comics/GLITCH_WITCH');
+
+const dialectOnly={...fixture,version:2,entries:[],dialects:{any:'gyeongsang',kyushu:'jeolla',kansai:'standard'}};
+assert.equal(JSON.stringify(names.dictionary(dialectOnly).dialects),JSON.stringify(dialectOnly.dialects));
+assert.equal(names.dictionary({...dialectOnly,target:'English'}).dialects,undefined);
+assert.equal(names.dictionary({...dialectOnly,dialects:{}}).dialects,undefined);
+assert.throws(()=>names.validate({...dialectOnly,dialects:{any:'unregistered'}}));
+assert.throws(()=>names.validate({...dialectOnly,dialects:{invalid:'gyeongsang'}}));
+const autoDialect=names.dictionary({...dialectOnly,dialects:{any:'auto',kyushu:'standard'}});
+assert.equal(autoDialect.dialects.any,'auto');
+assert.equal(autoDialect.dialects.kyushu,'standard');
+assert.throws(()=>names.validate({...dialectOnly,dialects:{kyushu:'auto'}}));
