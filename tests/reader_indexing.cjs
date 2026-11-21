@@ -17,5 +17,29 @@ const assert=require('node:assert/strict'),path=require('node:path'),{chromium}=
  await page.evaluate(()=>history.replaceState(null,'','/comics/124'));assert.match(await page.evaluate(()=>testReader.read(testReader.pages()[0]).then(()=>'',e=>e.message)),/다른 회차/);
  await page.goto('https://pocket.shonenmagazine.com/title/0123/episode/45');await page.evaluate(()=>{document.body.innerHTML='<div class="c-viewer"><div class="c-viewer__pages-wrap"><div class="c-viewer__pages-item">ad</div><div class="c-viewer__pages-item"><div class="c-viewer__comic-item-image"></div></div><div class="c-viewer__pages-item"><div class="c-viewer__comic-item-image"></div></div><div class="c-viewer__pages-item">recommendations</div></div></div>';});await page.addScriptTag({path:path.resolve(__dirname,'../extension/readers.js')});const pocket=await page.evaluate(async()=>{const r=MangaReaders.create();await r.prepare();return r.pages()});assert.deepEqual(pocket.map(r=>r.slot),[1,2],'index must contain unloaded artwork and exclude ads');
  await page.goto('https://www.manga-up.com/titles/123/chapters/45');await page.evaluate(()=>{document.body.innerHTML='<div class="swiper"><div class="swiper-slide"><img alt="マンガページ0ページ目"></div><div class="swiper-slide">promo</div><div class="swiper-slide"><img alt="マンガページ1ページ目"></div></div>';window.calls=[];document.querySelector('.swiper').swiper={slideTo:(...args)=>calls.push(args)};});await page.addScriptTag({path:path.resolve(__dirname,'../extension/readers.js')});const up=await page.evaluate(async()=>{const meta=await MangaReaders.metadata();await MangaReaders.metadata({action:'locate',slot:1});await MangaReaders.metadata({action:'locate',slot:2});return {meta,calls};});assert.deepEqual(up.meta.slots,[0,2]);assert.deepEqual(up.calls,[[2,0]],'navigation must only accept public artwork slots');
+ await page.goto('https://younganimal.com/episodes/example');
+ await page.evaluate(()=>{
+  const ad='<div class="-cv-page mode-pr"></div>';
+  const art='<div class="-cv-page"><div class="-cv-page-content"><div class="-cv-page-canvas"></div></div></div>';
+  document.body.innerHTML='<style>#xCVPagesWrap{width:400px;height:200px;overflow:hidden}.-cv-page{position:absolute;left:-999px}</style><div id="comici-viewer"><input type="range" id="xCVSeekBar" min="1" max="5" step="2" value="5"><div id="xCVPagesWrap"><div id="xCVPages" dir="rtl">'+ad+art+art+art+ad+ad+'</div></div></div>';
+  const seek=document.querySelector('#xCVSeekBar'),slots=[...document.querySelector('#xCVPages').children];
+  function paint(){
+   for(const [i,slot] of slots.entries()){
+    const holder=slot.querySelector('.-cv-page-canvas');if(!holder)continue;
+    const spread=Math.floor(i/2)*2;
+    const shown=Number(seek.value)===5-spread;
+    holder.replaceChildren();slot.classList.remove('mode-rendered');slot.style.left=shown?(i%2?12:200)+'px':'-999px';
+    if(shown)setTimeout(()=>{const c=document.createElement('canvas');c.width=100;c.height=140;c.getContext('2d').fillRect(0,0,100,140);holder.append(c);slot.classList.add('mode-rendered');},40);
+   }
+  }
+  seek.addEventListener('input',paint);paint();
+ });
+ await page.addScriptTag({path:path.resolve(__dirname,'../extension/readers.js')});
+ const young=await page.evaluate(async()=>{
+  const reader=MangaReaders.create();await reader.prepare();const pages=reader.pages();
+  const before=reader.element(pages[2]);const record=await reader.read(pages[2]);
+  return {keys:pages.map(p=>p.sourceURL.split('#')[1]),unloaded:before===null,seek:document.querySelector('#xCVSeekBar').value,width:record.width,current:reader.currentIndex()};
+ });
+ assert.deepEqual(young,{keys:['manga-page=1','manga-page=2','manga-page=3'],unloaded:true,seek:'3',width:100,current:1});
  console.log('PASS shared GigaViewer lazy navigation/leading blanks/ad exclusion, Palcy complete metadata before images load, Pocket lazy artwork indexing, MangaUP scoped public navigation, chapter guard');
 }finally{await browser.close()}})().catch(e=>{console.error(e);process.exitCode=1});
