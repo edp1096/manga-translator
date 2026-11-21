@@ -279,7 +279,18 @@ function rebindKnownImages(){
 }
 function isKnownImage(img){const url=urlOf(img);return entries.some(e=>!e.readerPage&&e.sourceURL===url)||(pageCache||[]).some(e=>e.sourceURL===url);}
 const ownNode=node=>node instanceof Element&&!!node.closest('[data-manga-translator-overlay],[data-manga-capture]');
+let youngPlacementFrame=0;
 new MutationObserver(changes=>{
+ if(reader?.kind==='younganimal'){
+  // Comici unloads and repaints artwork as the user turns pages. An existing
+  // translation may have been rendered while its source canvas was absent.
+  if(!youngPlacementFrame&&changes.some(c=>!ownNode(c.target)&&c.target instanceof Element&&
+   (c.target.closest('#xCVPages')||c.type==='childList'&&[...c.addedNodes].some(n=>n instanceof Element&&(n.id==='xCVPages'||n.querySelector('#xCVPages'))))&&
+   (c.type!=='childList'||[...c.addedNodes,...c.removedNodes].some(n=>!ownNode(n))))){
+   youngPlacementFrame=requestAnimationFrame(()=>{youngPlacementFrame=0;entries.forEach(place);});
+  }
+  return;
+ }
  if(reader){
   const relevant=changes.some(c=>!ownNode(c.target)&&c.target instanceof Element&&(!!c.target.closest('.splide,.js-viewer,#book,#viewerContainer,.gtm-expand-full-size-illust,input.gtm-manga-viewer-change-page')||(c.type==='childList'&&[...c.addedNodes].some(n=>n instanceof Element&&!ownNode(n)&&(n.matches('.splide,.js-viewer,#book,#viewerContainer,.gtm-expand-full-size-illust,input.gtm-manga-viewer-change-page')||n.querySelector('[data-type=contents] canvas,.js-viewer,#book,#viewerContainer,.gtm-expand-full-size-illust,input.gtm-manga-viewer-change-page')))))&&(c.type!=='childList'||[...c.addedNodes,...c.removedNodes].some(n=>!ownNode(n))));
   if(relevant){entries.forEach(place);rebindKnownImages();}return;
