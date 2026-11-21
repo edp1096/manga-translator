@@ -32,6 +32,15 @@ function browserImage(url,referrer){
       if(!r.ok)throw Error(`이미지 HTTP ${r.status}`);
       const blob=await r.blob();
       if(blob.size>24*1024*1024)throw Error('이미지가 24 MiB를 넘습니다.');
+      if(!blob.type||blob.type==='application/octet-stream'){
+        const header=new Uint8Array(await blob.slice(0,12).arrayBuffer());
+        const starts=(...signature)=>signature.every((byte,i)=>header[i]===byte);
+        let mime;
+        if(starts(0xff,0xd8,0xff))mime='image/jpeg';
+        else if(starts(137,80,78,71,13,10,26,10))mime='image/png';
+        else if(starts(82,73,70,70)&&String.fromCharCode(...header.slice(8,12))==='WEBP')mime='image/webp';
+        if(mime)return encoded(blob.slice(0,blob.size,mime));
+      }
       if(!blob.type.startsWith('image/'))throw Error('이미지 대신 접근 차단 응답을 받았습니다.');
       return await encoded(blob);
     } finally {await chrome.declarativeNetRequest.updateSessionRules({removeRuleIds:[id]});}

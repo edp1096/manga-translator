@@ -210,6 +210,7 @@ async function preload(){
 async function preloadReader(){
  if(running)return;running=true;stopped=false;const active=reader,identity=pageIdentity();let loaded=0,failed=0;
  try{
+  active.openForPreload?.();
   await scan({loading:true});
   for(const e of entries){if(stopped||pageIdentity()!==identity)break;status(`${active.name} · ${e.index+1}/${entries.length} 불러오는 중`);
    try{await readImage(e);loaded++;if(!e.result)e.state='대기';}catch(error){if(stopped)break;failed++;if(!e.result)e.state='읽기 실패: '+error.message;if(/활성화|activeTab|all_urls|화면 캡처 허용/.test(error.message))throw error;}

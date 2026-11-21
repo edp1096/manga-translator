@@ -232,7 +232,126 @@
    check();cache.set(p.index,record);bytes+=record.data.length;while(bytes>256*1024*1024&&cache.size>1){const [id,item]=cache.entries().next().value;cache.delete(id);bytes-=item.data.length;}return record;
   })};
  }
+ // A KLManga chapter can contain multiple scans joined vertically in one JPEG.
+ // Measure horizontal gutters and sudden changes across adjacent scan lines.
+ function stripCuts(image){
+  const w=image.naturalWidth,h=image.naturalHeight;
+  if(h<=2.25*w)return [0,h];
+  const samples=48,canvas=document.createElement('canvas');
+  canvas.width=samples;canvas.height=512;
+  const ctx=canvas.getContext('2d',{willReadFrequently:true}),edges=new Float32Array(h);
+  const previous=new Uint8Array(samples);let lastBlank=0;
+  for(let y=0;y<h;y+=canvas.height){
+   const count=Math.min(canvas.height,h-y);
+   ctx.drawImage(image,0,y,w,count,0,0,samples,count);
+   const data=ctx.getImageData(0,0,samples,count).data;
+   for(let row=0;row<count;row++){
+    let light=0,dark=0,change=0;
+    for(let x=0;x<samples;x++){
+     const i=4*(row*samples+x),v=(data[i]+2*data[i+1]+data[i+2])>>2;
+     light+=v>243;dark+=v<12;change+=Math.abs(v-previous[x]);previous[x]=v;
+    }
+    const blank=Math.max(light,dark)/samples;
+    edges[y+row]=Math.max(blank,lastBlank)**5+Math.min(1,change*4/(samples*255));lastBlank=blank;
+   }
+  }
+  const ideal=w*Math.SQRT2;
+  let bestCount=0,best=-Infinity,next=-Infinity;
+  for(let n=Math.max(2,Math.ceil(h/(w*1.9)));n<=Math.ceil(h/(w*1.12));n++){
+   let score=0;for(let i=1;i<n;i++)score+=edges[Math.round(i*h/n)];
+   score=score/(n-1)-0.1*Math.abs(h/n/w-Math.SQRT2);
+   if(score>best){next=best;best=score;bestCount=n;}else next=Math.max(next,score);
+  }
+  if(best>=0.65&&best-next>=0.12)return Array.from({length:bestCount+1},(_,i)=>Math.round(i*h/bestCount));
+  // Uneven scans and continuous strips have no reliable repeating boundary.
+  // Choose a nearby gutter, always keeping the final rows and complete coverage.
+  const cuts=[0];
+  while(h-cuts.at(-1)>ideal*1.5){
+   const start=cuts.at(-1),center=Math.round(start+ideal);let cut=center,quality=-Infinity;
+   for(let y=Math.round(center-ideal*.22);y<=center+ideal*.22;y++){
+    const score=edges[y]-.4*Math.abs(y-center)/ideal;
+    if(score>quality){quality=score;cut=y;}
+   }
+   cuts.push(cut);
+  }
+  cuts.push(h);return cuts;
+ }
+
+ function klmangaReader({fetchImage,cancelled}){
+  const identity=pageIdentity(),name='KLManga';
+  let rows=[],sources=[],indexed=[],preparing=null,decoded=null;
+  const check=()=>{if(cancelled?.())throw Error('작업이 중지되었습니다.');if(identity!==pageIdentity())throw Error('다른 회차로 이동했습니다.');};
+  const button=()=>document.querySelector('.go-open-popup-wrap a.go-open-popup');
+  const nodes=()=>[...document.querySelectorAll('.z_content img')].filter(img=>img.matches('[data-preload]')||!img.matches('.h-loading')&&/^https?:/.test(img.currentSrc||img.src));
+  const src=img=>img.currentSrc||img.src;
+  async function readable(img){
+   const url=src(img);
+   if(decoded?.url===url)return decoded.image;
+   await img.decode();check();
+   const probe=document.createElement('canvas');probe.width=probe.height=1;
+   const ctx=probe.getContext('2d');ctx.drawImage(img,0,0,1,1,0,0,1,1);
+   let image=img;
+   try{ctx.getImageData(0,0,1,1);}catch(error){
+    if(error.name!=='SecurityError'||!fetchImage)throw error;
+    image=new Image();image.src=await fetchImage(url);await image.decode();check();
+    if(image.naturalWidth!==img.naturalWidth||image.naturalHeight!==img.naturalHeight)throw Error('본문 이미지 크기가 변경되었습니다. 새로고침하세요.');
+   }
+   decoded={url,image};return image;
+  }
+  async function prepare(){
+   check();
+   if(button()||!document.querySelector('.z_content'))return;
+   if(preparing)return preparing;
+   preparing=(async()=>{
+    const limit=Date.now()+60000;
+    while(document.querySelector('.premium-loading')||!nodes().length){
+     check();if(Date.now()>limit)throw Error('KLManga 본문 이미지를 불러오지 못했습니다.');await sleep(150);
+    }
+    const list=nodes();
+    if(list.length===indexed.length&&indexed.every((source,i)=>source.node===list[i]&&source.url===src(list[i])))return;
+    const groups=[],pages=[];
+    for(const img of list){
+     if(img.loading==='lazy')img.loading='eager';
+     await img.decode();check();
+     if(!img.naturalWidth||!img.naturalHeight)throw Error('KLManga 원본 이미지가 비어 있습니다.');
+     const width=img.naturalWidth,height=img.naturalHeight;
+     if(width<32||height<32)continue;
+     if(height/width>2000||pages.length>=2000)throw Error('본문 페이지 수가 너무 많습니다.');
+     const cuts=height>2.25*width?stripCuts(await readable(img)):[0,height];
+     const source=groups.length;groups.push({node:img,url:src(img)});
+     for(let i=1;i<cuts.length;i++){
+      const index=pages.length;
+      pages.push({index,source,top:cuts[i-1],width,height:cuts[i]-cuts[i-1],sourceURL:cuts.length===2?src(img):identity+'#manga-page='+(index+1)});
+     }
+    }
+    check();sources=groups;rows=pages;indexed=list.map(node=>({node,url:src(node)}));
+   })().finally(()=>{preparing=null;});return preparing;
+  }
+  const element=p=>sources[p?.source]?.node;
+  function bounds(p){
+   const img=element(p);if(!img?.isConnected)return null;
+   const r=img.getBoundingClientRect(),scale=r.height/img.naturalHeight,top=r.top+p.top*scale,height=p.height*scale;
+   return {left:r.left,right:r.right,width:r.width,top,bottom:top+height,height};
+  }
+  function currentIndex(){
+   let best=-1,visible=0;
+   for(const p of rows){const r=bounds(p);if(!r)continue;const amount=Math.min(innerHeight,r.bottom)-Math.max(0,r.top);if(amount>visible){best=p.index;visible=amount;}}
+   return best;
+  }
+  return {kind:'klmanga',identity,name,prepare,pages:()=>rows,element,bounds,currentIndex,
+   openForPreload(){check();button()?.click();},
+   position:()=>({x:scrollX,y:scrollY}),restore:p=>{check();scrollTo({left:p.x,top:p.y,behavior:'instant'});},
+   locate:p=>{check();const r=bounds(p);if(!r)throw Error('본문 이미지를 찾을 수 없습니다.');scrollBy({top:r.top-Math.max(0,(innerHeight-r.height)/2),behavior:'instant'});},
+   read:async p=>{
+    check();const img=element(p);if(!img?.isConnected)throw Error('본문 이미지가 변경되었습니다. 새로고침하세요.');
+    const image=await readable(img),canvas=document.createElement('canvas');canvas.width=p.width;canvas.height=p.height;
+    canvas.getContext('2d').drawImage(image,0,p.top,p.width,p.height,0,0,p.width,p.height);
+    return imageRecord(canvas);
+   }
+  };
+ }
  function create({capture,fetchImage,onWait,cancelled,metadata:readMetadata}={}){
+  if(location.hostname==='klmanga.black'&&/^\/manga-raw\/[^/]+\/chapter-[^/]+\/?$/.test(location.pathname))return klmangaReader({fetchImage,cancelled});
   const host=location.hostname;
   const yanmaga=yanmagaReader({onWait,cancelled,metadata:readMetadata});if(yanmaga)return yanmaga;
   const extra=extraReader({capture,fetchImage,onWait,cancelled,metadata:readMetadata});if(extra)return extra;

@@ -651,7 +651,7 @@
       ]
     }
   ],
-  "version": "0.6.4",
+  "version": "0.6.5",
   "artifacts": [
     {
       "id": "ort-linux-arm64",
@@ -821,13 +821,13 @@
       "group": "application",
       "platform": "linux-arm64",
       "url": "embedded:engine/linux-arm64.gz",
-      "sha256": "73aa48d9367f3546b214d5e973e5af892c3067c730a74916d1e458bc56d9c250",
+      "sha256": "c79148be7bcf27261adade035d59501c98a823f1f2f0019f748bf8e087290636",
       "size": 1610709,
       "format": "gzip",
       "files": [
         {
           "path": "bin/manga-translator-server",
-          "sha256": "e0e063dcfc10b1eed0114d894cb6484aa8d6af71a8d13e1a01b459ec765e2055",
+          "sha256": "39233d7e3a9cbef69339f0fc944eaa9c7ae6b93390adc897a41ddb64358dbc72",
           "size": 3521224,
           "executable": true
         }
@@ -1158,13 +1158,13 @@
       "group": "application",
       "platform": "windows-amd64",
       "url": "embedded:engine/windows-amd64.gz",
-      "sha256": "06567b94ba4c8ac61cb4212d15d3bed3244604fa5021039146f275c404bbac9c",
-      "size": 2160217,
+      "sha256": "eaaa06238be3b34b4b0f49d0a68f0b0c69a0c49ef54738164d1f17a50b173da6",
+      "size": 2160216,
       "format": "gzip",
       "files": [
         {
           "path": "bin/manga-translator-server.exe",
-          "sha256": "7b025d44fc3888739a53f45094b15e798e6a79c5ede69b55f098576213a7dc67",
+          "sha256": "6d08024e40c516f340a707ef1a274e8f96d630f636687780a907a1e3c9a580e2",
           "size": 5549056,
           "executable": true
         }
@@ -2556,13 +2556,13 @@
       "group": "application",
       "platform": "linux-amd64",
       "url": "embedded:engine/linux-amd64.gz",
-      "sha256": "483c6e6c7be43183fbd4fdffff7f2390db9f8cdd0d35262dfeddec3dfff9d8b3",
-      "size": 1692245,
+      "sha256": "5f2e4618d59c2b334ff36fd4dce018d3c92a1d62735631882132d34ba07fc69f",
+      "size": 1692246,
       "format": "gzip",
       "files": [
         {
           "path": "bin/manga-translator-server",
-          "sha256": "a7c4a868dd13224437c398d8660055bf24395ef2f2011e99c0d36b019c6841f6",
+          "sha256": "f7bbeb6580bbfa86bfda87f9153d6a752d4b6e81db4e5dbf9ec06de50b88e310",
           "size": 3902584,
           "executable": true
         }
@@ -5091,13 +5091,13 @@
       "group": "runtime",
       "platform": "windows-amd64",
       "url": "embedded:engine/tensorrt-server-windows-amd64.gz",
-      "sha256": "2f37e8513f72551f8551022b664ce1d8f2d9c6ce06dbc6070238bcd3e67f2d70",
-      "size": 1236764,
+      "sha256": "e2a11dd00644afe410b9a4bfde6af417c4d36552121ca904bdcc7f47f2f05aeb",
+      "size": 1236084,
       "format": "gzip",
       "files": [
         {
           "path": "runtime/tensorrt/10.14.1/manga-translator-trt.exe",
-          "sha256": "d978c6ce0d159362f401023f3f675dd34610a1cc942590554640ba66d36ab2e2",
+          "sha256": "bf772cb1a2c5fffbc0abadb59ed60e9bff07e3bfb72f1b51dd8a6da6559014fa",
           "size": 2549760,
           "executable": true
         }
@@ -5145,13 +5145,13 @@
       "group": "runtime",
       "platform": "linux-arm64",
       "url": "embedded:engine/tensorrt-server-linux-arm64.gz",
-      "sha256": "7a331d0d1fb7655bbc4bb0a2c9362253a3a194e030579fe053c8115ce9727bf2",
-      "size": 1631539,
+      "sha256": "ce889543bbd3549b10d25517ec3881250f91c5f8bae037ce3e01ad9d7eba3704",
+      "size": 1631541,
       "format": "gzip",
       "files": [
         {
           "path": "runtime/tensorrt/10.14.1/manga-translator-trt",
-          "sha256": "7094ce27738fca77b137f306aa1bb16400163d79715e51f32ffa3ad3ea2a135d",
+          "sha256": "080368630009e569034c35a4b57da1da96b7bfba6cfbe1b913f132a7e92a2952",
           "size": 3529192,
           "executable": true
         }
@@ -5457,13 +5457,13 @@
       "group": "runtime",
       "platform": "linux-amd64",
       "url": "embedded:engine/tensorrt-server-linux-amd64.gz",
-      "sha256": "c8d71109d9e862da589676bdce91b2e4555ffed0fd3cc956f40dd711ae3891b2",
-      "size": 1713232,
+      "sha256": "10b1f4a8b0841fb9eb216cc8a76cabcd9f1c1d974bd12cd7da44b0bca2d3cf30",
+      "size": 1713231,
       "format": "gzip",
       "files": [
         {
           "path": "runtime/tensorrt/10.14.1/manga-translator-trt",
-          "sha256": "ddd2fd31af0c00bd7135262d9e78763c8a3cdc5075885caa6b8d877b0ccf33a5",
+          "sha256": "8573084d424c93f1666bd9543ec2f0441e487fc3a4eac8b3199fda4a85bf7a5a",
           "size": 3950064,
           "executable": true
         }
