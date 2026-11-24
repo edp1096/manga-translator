@@ -111,3 +111,36 @@ func TestGPUOCRSelectionCannotSilentlySwitchToCPU(t *testing.T) {
 		t.Fatal("mixed CPU/GPU setup rejected LiteRT", err)
 	}
 }
+
+func TestMigrateDXGISelection(t *testing.T) {
+	gpus := []GPUInfo{
+		{ID: "pnp:amd", sessionLUID: "dxgi:reused", Name: "Integrated"},
+		{ID: "pnp:nvidia", sessionLUID: "dxgi:new", Name: "Discrete"},
+	}
+	for _, test := range []struct{ saved, name, want string }{
+		{"dxgi:new", "", "pnp:nvidia"},
+		{"dxgi:old", "Discrete", "pnp:nvidia"},
+		{"dxgi:reused", "Discrete", "pnp:nvidia"},
+		{"dxgi:old", "", ""},
+		{"dxgi:old", "Removed", ""},
+		{"pnp:removed", "Discrete", ""},
+		{"", "Discrete", ""},
+	} {
+		if got := migrateDXGISelection(Settings{GPU: test.saved}, test.name, gpus); got != test.want {
+			t.Errorf("saved %q, name %q: got %q, want %q", test.saved, test.name, got, test.want)
+		}
+	}
+	gpus = append(gpus, GPUInfo{ID: "pnp:second", Name: "Discrete"})
+	if got := migrateDXGISelection(Settings{GPU: "dxgi:old"}, "Discrete", gpus); got != "" {
+		t.Fatal("ambiguous migration:", got)
+	}
+	// DirectML or CUDA ordinals may also change when adapters are enumerated again.
+	first, second := 0, 1
+	for _, idx := range []*int{&first, &second} {
+		gpus[1].DirectMLIndex = idx
+		g, err := selectedGPU(Settings{GPU: "pnp:nvidia", OCRExecution: "directml"}, gpus)
+		if err != nil || g.DirectMLIndex != idx {
+			t.Fatalf("persistent selection: %v %v", g, err)
+		}
+	}
+}

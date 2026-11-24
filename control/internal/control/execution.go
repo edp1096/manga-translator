@@ -196,6 +196,29 @@ func usesGPU(s Settings) bool {
 	return s.RestorationBackend == "libtorch" || execution(s.LLMExecution) != "cpu" || execution(s.LayoutExecution) != "cpu" || execution(s.OCRExecution) != "cpu"
 }
 
+// Older controllers saved a boot-local adapter LUID. The last generated native
+// config records the actual model name; never guess between identical cards.
+func migrateDXGISelection(s Settings, previousName string, gpus []GPUInfo) string {
+	if !strings.HasPrefix(s.GPU, "dxgi:") {
+		return ""
+	}
+	var named string
+	matches := 0
+	for _, g := range gpus {
+		if g.sessionLUID == s.GPU && (previousName == "" || g.Name == previousName) {
+			return g.ID
+		}
+		if previousName != "" && g.Name == previousName {
+			named = g.ID
+			matches++
+		}
+	}
+	if matches == 1 {
+		return named
+	}
+	return ""
+}
+
 func selectedGPU(s Settings, gpus []GPUInfo) (GPUInfo, error) {
 	if !usesGPU(s) {
 		return GPUInfo{}, nil
@@ -229,6 +252,9 @@ func selectedGPU(s Settings, gpus []GPUInfo) (GPUInfo, error) {
 		}
 	}
 	if selected == nil {
+		if strings.HasPrefix(s.GPU, "dxgi:") {
+			return GPUInfo{}, fmt.Errorf("이전 Windows GPU 식별자를 현재 장치와 연결할 수 없습니다. 설치 관리에서 사용할 GPU를 한 번 선택해 저장하세요")
+		}
 		return GPUInfo{}, fmt.Errorf("선택한 실행 방식을 지원하는 GPU를 찾지 못했습니다. GPU 드라이버와 실행 설정을 확인하세요")
 	}
 	return *selected, nil

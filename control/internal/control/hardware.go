@@ -24,6 +24,9 @@ type CPUInfo struct {
 }
 
 type GPUInfo struct {
+	// Windows driver records are joined by session LUID before publishing a persistent ID.
+	persistentID          string
+	sessionLUID           string
 	CUDAComputeCapability int     `json:"cudaComputeCapability,omitempty"`
 	CUDADriverVersion     int     `json:"cudaDriverVersion,omitempty"`
 	VulkanIndex           *int    `json:"vulkanIndex,omitempty"`
@@ -178,6 +181,9 @@ func mergeGPUs(osGPUs, driverGPUs []GPUInfo) []GPUInfo {
 		}
 		if match >= 0 {
 			old := result[match]
+			if old.persistentID != "" {
+				gpu.persistentID = old.persistentID
+			}
 			if gpu.DirectMLIndex == nil {
 				gpu.DirectMLIndex = old.DirectMLIndex
 			}

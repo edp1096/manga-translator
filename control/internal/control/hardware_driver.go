@@ -136,6 +136,7 @@ func nvidiaGPUs() []GPUInfo {
 			g.CUDADriverVersion = info.DriverVersion
 		}
 		if info.LUID != "" {
+			g.persistentID = g.ID // PCI address if the Windows display path is unavailable.
 			g.ID = info.LUID
 		}
 		if info.Shared {

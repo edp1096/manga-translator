@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"path/filepath"
 	"runtime"
+	"strings"
 	"syscall"
 	"unsafe"
 
@@ -124,6 +125,33 @@ func dxgiMemoryKind(adapter *comHardwareObject) string {
 	return "dedicated"
 }
 
+var displayConfigGetDeviceInfo = windows.NewLazySystemDLL("user32.dll").NewProc("DisplayConfigGetDeviceInfo")
+
+func adapterDevicePath(desc []byte) string {
+	// DISPLAYCONFIG_ADAPTER_NAME, queried using the DXGI adapter's current LUID.
+	var request struct {
+		Type, Size uint32
+		LUID       [8]byte
+		ID         uint32
+		Path       [128]uint16
+	}
+	request.Type = 4 // DISPLAYCONFIG_DEVICE_INFO_GET_ADAPTER_NAME
+	request.Size = uint32(unsafe.Sizeof(request))
+	copy(request.LUID[:], desc[296:304])
+	if displayConfigGetDeviceInfo.Find() != nil {
+		return ""
+	}
+	status, _, _ := displayConfigGetDeviceInfo.Call(uintptr(unsafe.Pointer(&request)))
+	if status != 0 {
+		return ""
+	}
+	path := windows.UTF16ToString(request.Path[:])
+	if path == "" {
+		return ""
+	}
+	return "pnp:" + strings.ToLower(path)
+}
+
 func probeGPUs() []GPUInfo {
 	var gpus []GPUInfo
 	proc := windows.NewLazySystemDLL("dxgi.dll").NewProc("CreateDXGIFactory1")
@@ -141,6 +169,7 @@ func probeGPUs() []GPUInfo {
 				var desc [312]byte
 				if int32(comHardwareCall(adapter, 10, uintptr(unsafe.Pointer(&desc[0])))) >= 0 && binary.LittleEndian.Uint32(desc[304:308])&2 == 0 {
 					g := decodeDXGIDescription(desc[:])
+					g.persistentID = adapterDevicePath(desc[:])
 					idx := int(index)
 					g.DirectMLIndex = &idx
 					g.MemoryKind = dxgiMemoryKind(adapter)

@@ -195,6 +195,19 @@ func NewManager(root string, bundle fs.FS, logger *log.Logger) (*Manager, error)
 			}
 		}
 	}
+	migratedGPU := false
+	if strings.HasPrefix(m.settings.GPU, "dxgi:") && m.platform == "windows-amd64" {
+		var prior struct {
+			Name string `json:"gpu_name"`
+		}
+		if raw, err := os.ReadFile(filepath.Join(absolute, "config", "native_api.json")); err == nil {
+			_ = json.Unmarshal(raw, &prior)
+		}
+		if id := migrateDXGISelection(m.settings, prior.Name, executionGPUs(probeGPUs())); id != "" && id != m.settings.GPU {
+			m.settings.GPU = id
+			migratedGPU = true
+		}
+	}
 	upgradePageOCR := false
 	if m.settings.PageOCR == "" && (m.settings.Profile == "gpu-balanced" || m.settings.Profile == "gpu-12gb") {
 		for _, profile := range m.executionProfilesFor(HardwareReport()) {
@@ -206,7 +219,7 @@ func NewManager(root string, bundle fs.FS, logger *log.Logger) (*Manager, error)
 			}
 		}
 	}
-	if legacySettings || upgradePageOCR {
+	if legacySettings || upgradePageOCR || migratedGPU {
 		if err := writeJSON(filepath.Join(absolute, "config", "control.json"), m.settings); err != nil {
 			cancel()
 			return nil, err

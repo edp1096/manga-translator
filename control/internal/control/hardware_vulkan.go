@@ -4,6 +4,7 @@ import (
 	"encoding/binary"
 	"fmt"
 	"runtime"
+	"strings"
 	"sync"
 	"unsafe"
 )
@@ -114,6 +115,9 @@ var vulkanDevices = sync.OnceValue(func() []GPUInfo {
 		}
 		index := i
 		g := GPUInfo{ID: stable, Name: cText(raw[20:276]), Vendor: fmt.Sprintf("%04x", binary.LittleEndian.Uint32(raw[8:12])), MemoryKind: "unknown", Source: "Vulkan driver", VulkanIndex: &index}
+		if id.Valid != 0 && id.UUID != ([16]byte{}) {
+			g.persistentID = fmt.Sprintf("vulkan:%x", id.UUID)
+		}
 		if kind == 1 {
 			g.MemoryKind = "shared"
 		}
@@ -166,6 +170,15 @@ func executionGPUs(gpus []GPUInfo) []GPUInfo {
 			result = append(result, v)
 		} else {
 			result[match].VulkanIndex = v.VulkanIndex
+			if result[match].persistentID == "" {
+				result[match].persistentID = v.persistentID
+			}
+		}
+	}
+	for i := range result {
+		g := &result[i]
+		if strings.HasPrefix(g.ID, "dxgi:") && g.persistentID != "" {
+			g.sessionLUID, g.ID = g.ID, g.persistentID
 		}
 	}
 	return result
