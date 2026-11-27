@@ -1,5 +1,5 @@
 const defaults = {server:'http://127.0.0.1:8793',token:'',managementServer:'',target:'Korean',selector:'',captureFallback:true,displayMode:'auto',outsideTextMode:'tooltip',lightweightDisplay:false,forceTooltipRestoration:false,nameCorrectionScope:'chapter',fontPolicy:{}};
-importScripts('server-addresses.js','fonts.js','panel_scope.js','readers.js','names.js','job_cache.js','library.js','editor-session.js');
+importScripts('server-addresses.js','fonts.js','panel_scope.js','readers.js','names.js','work-font-settings.js','job_cache.js','library.js','editor-session.js');
 async function settings(){return {...defaults,...await chrome.storage.local.get(Object.keys(defaults))};}
 async function api(path, options={}) {
   const s=await settings();
@@ -19,6 +19,13 @@ async function encoded(blob){
   const bytes=new Uint8Array(await blob.arrayBuffer());
   let binary=''; for(let i=0;i<bytes.length;i+=32768)binary+=String.fromCharCode(...bytes.subarray(i,i+32768));
   return `data:${blob.type||'image/png'};base64,${btoa(binary)}`;
+}
+async function addedFonts(){
+ try{
+  const response=await fetch(chrome.runtime.getURL('fonts/added/catalog.json'),{cache:'no-store'});
+  if(response.ok){const list=await response.json();if(Array.isArray(list))return list;}
+ }catch{}
+ return [];
 }
 let imageChain=Promise.resolve();
 function browserImage(url,referrer){
@@ -80,7 +87,27 @@ chrome.runtime.onMessage.addListener((msg,sender,respond)=>{
   (async()=>{
     switch(msg.type){
       case 'page-panel-closed':await globalThis.MangaPagePanels?.closed(sender);return true;
-      case 'settings':return settings();
+      case 'settings':{
+        const prefs=await settings(),tabURL=sender.tab?.url||'';
+        const fromManga=/^https?:/.test(tabURL);
+        if(fromManga&&prefs.lightweightDisplay)return {...prefs,addedFonts:[],workFontPolicy:null};
+        const pageURL=fromManga?tabURL:msg.pageURL,tabId=fromManga?sender.tab.id:msg.tabId;
+        const [{key,profile},fonts]=await Promise.all([MangaWorkFonts.read(pageURL,tabId),addedFonts()]);
+        return {...prefs,addedFonts:fonts,workFontKey:key,workFontPolicy:profile};
+      }
+      case 'openWorkFonts':{
+        const tab=Number.isInteger(msg.tabId)?await chrome.tabs.get(msg.tabId):sender.tab;
+        if(!tab||!/^https?:/.test(tab.url||''))throw Error('만화 페이지에서 작품 글꼴을 여세요.');
+        const url=new URL(chrome.runtime.getURL('work-fonts.html'));
+        url.searchParams.set('page',tab.url);url.searchParams.set('tab',tab.id);
+        if(tab.title)url.searchParams.set('title',tab.title);
+        await chrome.tabs.create({windowId:tab.windowId,url:url.href});
+        return true;
+      }
+      case 'saveWorkFontPolicy':{
+        if(sender.url?.split('?')[0]!==chrome.runtime.getURL('work-fonts.html'))throw Error('작품 글꼴 설정 화면에서 저장하세요.');
+        return MangaWorkFonts.save(msg.key,msg.profile);
+      }
       case 'readerMetadata':{
         if(!Number.isInteger(sender.tab?.id)||sender.frameId!==0||!/^https:\/\/(?:manga-one\.com\/manga\/\d+\/chapter\/\d+|manga-mee\.jp\/detail\/\d+|palcy\.jp\/comics\/\d+|www\.manga-up\.com\/titles\/\d+\/chapters\/\d+|www\.pixiv\.net\/(?:[a-z]{2}\/)?artworks\/\d+|ynjn\.jp\/viewer\/\d+\/\d+|yanmaga\.jp\/viewer\/comics\/[^/?#]+\/[^/?#]+)(?:[/?#]|$)/.test(sender.url||''))return null;
         const result=await chrome.scripting.executeScript({target:{tabId:sender.tab.id,frameIds:[0]},world:'MAIN',func:MangaReaders.metadata,args:[msg.command?.action==='locate'&&Number.isInteger(msg.command.slot)?{action:'locate',slot:msg.command.slot}:null]});
@@ -177,8 +204,11 @@ chrome.runtime.onMessage.addListener((msg,sender,respond)=>{
       case 'manualRestoration':return (await api(`/api/jobs/${msg.id}/restoration/manual`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(msg.mask),timeout:240000})).json();
       case 'restoration':try{return await(await MangaLibrary.request('/assets/'+msg.id+'/restoration-v1.json')).json();}catch{return (await api(`/api/jobs/${msg.id}/restoration`,{method:'POST',timeout:240000})).json();}
       case 'font':{
-        if(!Object.hasOwn(MangaFonts.catalog,msg.id))throw Error('Invalid font');
-        const response=await fetch(chrome.runtime.getURL('fonts/'+msg.id+'.woff'));if(!response.ok)throw Error('Font unavailable');return encoded(await response.blob());
+        const added=MangaFonts.isAdded(msg.id)?(await addedFonts()).find(font=>font?.id===msg.id&&['ttf','otf'].includes(font.format)):null;
+        if(!added&&!Object.hasOwn(MangaFonts.catalog,msg.id))throw Error('Invalid font');
+        const response=await fetch(chrome.runtime.getURL('fonts/'+MangaFonts.fileName(msg.id,msg.weight,added)));
+        if(!response.ok)throw Error('Font unavailable');
+        return encoded(await response.blob());
       }
       case 'asset':{
         if(!['original.png','cleaned.png','mask.png','result.json','restored-v1.png'].includes(msg.name)&&!/^manual-[0-9a-f]{32}\.png$/.test(msg.name))throw Error('Invalid asset');

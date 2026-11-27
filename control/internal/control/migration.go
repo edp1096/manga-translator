@@ -17,7 +17,7 @@ import (
 
 // Only persistent user assets move between releases. Executables, extension
 // code, caches, process locks and logs always belong to the new installation.
-var migrationPaths = []string{"data/control-access-token", "data/library-groups.json", "config", "models", "runtime", "data/api-key", "data/native_api", "data/install-state.json", "data/downloads"}
+var migrationPaths = []string{"data/control-access-token", "data/library-groups.json", "config", "models", "runtime", "data/api-key", "data/native_api", "data/install-state.json", "data/downloads", AddedFontsPath}
 
 const migrationDir = ".data-import"
 
@@ -120,7 +120,7 @@ func recoverMigration(root string) error {
 }
 
 func migrationParents(root string) error {
-	for _, p := range []string{"data", "config", "models", "runtime"} {
+	for _, p := range []string{"data", "config", "models", "runtime", "extension", "extension/fonts"} {
 		st, e := os.Lstat(filepath.Join(root, p))
 		if os.IsNotExist(e) {
 			continue

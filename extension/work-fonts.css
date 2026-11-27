@@ -1,0 +1,15 @@
+#work-title { font-weight: 600; margin-bottom: 4px; }
+#work-scope { overflow-wrap: anywhere; margin-top: 0; }
+#work-roles fieldset { margin-block: 12px; }
+#work-roles .font-policy-row { margin-block: 2px 8px; }
+.candidate-fonts summary { cursor: pointer; font-size: 13px; }
+.candidate-list {
+ display: grid;
+ grid-template-columns: repeat(auto-fit,minmax(160px,1fr));
+ gap: 3px 10px;
+ max-height: 240px;
+ overflow: auto;
+ padding: 6px 2px;
+}
+.candidate-list label { display: flex; align-items: center; gap: 6px; margin: 0; min-width: 0; overflow-wrap: anywhere; }
+.candidate-list input { flex: none; }

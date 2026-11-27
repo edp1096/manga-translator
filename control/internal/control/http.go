@@ -243,6 +243,7 @@ func (m *Manager) Handler() http.Handler {
 	})
 	mux.HandleFunc("POST /api/open/root", func(w http.ResponseWriter, r *http.Request) { action(w, openFolder(m.root)) })
 	mux.HandleFunc("POST /api/open/chrome", func(w http.ResponseWriter, r *http.Request) { action(w, openChrome(m.root)) })
+	m.fontRoutes(mux)
 	pairHandler := func(w http.ResponseWriter, r *http.Request) {
 		expected := "chrome-extension://" + m.extensionID
 		origin := r.Header.Get("Origin")

@@ -6,7 +6,7 @@ let nameWork=null,namePageURL='',nameScope='chapter',nameScopeReady=false,changi
 const helpTopics={
  status:['진행 상태',[]],
  force:['대사·독백 툴팁 복원',['효과음을 제외한 대사·독백 툴팁에 원문 영역 제거와 배경 복원을 추가로 시도합니다. 말풍선 안팎 모두 포함합니다.','그림이 손상될 수 있습니다. 실패하거나 글자가 들어가지 않는 영역은 툴팁으로 유지합니다. 끄면 기존 표시로 돌아갑니다. 경량 처리에서는 실행하지 않습니다.']],
- lightweight:['경량 처리',['표시용 추가 말풍선 분석·흰 배경·이미지 복원과 정밀 배치를 생략합니다. OCR·중복 제거·툴팁 겹침 방지와 개별 편집은 유지합니다.','선택해 둔 표시 방식은 보존됩니다. 끄면 재번역 없이 해당 방식을 다시 적용합니다. 이미 실행 중인 서버 요청은 완료될 때까지 시간이 필요할 수 있습니다.']],
+ lightweight:['경량 처리',['표시용 추가 말풍선 분석·흰 배경·이미지 복원·정밀 배치와 작품별 글꼴 분석을 생략합니다. OCR·중복 제거·툴팁 겹침 방지와 개별 편집은 유지합니다.','선택해 둔 표시 방식은 보존됩니다. 끄면 재번역 없이 해당 방식을 다시 적용합니다. 이미 실행 중인 서버 요청은 완료될 때까지 시간이 필요할 수 있습니다.']],
  reader:['패널 사용',[
   '뒤쪽 이미지가 목록에 없으면 새로고침을 누르세요. 스크롤하거나 지원 뷰어의 페이지를 넘겨 본문을 불러옵니다.',
   '새로고침이나 번역이 끝나도 시작 위치로 돌아가지 않습니다. 토나리노 영점프처럼 화면을 읽는 뷰어는 만화 탭을 활성 상태로 유지하세요.',
@@ -247,6 +247,7 @@ $('preload').onclick=()=>control('preload');
 $('display-mode').onchange=async()=>{const mode=$('display-mode').value;changingDisplay=true;selectionState();try{await control('displayMode',{mode});}finally{changingDisplay=false;await control('status');}};
 $('outside-text-mode').onchange=async()=>{const mode=$('outside-text-mode').value;changingDisplay=true;selectionState();try{await control('outsideTextMode',{mode});}finally{changingDisplay=false;await control('status');}};
 $('display-retry').onclick=()=>control('displayRetry');
+if($('work-fonts'))$('work-fonts').onclick=()=>rpc({type:'openWorkFonts',tabId}).catch(error=>{noticeUntil=Date.now()+6000;$('status').textContent=error.message;});
 if($('names-settings'))$('names-settings').onclick=()=>rpc({type:'openNames',tabId}).catch(error=>{$('name-status').textContent=error.message;$('name-status').hidden=false;});
 if($('names-correct'))$('names-correct').onclick=()=>control('namesCorrect',{scope:nameScope});
 if($('names-undo'))$('names-undo').onclick=()=>control('namesUndo',{scope:nameScope});

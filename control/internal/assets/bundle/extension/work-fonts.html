@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="ko">
+<meta charset="utf-8">
+<title>작품 글꼴</title>
+<script defer src="appearance.js" data-appearance-page></script>
+<link rel="stylesheet" href="ui.css">
+<link rel="stylesheet" href="font-preview.css">
+<link rel="stylesheet" href="work-fonts.css">
+<main>
+ <h1>작품 글꼴</h1>
+ <p id="work-title" hidden></p>
+ <p id="work-scope" class="note"></p>
+ <form id="work-font-form">
+  <label>자동 글꼴 프리셋
+   <select id="work-preset" disabled>
+    <option value="inherit">전체 설정 따르기</option>
+   </select>
+  </label>
+  <div id="work-roles" hidden></div>
+  <p class="note">후보가 원문의 획과 충분히 비슷하면 후보를 사용합니다. 후보가 없거나 판단이 어려우면 지정한 기본 글꼴을 사용합니다.</p>
+  <p class="note">한국어 번역에 적용됩니다. 글상자·페이지 지정이 우선하며, 경량 처리에서는 기본 글꼴로 표시합니다.</p>
+  <button disabled>저장</button>
+  <output id="status" role="status"></output>
+ </form>
+</main>
+<script src="fonts.js"></script>
+<script src="font-preview.js"></script>
+<script src="work-fonts.js"></script>
+</html>

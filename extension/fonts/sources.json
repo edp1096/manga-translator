@@ -1,42 +1,76 @@
 {
   "dialogue": {
     "source": "https://copyright.keris.or.kr/wft/fntDwnldView?fntGrpId=GFT202301110000000000001",
-    "sha256": "d546786fe2cbeefa4f378607573fdb8d68d94116205dcfa7c2adaa375dde5be9"
+    "sha256": "d546786fe2cbeefa4f378607573fdb8d68d94116205dcfa7c2adaa375dde5be9",
+    "name": "학교안심 바른돋움"
   },
   "reflective": {
     "source": "https://copyright.keris.or.kr/wft/fntDwnldView?fntGrpId=GFT202510270000000000003",
-    "sha256": "32e266511499727b0e8d17374641d55f5d5f2fe2dc99a203db02a3eb6dee346c"
+    "sha256": "32e266511499727b0e8d17374641d55f5d5f2fe2dc99a203db02a3eb6dee346c",
+    "name": "학교안심 날개"
   },
   "narration": {
     "source": "https://copyright.keris.or.kr/wft/fntDwnldView?fntGrpId=GFT202301120000000000002",
-    "sha256": "da196e6907d80c59aa18879918c74a67eb758c98f74b09d9e6d0f8f7bdb758b5"
+    "sha256": "da196e6907d80c59aa18879918c74a67eb758c98f74b09d9e6d0f8f7bdb758b5",
+    "name": "학교안심 바른바탕"
   },
   "shout": {
     "source": "https://copyright.keris.or.kr/wft/fntDwnldView?fntGrpId=GFT202312110000000000020",
-    "sha256": "845eca2d318bfd87db2b35caa90bdc2eb4f358df1448a898366895e0e98fac40"
+    "sha256": "845eca2d318bfd87db2b35caa90bdc2eb4f358df1448a898366895e0e98fac40",
+    "name": "학교안심 여행"
   },
   "impact": {
     "source": "https://copyright.keris.or.kr/wft/fntDwnldView?fntGrpId=GFT202312110000000000015",
-    "sha256": "7a729454b6379763c84e5b021e4001306cf782f4b44d5d7bb8d2f115cb3a45a2"
+    "sha256": "7a729454b6379763c84e5b021e4001306cf782f4b44d5d7bb8d2f115cb3a45a2",
+    "name": "학교안심 투호"
   },
   "handwritten": {
     "source": "https://copyright.keris.or.kr/wft/fntDwnldView?fntGrpId=GFT202509240000000000003",
-    "sha256": "8e114bf0a76b6118b242231ebeae3d6db5803f8df9b0402f79d758f692e9608c"
+    "sha256": "8e114bf0a76b6118b242231ebeae3d6db5803f8df9b0402f79d758f692e9608c",
+    "name": "학교안심 민들레홀씨"
   },
   "stone": {
     "source": "https://copyright.keris.or.kr/wft/fntDwnldView?fntGrpId=GFT202301090000000000003",
-    "sha256": "cf4b94c8dc6cfa72aaad3a9c3cbeb9a54f793f54a1e99adc09dfeaca970fb1a6"
+    "sha256": "cf4b94c8dc6cfa72aaad3a9c3cbeb9a54f793f54a1e99adc09dfeaca970fb1a6",
+    "name": "학교안심 돌담"
   },
   "shower": {
     "source": "https://copyright.keris.or.kr/wft/fntDwnldView?fntGrpId=GFT202312110000000000008",
-    "sha256": "554618b5f82584b056bdc48c6ccc517f4890a794a7c820d89d478afbf914c3ed"
+    "sha256": "554618b5f82584b056bdc48c6ccc517f4890a794a7c820d89d478afbf914c3ed",
+    "name": "학교안심 소나기"
   },
   "serif": {
     "source": "https://copyright.keris.or.kr/wft/fntDwnldView?fntGrpId=GFT202301090000000000002",
-    "sha256": "c7ab37754fbf53c341ffb9c9a37940ebacb3d4f26bd6d8de4d32c6a505605cab"
+    "sha256": "c7ab37754fbf53c341ffb9c9a37940ebacb3d4f26bd6d8de4d32c6a505605cab",
+    "name": "학교안심 산뜻바탕"
   },
   "kimdaegeon": {
     "source": "https://copyright.keris.or.kr/wft/fntDwnldView?fntGrpId=GFT202210280000000000002",
-    "sha256": "a59513a97a84aecf313fbe2448c09c3ff822eee0a189d1cddf18f7964ff03bfb"
+    "sha256": "a59513a97a84aecf313fbe2448c09c3ff822eee0a189d1cddf18f7964ff03bfb",
+    "name": "학교안심 솔뫼 김대건"
+  },
+  "euljiro": {
+    "source": "https://woowahan-cdn.woowahan.com/static/fonts/BMEULJIROTTF.ttf?2e60d3cf",
+    "sha256": "9267f884385258c45b7e796dfa242508c756542a1a80059d03556e0d1903adf4",
+    "name": "배민 을지로"
+  },
+  "yeonsung": {
+    "source": "https://woowahan-cdn.woowahan.com/static/fonts/BMYEONSUNG_ttf.ttf?30f546f7",
+    "sha256": "154d22ee908e6d5ac11acb3526a8dd5c6963a9379abe81330df0b1453080f63e",
+    "name": "배민 연성"
+  },
+  "anjunggeun": {
+    "source": "https://gscaltexmediahub.com/wp-content/uploads/common/storage/%EB%8F%85%EB%A6%BD%EC%84%9C%EC%B2%B4_%EC%95%88%EC%A4%91%EA%B7%BC_GS.ttf",
+    "sha256": "3af7d111686d5b8fa248bd853e3233fd1c74bdf40de08f4715686142e796be54",
+    "name": "독립서체 안중근"
+  },
+  "heejoy": {
+    "source": "https://heejoykim.com/font-assets/heejoy/1.002/HEEJOY-1.002.zip",
+    "sha256": "3fc51ba75ce773533a82c9a61d42d624e8262121f13b76ab5170ee2f8f17abdd",
+    "name": "히조이체"
+  },
+  "heejoy-bold": {
+    "source": "https://heejoykim.com/font-assets/heejoy/1.002/HEEJOY-1.002.zip",
+    "sha256": "3c02c73c0da70cc79de61635f474ba5f66efaf70d1241538c94a6bd690c4e343"
   }
 }

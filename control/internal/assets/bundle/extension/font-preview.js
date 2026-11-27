@@ -2,10 +2,7 @@
 (() => {
 const sample='오늘은 어떤 이야기가 펼쳐질까?';
 function attach(select,read){
- const selected=select.value;
- for(const option of [...select.options])if(Object.hasOwn(MangaFonts.catalog,option.value))option.remove();
- for(const group of MangaFonts.groups)for(const id of group.ids)select.append(new Option('학교안심 '+MangaFonts.catalog[id],id));
- select.value=selected;
+ MangaFonts.populate(select);
 
  const root=document.createElement('div');root.className='font-preview';
  const caption=document.createElement('small'),text=document.createElement('div');text.className='font-preview-sample';
@@ -20,7 +17,8 @@ function attach(select,read){
   caption.textContent=(select.value==='mixed'?'현재 영역: ':select.value==='auto'?'자동 → ':'')+(MangaFonts.catalog[id]||'기본 글꼴')+(light?' · 경량 처리':'');
   text.style.font=MangaFonts.css(23,decorated);text.textContent=region.translation||sample;
   text.title=text.textContent;
-  if(details.open)await compare(seq,region,fontDefaults);
+  details.hidden=light;
+  if(!light&&details.open)await compare(seq,region,fontDefaults);
  }
  async function compare(seq,region,fontDefaults){
   const result={target:'Korean',fontDefaults,regions:MangaFonts.groups.flatMap(group=>group.ids).map(fontChoice=>({...region,fontChoice}))};

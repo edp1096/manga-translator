@@ -1,20 +1,99 @@
-/* Packaged, unmodified KERIS school-safe fonts; see fonts/LICENSE.txt. */
+/* Font sources and notices are included in fonts/. */
 (() => {
 if(globalThis.MangaFonts)return;
-const catalog=Object.freeze({dialogue:'바른돋움',reflective:'날개',narration:'바른바탕',shout:'여행',impact:'투호',handwritten:'민들레홀씨',stone:'돌담',shower:'소나기',serif:'산뜻바탕',kimdaegeon:'솔뫼 김대건'});
-const groups=Object.freeze([
+const catalog={dialogue:'바른돋움',reflective:'날개',narration:'바른바탕',shout:'여행',impact:'투호',handwritten:'민들레홀씨',stone:'돌담',shower:'소나기',serif:'산뜻바탕',kimdaegeon:'솔뫼 김대건',yeonsung:'배민 연성',heejoy:'히조이체',euljiro:'배민 을지로',anjunggeun:'독립서체 안중근'};
+const groups=[
  {title:'돋움체',ids:['dialogue']},
  {title:'바탕체',ids:['narration','serif']},
- {title:'손글씨체',ids:['reflective','handwritten','stone']},
- {title:'강조·효과음체',ids:['shout','impact','kimdaegeon','shower']}
-].map(group=>Object.freeze({...group,ids:Object.freeze(group.ids)})));
+ {title:'손글씨체',ids:['reflective','handwritten','stone','yeonsung','heejoy']},
+ {title:'강조·효과음체',ids:['shout','impact','kimdaegeon','shower','euljiro','anjunggeun']},
+{title:'추가 글꼴',ids:[]}
+];
+const addedFonts=new Map();
+const addedIDs=groups.at(-1).ids;
+const isAdded=id=>typeof id==='string'&&/^added-[a-f0-9]{64}$/.test(id);
+function registerAdded(list){
+ const entries=(Array.isArray(list)?list:[]).filter(font=>isAdded(font?.id)&&['ttf','otf'].includes(font.format)&&typeof font.name==='string'&&Number.isInteger(font.weight)&&font.weight>=1&&font.weight<=1000);
+ if(JSON.stringify(entries)===JSON.stringify([...addedFonts.values()]))return false;
+ for(const id of addedIDs){
+  if(entries.some(font=>font.id===id))continue;
+  delete catalog[id];pending.delete(id);loaded.delete(id);
+  if(typeof document!=='undefined')for(const face of document.fonts)if(face.family==='MangaSchool_'+id)document.fonts.delete(face);
+ }
+ addedFonts.clear();addedIDs.length=0;
+ for(const font of entries){
+  if(addedFonts.has(font.id))continue;
+  addedFonts.set(font.id,font);addedIDs.push(font.id);catalog[font.id]=font.name;
+ }
+ revision++;return true;
+}
+function populate(select){
+ const selected=select.value;
+ for(const option of [...select.options])if(Object.hasOwn(catalog,option.value)||isAdded(option.value))option.remove();
+ for(const group of groups)for(const id of group.ids)select.append(new Option(label(id),id));
+ select.value=[...select.options].some(option=>option.value===selected)?selected:'auto';
+}
+const ttf=new Set(['euljiro','yeonsung','heejoy','anjunggeun']);
+function fileName(id,weight=400,font=addedFonts.get(id)){
+ if(font&&isAdded(id)&&['ttf','otf'].includes(font.format))return 'added/'+id.slice(6)+'.'+font.format;
+ return id==='heejoy'&&weight===700?'heejoy-bold.ttf':id+(ttf.has(id)?'.ttf':'.woff');
+}
+function label(id){return ttf.has(id)||isAdded(id)?catalog[id]:'학교안심 '+catalog[id];}
+const impactCandidates=['impact','kimdaegeon','shower','euljiro','anjunggeun'];
+const narrationCandidates=['dialogue','narration','reflective','handwritten','stone','yeonsung','heejoy'];
 const legacy=size=>`600 ${size}px "Noto Sans CJK KR", "Malgun Gothic", sans-serif`;
 let loader,revision=0;const pending=new Map(),loaded=new Set();
 const roles=Object.freeze({dialogue:'일반 대사',narration:'독백·서술',shout:'강조·외침',impact:'강한 효과음'});
 const defaultPolicy=Object.freeze(Object.fromEntries(Object.keys(roles).map(role=>[role,{font:'auto',bold:['shout','impact'].includes(role)}])));
 function normalizePolicy(input){return Object.fromEntries(Object.keys(roles).map(role=>{const p=input?.[role];return [role,{font:p?.font==='default'||Object.hasOwn(catalog,p?.font)?p.font:'auto',bold:typeof p?.bold==='boolean'?p.bold:defaultPolicy[role].bold}];}));}
-let policy=normalizePolicy();
-function configure(value){const next=normalizePolicy(value);if(JSON.stringify(next)===JSON.stringify(policy))return false;policy=next;revision++;return true;}
+const workPolicyVersion=2;
+const workPresets=Object.freeze({general:'일반',drama:'극화',slice:'생활만화'});
+function presetPolicy(preset){
+ if(!Object.hasOwn(workPresets,preset))return null;
+ const dialogue={general:'dialogue',drama:'narration',slice:'reflective'}[preset];
+ const narration={general:'reflective',drama:'serif',slice:'heejoy'}[preset];
+ const narrationOptions=preset==='drama'?['narration']:preset==='slice'?['yeonsung','reflective','handwritten']:narrationCandidates.filter(id=>!['dialogue','narration','reflective'].includes(id));
+ return {version:workPolicyVersion,preset,roles:{
+  dialogue:{fallback:dialogue,bold:false,candidates:preset==='slice'?['yeonsung']:[]},
+  narration:{fallback:narration,bold:false,candidates:narrationOptions},
+  shout:{fallback:'shout',bold:true,candidates:[]},
+  impact:{fallback:'impact',bold:true,candidates:impactCandidates.filter(id=>id!=='impact')}
+ }};
+}
+function normalizeWorkPolicy(input){
+ const defaults=presetPolicy(input?.preset);
+ if(!defaults)return null;
+ const valid=id=>Object.hasOwn(catalog,id)||isAdded(id);
+ for(const role of Object.keys(roles)){
+  const r=input.roles?.[role],d=defaults.roles[role];
+  if(!r)continue;
+  // The first 생활만화 preset used 연성 as the fixed dialogue face.
+  const formerSliceDefault=input.version===undefined&&input.preset==='slice'&&role==='dialogue'&&r.fallback==='yeonsung'&&Array.isArray(r.candidates)&&r.candidates.length===0;
+  const fallback=!formerSliceDefault&&(r.fallback==='default'||valid(r.fallback))?r.fallback:d.fallback;
+  defaults.roles[role]={
+   fallback,
+   bold:typeof r.bold==='boolean'?r.bold:d.bold,
+   candidates:!formerSliceDefault&&Array.isArray(r.candidates)?[...new Set(r.candidates.filter(id=>valid(id)&&id!==fallback))]:d.candidates
+  };
+ }
+ return defaults;
+}
+function availableWorkPolicy(input){
+ const profile=normalizeWorkPolicy(input);
+ if(!profile)return null;
+ const available=profile.roles;
+ for(const [role,rule] of Object.entries(available)){
+  if(rule.fallback!=='default'&&!Object.hasOwn(catalog,rule.fallback))rule.fallback=presetPolicy(profile.preset).roles[role].fallback;
+  rule.candidates=rule.candidates.filter(id=>Object.hasOwn(catalog,id)&&id!==rule.fallback);
+ }
+ return available;
+}
+let policy=normalizePolicy(),workPolicy=null;
+function configure(value,work){
+ const next=normalizePolicy(value),nextWork=availableWorkPolicy(work);
+ if(JSON.stringify([next,nextWork])===JSON.stringify([policy,workPolicy]))return false;
+ policy=next;workPolicy=nextWork;revision++;return true;
+}
 function category(region){
  const role=region.fontStyle?.role,short=typeof region.translation==='string'&&!!region.translation.trim()&&[...region.translation.replace(/\s/gu,'')].length<=24,effect=region.type==='effect'&&!['DIALOGUE','LABEL'].includes(region.textVerification?.role);
  if(role==='impact'&&effect&&short)return 'impact';
@@ -31,39 +110,78 @@ function choice(region,target,light=false){
  if(region.fontChoice==='default'||Object.hasOwn(catalog,region.fontChoice))return region.fontChoice;
  const page=pageDefaults(region._pageFontDefaults);if(page.font!=='auto')return page.font;
  if(target!=='Korean')return 'default';
- const role=category(region);if(policy[role].font!=='auto')return policy[role].font;
- const source=region.sourceTypography;if(source?.version===1&&source.key===sourceKey(region)&&Object.hasOwn(catalog,source.choice))return source.choice;
- return defaultChoice(role);
+ const role=category(region);
+ const rule=workPolicy?.[role];
+ if(!rule&&policy[role].font!=='auto')return policy[role].font;
+ const source=region.sourceTypography;
+ if(source?.version===1&&source.key===sourceKey(region)&&Object.hasOwn(catalog,source.choice)&&(!rule||rule.candidates.includes(source.choice)))return source.choice;
+ return rule?.fallback||defaultChoice(role);
 }
 async function ensure(result,light=result._fontLight===true){
+ if(light||!loader||typeof FontFace==='undefined')return;
  const ids=new Set(result.regions.map(r=>choice(withPage(r,result),result.target,light)));
  await Promise.all([...ids].filter(id=>id!=='default').map(id=>{
   if(!pending.has(id))pending.set(id,(async()=>{
    try{
-    if(!loader||typeof FontFace==='undefined')return;
-    const data=await loader(id),bytes=typeof data==='string'?Uint8Array.from(atob(data.slice(data.indexOf(',')+1)),c=>c.charCodeAt(0)):data;
-    const face=await new FontFace('MangaSchool_'+id,bytes,{weight:'400'}).load();
-    document.fonts.add(face);loaded.add(id);revision++;
-   }catch(error){console.warn('Manga font fallback:',id,error.message);}
+    const faces=[];
+    const added=addedFonts.get(id);
+    for(const weight of id==='heejoy'?[400,700]:[added?.weight||400]){
+     const data=await loader(id,weight),bytes=typeof data==='string'?Uint8Array.from(atob(data.slice(data.indexOf(',')+1)),c=>c.charCodeAt(0)):data;
+     faces.push(await new FontFace('MangaSchool_'+id,bytes,{weight:String(weight)}).load());
+    }
+    if(added&&!addedFonts.has(id))return;
+    for(const face of faces)document.fonts.add(face);
+    loaded.add(id);revision++;
+   }catch(error){pending.delete(id);console.warn('Manga font fallback:',id,error.message);}
   })());
   return pending.get(id);
  }));
 }
-function decorate(result,light=result._fontLight===true){return {...result,_fontLight:light,regions:result.regions.map(r=>({...withPage(r,result),_fontId:choice(withPage(r,result),result.target,light),_fontLight:light}))};}
+function decorate(result,light=result._fontLight===true){return {...result,_fontLight:light,regions:result.regions.map(r=>({...withPage(r,result),_fontId:choice(withPage(r,result),result.target,light),_fontTarget:result.target,_fontLight:light}))};}
 function weight(region){
  if(region?._fontLight)return 400;
  if(region?.fontWeight===400||region?.fontWeight===700)return region.fontWeight;
  const page=pageDefaults(region?._pageFontDefaults);if(page.weight!=='auto')return page.weight;
  // Reuse semantic classification; punctuation alone does not make speech bold.
- return policy[category(region)].bold?700:400;
+ const role=category(region);
+ return ((region?._fontTarget??'Korean')==='Korean'?workPolicy?.[role]?.bold??policy[role].bold:policy[role].bold)?700:400;
 }
 function css(size,region){const id=region?._fontId;return loaded.has(id)?`${weight(region)} ${size}px "MangaSchool_${id}", "Noto Sans CJK KR", "Malgun Gothic", sans-serif`:!region?._fontLight?`${weight(region)} ${size}px "Noto Sans CJK KR", "Malgun Gothic", sans-serif`:legacy(size);}
 // Source-image shape matching is conservative: ambiguity retains the existing
 // typography policy. This is not a semantic guess from the translated sentence.
-const sourceKey=r=>JSON.stringify([3,r.text,r.bbox,r.fontStyle?.role,r.type]);
+function sourceKey(r){
+ const key=[4,r.text,r.bbox,r.fontStyle?.role,r.type];
+ const rule=workPolicy?.[category(r)];
+ if(rule)key.push(rule.fallback,rule.candidates);
+ return JSON.stringify(key);
+}
+function candidatesFor(r){
+ const rule=workPolicy?.[category(r)];
+ if(rule)return [rule.fallback==='default'?'dialogue':rule.fallback,...rule.candidates];
+ return r.type==='effect'?impactCandidates:narrationCandidates;
+}
 function sourceEligible(r){
- if(policy[category(r)].font!=='auto'||r.manual||r.fontChoice&&r.fontChoice!=='auto'||r.ocrTruncated||r.truncated||!r.text||!Array.isArray(r.bbox))return false;
- return r.type==='text'&&category(r)==='narration'||r.type==='effect'&&category(r)==='impact';
+ if(r.manual||r.fontChoice&&r.fontChoice!=='auto'||r.ocrTruncated||r.truncated||!r.text||!Array.isArray(r.bbox))return false;
+ const role=category(r);
+ if(workPolicy)return workPolicy[role].candidates.length>0&&(r.type==='text'||role==='impact');
+ return policy[role].font==='auto'&&(r.type==='text'&&role==='narration'||r.type==='effect'&&role==='impact');
+}
+function matchShape(features,text,aspect,fonts,role,rule){
+ const scores=new Map();
+ for(const ref of templateShapes(text,aspect,fonts)){
+  const score=shapeDistance(features,ref.features);
+  scores.set(ref.id,Math.min(scores.get(ref.id)??Infinity,score));
+ }
+ const [best,runner]=[...scores].sort((a,b)=>a[1]-b[1]);
+ if(!best||best[1]>=.24||!runner||runner[1]-best[1]<=.012)return null;
+ if(rule){
+  const fallback=rule.fallback==='default'?'dialogue':rule.fallback;
+  if(!rule.candidates.includes(best[0])||!scores.has(fallback)||scores.get(fallback)-best[1]<=.025)return null;
+ }else if(role==='narration'){
+  const printed=Math.min(scores.get('dialogue')??Infinity,scores.get('narration')??Infinity);
+  if(['dialogue','narration'].includes(best[0])||printed-best[1]<=.025)return null;
+ }
+ return {choice:best[0],distance:best[1],margin:runner[1]-best[1]};
 }
 function shapeDescriptor(data,w,h,characters){
  const bits=new Uint8Array(w*h);let count=0,x0=w,y0=h,x1=0,y1=0;
@@ -84,11 +202,16 @@ function shapeDescriptor(data,w,h,characters){
 }
 function shapeDistance(a,b){const scales=[.35,.08,.5,.5,.15,.08,.10];return a.reduce((n,v,i)=>n+Math.min(2,Math.abs(v-b[i])/scales[i]),0)/a.length;}
 const shapeTemplates=new Map();
+// For these Korean lettering faces, the Kana/Han glyphs are either absent or use
+// generic forms. Sample the face's own Hangul strokes for a cross-script match.
+const hangulPrototypes=new Set(['heejoy','anjunggeun']);
+const hangulSample=[...'오늘은어떤이야기가펼쳐질까'];
 function templateShapes(text,aspect,ids){
  const chars=[...text.replace(/\s/gu,'')],key=JSON.stringify([text,Math.round(aspect*4)/4,ids]);if(shapeTemplates.has(key))return shapeTemplates.get(key);
  const vertical=aspect<.7,cols=Math.max(1,Math.ceil(Math.sqrt(chars.length*Math.max(.1,Math.min(10,aspect))))),rows=Math.ceil(chars.length/cols),c=document.createElement('canvas');c.width=cols*48+16;c.height=rows*48+16;const ctx=c.getContext('2d'),out=[];
  for(const id of ids)for(const weight of [400,700]){ctx.fillStyle='#fff';ctx.fillRect(0,0,c.width,c.height);ctx.fillStyle='#111';ctx.font=`${weight} 40px "MangaSchool_${id}"`;ctx.textAlign='center';ctx.textBaseline='middle';
-  for(let i=0;i<chars.length;i++){const x=vertical?cols-1-Math.floor(i/rows):i%cols,y=vertical?i%rows:Math.floor(i/cols);ctx.fillText(chars[i],8+x*48+24,8+y*48+24);}
+  for(let i=0;i<chars.length;i++){const x=vertical?cols-1-Math.floor(i/rows):i%cols,y=vertical?i%rows:Math.floor(i/cols);const ch=chars[i];
+   const sample=(hangulPrototypes.has(id)||isAdded(id))&&/[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}]/u.test(ch)?hangulSample[i%hangulSample.length]:ch;ctx.fillText(sample,8+x*48+24,8+y*48+24);}
   const features=shapeDescriptor(ctx.getImageData(0,0,c.width,c.height).data,c.width,c.height,chars.length);if(features)out.push({id,features});
  }
  c.width=c.height=0;if(shapeTemplates.size>=64)shapeTemplates.clear();shapeTemplates.set(key,out);return out;
@@ -100,20 +223,21 @@ async function analyze(result,original,geometry,light=false){
  const candidates=result.regions.filter(r=>sourceEligible(r)&&(r.sourceTypography?.key!==sourceKey(r)||r.sourceTypography.inside!==sourceInside(r,result,geometry)));if(!candidates.length)return false;
  if(analysisTasks.has(result))return analysisTasks.get(result);
  const task=(async()=>{
-  const ids=[...new Set(candidates.flatMap(r=>r.type==='effect'?['impact','kimdaegeon','shower']:['dialogue','narration','reflective','handwritten','stone']))];
-  await ensure({target:'Korean',regions:ids.map(fontChoice=>({fontChoice}))});if(ids.some(id=>!loaded.has(id)))return false;
+  const rules=candidates.map(r=>({r,key:sourceKey(r),role:category(r),fonts:candidatesFor(r),rule:workPolicy?.[category(r)]}));
+  const ids=[...new Set(rules.flatMap(item=>item.fonts))];
+  await ensure({target:'Korean',regions:ids.map(fontChoice=>({fontChoice}))});
   const im=new Image();im.src=original;await im.decode();if(im.width!==result.width||im.height!==result.height)return false;let changed=false;
-  for(const r of candidates){await new Promise(resolve=>setTimeout(resolve,0));const key=sourceKey(r),text=r.text.replace(/\s/gu,''),b=r.bbox,chars=[...text];let selected;
+  for(const {r,key,role,fonts,rule} of rules){
+   await new Promise(resolve=>setTimeout(resolve,0));
+   if(key!==sourceKey(r))continue;
+   const text=r.text.replace(/\s/gu,''),b=r.bbox,chars=[...text];let selected;
    if(chars.length>=(r.type==='effect'?2:6)&&chars.length<=64&&b.length===4&&b.every(Number.isFinite)&&b[0]>=0&&b[1]>=0&&b[2]<=result.width&&b[3]<=result.height&&b[2]>b[0]&&b[3]>b[1]&&Math.sqrt((b[2]-b[0])*(b[3]-b[1])/chars.length)>=20){
     // Narration inside a normal balloon keeps the established body typography.
     const inside=sourceInside(r,result,geometry);
-    if(!inside){
+    if(!inside||rule&&role!=='narration'){
      const scale=Math.min(1,512/Math.max(b[2]-b[0],b[3]-b[1])),w=Math.max(1,Math.round((b[2]-b[0])*scale)),h=Math.max(1,Math.round((b[3]-b[1])*scale)),c=document.createElement('canvas');c.width=w;c.height=h;const ctx=c.getContext('2d',{willReadFrequently:true});ctx.drawImage(im,b[0],b[1],b[2]-b[0],b[3]-b[1],0,0,w,h);
-     const features=shapeDescriptor(ctx.getImageData(0,0,w,h).data,w,h,chars.length),group=r.type==='effect'?['impact','kimdaegeon','shower']:['dialogue','narration','reflective','handwritten','stone'];
-     if(features){const scores=new Map();for(const ref of templateShapes(text,w/h,group)){const score=shapeDistance(features,ref.features);scores.set(ref.id,Math.min(scores.get(ref.id)??Infinity,score));}
-      const ranked=[...scores].sort((a,b)=>a[1]-b[1]),best=ranked[0],runner=ranked[1],printed=Math.min(scores.get('dialogue')??Infinity,scores.get('narration')??Infinity);
-      if(best&&best[1]<.24&&runner&&runner[1]-best[1]>.012&&(r.type==='effect'||!['dialogue','narration'].includes(best[0])&&printed-best[1]>.025))selected={choice:best[0],distance:best[1],margin:runner[1]-best[1]};
-     }
+     const features=shapeDescriptor(ctx.getImageData(0,0,w,h).data,w,h,chars.length);
+     if(features)selected=matchShape(features,text,w/h,fonts.filter(id=>loaded.has(id)),role,rule);
      c.width=c.height=0;
     }
    }
@@ -123,5 +247,5 @@ async function analyze(result,original,geometry,light=false){
  })();analysisTasks.set(result,task);try{return await task;}finally{analysisTasks.delete(result);}
 }
 
-globalThis.MangaFonts={defaultChoice,pageDefaults,withPage,configure,normalizePolicy,defaultPolicy,roles,category,analyze,shapeDescriptor,shapeDistance,sourceKey,catalog,groups,choice,weight,ensure,decorate,css,get revision(){return revision;},setLoader(value){loader=value;}};
+globalThis.MangaFonts={fileName,label,registerAdded,isAdded,populate,workPresets,presetPolicy,normalizeWorkPolicy,defaultChoice,pageDefaults,withPage,configure,normalizePolicy,defaultPolicy,roles,category,analyze,shapeDescriptor,shapeDistance,sourceKey,catalog,groups,choice,weight,ensure,decorate,css,get revision(){return revision;},setLoader(value){loader=value;}};
 })();

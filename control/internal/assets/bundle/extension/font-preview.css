@@ -20,3 +20,5 @@
 .font-policy-row .font-preview summary{grid-column:2;grid-row:1;align-self:center;font-size:12px}
 .font-policy-row .font-preview-grid{grid-column:1/-1}
 .font-policy-row .font-preview details:not([open]) .font-preview-grid{display:none}
+
+.font-preview details[hidden]{display:none}

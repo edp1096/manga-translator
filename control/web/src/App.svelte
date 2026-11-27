@@ -1,5 +1,6 @@
 <script>
  import {onMount} from 'svelte';
+ import Fonts from './Fonts.svelte';
  import Icon from './Icon.svelte';
  import InfoPopover from './InfoPopover.svelte';
  import Library from './Library.svelte';
@@ -196,6 +197,7 @@
     {#if extension.connected}<section class="connected-card"><span class="connected-icon"><Icon name="check" size={27}/></span><div><h2>이제 만화 페이지에서 번역하세요.</h2><p>Manga Translator {extension.version} · 로컬 API에 연결됐습니다.</p></div><button class="button secondary" onclick={probe} disabled={probing}><Icon name="refresh" size={16}/>다시 확인</button></section>{/if}
     <section class="card extension-guide"><article><span class="guide-number">1</span><div><h3>확장 폴더를 확인하세요.</h3><p>{remoteServer?'확장 ZIP을 Windows PC에 다운로드하고 압축을 풀어 등록하세요.':'아래 폴더는 관리 앱이 준비한 크롬 확장입니다.'}</p><div class="copy-path"><code>{state?.extensionPath||'확인 중'}</code><button class="icon-button" aria-label="확장 폴더 경로 복사" onclick={()=>copy(state.extensionPath)}><Icon name="copy" size={17}/></button></div><div class="inline-actions">{#if !remoteServer}<button class="button secondary" onclick={()=>act('open/extension')}><Icon name="folder" size={17}/>폴더 열기</button>{/if}<a class="text-button" href="/extension.zip" download>확장 ZIP 받기<Icon name="download" size={15}/></a></div></div></article><article><span class="guide-number">2</span><div><h3>크롬에 확장을 추가하세요.</h3><p>확장 관리 화면에서 <strong>개발자 모드</strong>를 켜고, <strong>압축해제된 확장 프로그램을 로드</strong>를 눌러 위 폴더를 선택하세요.</p>{#if !remoteServer}<button class="button secondary" onclick={()=>act('open/chrome')}><Icon name="chrome" size={17}/>크롬 확장 관리 열기<Icon name="external" size={14}/></button>{/if}<small class="guide-note">자동으로 열리지 않으면 크롬 주소창에 chrome://extensions 를 입력하세요.</small></div></article><article><span class="guide-number">3</span><div><h3>처리 서버와 연결하세요.</h3><p>{remoteServer?'확장 연결하기를 누르고 열린 확장 화면에서 서버를 확인하세요. 주소와 인증 정보는 자동으로 설정됩니다.':'관리 앱에서 연결 설정과 접근 키를 자동으로 전달합니다.'}</p><div class="inline-actions">{#if extension.installed}<button class="button primary" onclick={pair} disabled={acting||quitting}><Icon name="link" size={17}/>{extension.connected?'연결 설정 다시 적용':'확장 연결하기'}</button>{:else}<button class="button primary" onclick={()=>location.reload()}><Icon name="refresh" size={17}/>설치 후 다시 확인</button>{/if}<span class="subtle">{extension.installed?'설치 확인 · v'+extension.version:'확장 설치 후 이 화면을 새로고침합니다.'}</span></div></div></article></section>
 
+    <Fonts {request} locked={dataLocked} remote={remoteServer}/>
    {:else if view==='devices'}
  <Devices {request}/>
    {:else if view==='logs'}

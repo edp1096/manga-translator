@@ -2,12 +2,12 @@
 if(globalThis.__mangaTranslator)return;globalThis.__mangaTranslator=true;
 const rpc=async msg=>{const r=await chrome.runtime.sendMessage(msg);if(!r?.ok)throw Error(r?.error||'확장 연결이 끊어졌습니다. 새로고침하세요.');return r.value;};
 MangaRender.setAssetLoader((id,name)=>rpc({type:'asset',id,name}));
-globalThis.MangaFonts?.setLoader(id=>rpc({type:'font',id}));
+globalThis.MangaFonts?.setLoader((id,weight)=>rpc({type:'font',id,weight}));
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 const pageIdentity=()=>{if(globalThis.MangaReaders)return MangaReaders.pageIdentity(location.href);const u=new URL(location.href);u.hash='';return u.href;};
 const captureReader=async()=>{if((await rpc({type:'settings'})).captureFallback===false)throw Error('이 뷰어는 확장 설정의 화면 캡처 허용이 필요합니다.');return rpc({type:'capture'});};
 let reader=globalThis.MangaReaders?.create({fetchImage:url=>rpc({type:'fetchImage',url}),metadata:command=>rpc({type:'readerMetadata',command}),capture:captureReader,onWait:text=>status(text),cancelled:()=>running&&stopped})||null;
-let pageCache=null,exportPosition=null,pendingFontPolicy;
+let pageCache=null,exportPosition=null,pendingFontPreferences;
 const overlayInstance=crypto.randomUUID();
 let tooltipClipSequence=0;
 let entries=[],running=false,stopped=false,showOriginal=false,message='이미지를 탐지하세요.',scannedURL=pageIdentity();
@@ -106,7 +106,17 @@ function queueDisplay(){
   if(!displayPaused&&!running&&!exporting&&entries.some(needsDisplay))queueDisplay();
  });
 }
-chrome.storage?.onChanged?.addListener((changes,area)=>{if(area!=='local')return;if(changes.fontPolicy){if(exporting)pendingFontPolicy=changes.fontPolicy.newValue;else if(globalThis.MangaFonts?.configure(changes.fontPolicy.newValue))setDisplayMode(displayMode,true);}if(changes.displayMode||changes.outsideTextMode||changes.lightweightDisplay||changes.forceTooltipRestoration)setDisplayModes(changes.displayMode?changes.displayMode.newValue:(pendingDisplayMode?.mode||displayMode),changes.outsideTextMode?changes.outsideTextMode.newValue:(pendingDisplayMode?.outside||outsideTextMode),false,changes.lightweightDisplay?changes.lightweightDisplay.newValue:(pendingDisplayMode?.light??lightweightDisplay),changes.forceTooltipRestoration?changes.forceTooltipRestoration.newValue:(pendingDisplayMode?.force??forceTooltipRestoration));if(changes.nameWorks||changes.target)nameMessage='';});
+function applyFontPreferences(value){
+ if(exporting){pendingFontPreferences=value;return false;}
+ const fontsChanged=globalThis.MangaFonts?.registerAdded(value.addedFonts);
+ const policyChanged=globalThis.MangaFonts?.configure(value.fontPolicy,value.workFontPolicy);
+ return fontsChanged||policyChanged;
+}
+async function refreshFontPreferences(){
+ const page=pageIdentity(),preferences=await rpc({type:'settings'});
+ if(pageIdentity()===page&&applyFontPreferences(preferences))setDisplayMode(displayMode,true);
+}
+chrome.storage?.onChanged?.addListener((changes,area)=>{if(area!=='local')return;if(changes.fontPolicy||changes.workFontPolicies||changes.lightweightDisplay)refreshFontPreferences().catch(()=>{});if(changes.displayMode||changes.outsideTextMode||changes.lightweightDisplay||changes.forceTooltipRestoration)setDisplayModes(changes.displayMode?changes.displayMode.newValue:(pendingDisplayMode?.mode||displayMode),changes.outsideTextMode?changes.outsideTextMode.newValue:(pendingDisplayMode?.outside||outsideTextMode),false,changes.lightweightDisplay?changes.lightweightDisplay.newValue:(pendingDisplayMode?.light??lightweightDisplay),changes.forceTooltipRestoration?changes.forceTooltipRestoration.newValue:(pendingDisplayMode?.force??forceTooltipRestoration));if(changes.nameWorks||changes.target)nameMessage='';});
 const status=t=>message=t;
 const updateRow=()=>{};
 function urlOf(img){return img.currentSrc||img.getAttribute('data-src')||img.getAttribute('data-original')||img.src;}
@@ -150,7 +160,7 @@ async function scan(options={}){
  if(running&&!options.loading)return snapshot();
  const samePage=scannedURL===pageIdentity();scannedURL=pageIdentity();if(!samePage){pageCache=null;for(const e of entries){e.overlay?.remove();e.resizeObserver?.disconnect();}entries=[];reader=globalThis.MangaReaders?.create({fetchImage:url=>rpc({type:'fetchImage',url}),metadata:command=>rpc({type:'readerMetadata',command}),capture:captureReader,onWait:text=>status(text),cancelled:()=>running&&stopped})||null;}
  const settings=options.settings||await rpc({type:'settings'});
- const fontPolicyChanged=globalThis.MangaFonts?.configure(settings.fontPolicy);
+ const fontPolicyChanged=applyFontPreferences(settings);
  setDisplayModes(settings.displayMode,settings.outsideTextMode,!!fontPolicyChanged,settings.lightweightDisplay,settings.forceTooltipRestoration);
  if(pageCache===null){const saved=await rpc({type:'restore'}).catch(()=>[]);pageCache=Array.isArray(saved)?saved:[];}
  if(reader){const active=reader;await active.prepare?.();if(reader!==active||active.identity!==pageIdentity())return snapshot();return readerScan(options);}
@@ -425,6 +435,8 @@ async function run(keys){
  const active=()=>!stopped&&pageIdentity()===batchIdentity;
  const completed=new Set();let done=0,failed=0,interrupted='',displayEntry=null;
  try{
+  const preferences=await rpc({type:'settings'}).catch(()=>null);
+  if(preferences&&applyFontPreferences(preferences))setDisplayMode(displayMode,true);
   for(const e of selected){
    if(!active()){stopped=true;break;}
    try{
@@ -528,7 +540,7 @@ chrome.runtime.onMessage.addListener((m,s,reply)=>{
     status(`${e.index+1}번 이미지로 이동했습니다.`);
    }
    if(m.action==='exportStart'){if(running)throw Error('작업이 끝난 뒤 저장하세요.');exporting=true;exportPosition=reader?{reader,position:reader.position(),identity:pageIdentity()}:null;return snapshot();}
-   if(m.action==='exportEnd'){const saved=exportPosition;exportPosition=null;exporting=false;if(pendingFontPolicy!==undefined){globalThis.MangaFonts?.configure(pendingFontPolicy);pendingFontPolicy=undefined;setDisplayMode(displayMode,true);}if(pendingDisplayMode!==undefined){const pending=pendingDisplayMode;pendingDisplayMode=undefined;setDisplayModes(pending.mode,pending.outside,false,pending.light,pending.force);}if(saved&&saved.identity===pageIdentity())await saved.reader.restore(saved.position);queueDisplay();return snapshot();}
+   if(m.action==='exportEnd'){const saved=exportPosition;exportPosition=null;exporting=false;if(pendingFontPreferences){const pending=pendingFontPreferences;pendingFontPreferences=undefined;if(applyFontPreferences(pending))setDisplayMode(displayMode,true);}if(pendingDisplayMode!==undefined){const pending=pendingDisplayMode;pendingDisplayMode=undefined;setDisplayModes(pending.mode,pending.outside,false,pending.light,pending.force);}if(saved&&saved.identity===pageIdentity())await saved.reader.restore(saved.position);queueDisplay();return snapshot();}
    if(m.action==='export'){
     if(running)throw Error('작업이 끝난 뒤 저장하세요.');
     const e=entries.find(e=>e.key===m.key);if(!e)throw Error('목록의 이미지를 찾지 못했습니다.');

@@ -127,7 +127,7 @@ func TestUpdateRollbackPreservesData(t *testing.T) {
 			t.Fatal(e)
 		}
 	}
-	for _, p := range []string{exe, "README.txt", "DOWNLOADS.json", "licenses/old.txt", "extension/manifest.json", "models/model.bin", "runtime/library", "config/control.json", "data/api-key", "data/native_api/jobs/result.json"} {
+	for _, p := range []string{exe, "README.txt", "DOWNLOADS.json", "licenses/old.txt", "extension/manifest.json", fontIndex, AddedFontsPath + "/test.ttf", "models/model.bin", "runtime/library", "config/control.json", "data/api-key", "data/native_api/jobs/result.json"} {
 		put(p, "original:"+p)
 	}
 	j := updateJournal{Version: "0.4.2", Previous: "0.4.1", Executable: exe, Token: strings.Repeat("a", 64), Phase: "prepared", Archive: "archive/update-test"}
@@ -140,6 +140,9 @@ func TestUpdateRollbackPreservesData(t *testing.T) {
 	if e := installUpdateFiles(root, j); e != nil {
 		t.Fatal(e)
 	}
+	if readImport(t, root, fontIndex) != "original:"+fontIndex {
+		t.Fatal("update removed font catalog")
+	}
 	put("extension/manifest.json", "new extension")
 	put("extension/new.js", "new file")
 	if e := restoreUpdateFiles(root, j); e != nil {
@@ -148,7 +151,7 @@ func TestUpdateRollbackPreservesData(t *testing.T) {
 	if e := restoreUpdateFiles(root, j); e != nil {
 		t.Fatal("non-idempotent rollback", e)
 	}
-	for _, p := range []string{exe, "README.txt", "DOWNLOADS.json", "licenses/old.txt", "extension/manifest.json", "models/model.bin", "runtime/library", "config/control.json", "data/api-key", "data/native_api/jobs/result.json"} {
+	for _, p := range []string{exe, "README.txt", "DOWNLOADS.json", "licenses/old.txt", "extension/manifest.json", fontIndex, AddedFontsPath + "/test.ttf", "models/model.bin", "runtime/library", "config/control.json", "data/api-key", "data/native_api/jobs/result.json"} {
 		b, e := os.ReadFile(filepath.Join(root, p))
 		if e != nil || string(b) != "original:"+p {
 			t.Fatal("not preserved", p, e)

@@ -209,6 +209,9 @@ func archiveSource(project, path string) error {
 				return err
 			}
 			if info.IsDir() {
+				if path == filepath.Join(project, filepath.FromSlash(control.AddedFontsPath)) {
+					return filepath.SkipDir
+				}
 				switch info.Name() {
 				case "node_modules", ".git", ".build", "__pycache__":
 					return filepath.SkipDir
@@ -304,6 +307,9 @@ func main() {
 			return err
 		}
 		if entry.IsDir() {
+			if name == filepath.Join(project, filepath.FromSlash(control.AddedFontsPath)) {
+				return filepath.SkipDir
+			}
 			return nil
 		}
 		relative, err := filepath.Rel(extensionRoot, name)

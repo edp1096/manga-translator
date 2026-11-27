@@ -15,5 +15,6 @@ archive/
 
 # Local experiments, captures, logs and build evidence
 /research/
+/extension/fonts/added/
 
 control/tools/geometry/node_modules/
