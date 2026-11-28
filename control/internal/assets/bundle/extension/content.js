@@ -141,7 +141,7 @@ function currentPageKey(){
  }
  return best;
 }
-function snapshot(){return {message,running,editing:editOpening||entries.some(e=>e.applyingEdit),nameMessage,nameBusy,displayMode,outsideTextMode,lightweightDisplay,forceTooltipRestoration,displayBusy:displayBusy||!!displayTask,displayMessage,displayPaused,forceFailures:forceTooltipRestoration&&!lightweightDisplay?entries.reduce((n,e)=>n+(e.forceFailed||0),0):0,pageURL:location.href,pageIdentity:pageIdentity(),reader:reader?.name,items:entries.map(e=>({key:e.key,index:e.index,sourceURL:e.sourceURL||urlOf(e.img),state:e.state,done:!!e.result&&(!e.result.manualDraft||e.result.regions.some(r=>r.translation?.trim())),error:e.error,preview:e.readerPage?(e.readerPreview||MangaReaders.placeholder(e.index)):(e.sourceURL||urlOf(e.img)),title:e.title||e.img?.alt||`이미지 ${e.index+1}`,sourceWarnings:e.result?.ocrWarnings||[],width:e.readerWidth||e.img?.naturalWidth||e.img?.width||0,height:e.readerHeight||e.img?.naturalHeight||e.img?.height||0}))};}
+function snapshot(){return {contextCount:contextSuggestions.filter(p=>p.identity===pageIdentity()).length,message,running,editing:editOpening||entries.some(e=>e.applyingEdit),nameMessage,nameBusy,displayMode,outsideTextMode,lightweightDisplay,forceTooltipRestoration,displayBusy:displayBusy||!!displayTask,displayMessage,displayPaused,forceFailures:forceTooltipRestoration&&!lightweightDisplay?entries.reduce((n,e)=>n+(e.forceFailed||0),0):0,pageURL:location.href,pageIdentity:pageIdentity(),reader:reader?.name,items:entries.map(e=>({key:e.key,index:e.index,sourceURL:e.sourceURL||urlOf(e.img),state:e.state,done:!!e.result&&(!e.result.manualDraft||e.result.regions.some(r=>r.translation?.trim())),error:e.error,preview:e.readerPage?(e.readerPreview||MangaReaders.placeholder(e.index)):(e.sourceURL||urlOf(e.img)),title:e.title||e.img?.alt||`이미지 ${e.index+1}`,sourceWarnings:e.result?.ocrWarnings||[],width:e.readerWidth||e.img?.naturalWidth||e.img?.width||0,height:e.readerHeight||e.img?.naturalHeight||e.img?.height||0}))};}
 function readerScan(options={}){
  const previous=new Map(entries.map(e=>[e.sourceURL,e]));
  const next=reader.pages().map(page=>{
@@ -243,10 +243,54 @@ function restoreEntry(e){
  cachedRestoreQueue=task.catch(()=>{e.restoring=false;});
  return task;
 }
+function suspectDialogue(result){
+ const groups=new Map(),suspects=new Set();
+ const normalize=text=>(text||'').normalize('NFKC').toLowerCase().replace(/[^\p{L}\p{N}]/gu,'');
+ for(const row of result.regions||[]){
+  if(row.type==='effect'||row.ocrTruncated||row.ocrUnreliable)continue;
+  const source=normalize(row.text),translation=normalize(row.translation);
+  if(!source||!translation)continue;
+  const previous=groups.get(translation)||[];
+  for(const other of previous){
+   if(source.includes(other.source)||other.source.includes(source))continue;
+   // Short replies are often identical on purpose. A full sentence paired
+   // with a much shorter source still warrants checking (e.g. a shifted batch).
+   const longer=Math.max(source.length,other.source.length),shorter=Math.min(source.length,other.source.length);
+   if(translation.length<8&&(longer<10||longer<shorter*2))continue;
+   suspects.add(row.id);suspects.add(other.id);
+  }
+  previous.push({id:row.id,source});groups.set(translation,previous);
+ }
+ return suspects;
+}
+async function repairDialogue(entry){
+ if(lightweightDisplay||entry.result?.target!=='Korean'||entry.result.manualDraft)return;
+ const job=entry.job,identity=pageIdentity();
+ const current=before=>entry.job===job&&entry.result===before&&entries.includes(entry)&&pageIdentity()===identity&&!entry.applyingEdit;
+ const before=entry.result,suspects=suspectDialogue(before);
+ if(!suspects.size)return;
+ const rows=before.regions.filter(row=>suspects.has(row.id)&&
+  !(row.duplicateReview?.source===row.text&&row.duplicateReview.translation===row.translation));
+ if(!rows.length)return;
+ const ids=new Set(rows.map(row=>row.id));
+ try{
+  const proposals=await rpc({type:'contextReview',id:job,result:{regions:rows},automatic:true,duplicateIds:[...ids]});
+  if(!current(before))return;
+  const changes=proposals.filter(proposal=>proposal.apply&&ids.has(proposal.id));
+  if(!changes.length)return;
+  const response=await rpc({type:'contextApply',id:job,changes});
+  if(!current(before)||!response.applied||!response.result)return;
+  entry.result=response.result;entry.presentationBase=null;
+  const cached=pageCache?.find(item=>item.id===job);
+  if(cached)cached.result=response.result;
+ }catch{return;} // Offline rereading and older servers still show saved pages.
+}
 async function restoreEntryNow(e,saved){
  try{
   const [original,cleaned]=await Promise.all(['original.png','cleaned.png'].map(name=>rpc({type:'asset',id:saved.id,name})));
   if(e.job!==saved.id||e.pendingJob||e.result!==saved.result)return;
+  await repairDialogue(e);
+  if(e.job!==saved.id||e.pendingJob||!entries.includes(e))return;
   Object.assign(e,{original,cleaned});await overlay(e);e.completionState=e.result.manualDraft?draftState(e.result):e.result.ocrWarnings?.length?`원문 확인 필요 ${e.result.ocrWarnings.length}곳 · 이전 결과 복원`:e.result.nameWarnings?.length?'명칭 확인 필요 · 이전 결과 복원':e.result.regions.length?'완료 · 이전 결과 복원':'글자 없음 · 원본 유지';e.state=e.displayRevision===displayRevision&&e.displayResult===e.result?e.completionState:'이전 결과 표시 준비';if(e.state===e.completionState)delete e.completionState;
  }catch(error){
   if(e.job===saved.id&&!e.pendingJob&&e.result===saved.result){
@@ -390,6 +434,58 @@ async function overlay(e){
  place(e);
  if(revision===displayRevision&&(!needsGeometry(result)||geometryReady(e))&&restorationReady(e)&&(lightweightDisplay||displayMode!=='white'||e.whiteRevision===revision)&&(!forceTooltipRestoration||lightweightDisplay||e.forceRevision===revision&&e.forceResult===result)){e.displayRevision=revision;e.displayResult=result;}
 }
+let contextSuggestions=[];
+async function showContextResult(entry,changes){
+ const response=await rpc({type:'contextApply',id:entry.job,changes});
+ if(response.applied>0&&response.result){
+  entry.result=response.result;entry.presentationBase=null;
+  await overlay(entry).catch(()=>{entry.state='문맥 교정 저장됨 · 표시 다시 적용';});
+ }
+ return response;
+}
+async function reviewContext(keys,namesOnly=false){
+ if(running||exporting||displayBusy||displayTask)throw Error('진행 중인 작업을 끝낸 뒤 문맥 재번역을 실행하세요.');
+ const selected=entries.filter(e=>e.job&&e.result?.target==='Korean'&&!e.restoring&&!e.cachedRestore&&!e.pendingJob&&!e.applyingEdit&&(namesOnly||keys.includes(e.key)));
+ if(!selected.length)throw Error('한국어 번역 결과가 있는 페이지를 선택하세요.');
+ const identity=pageIdentity();running=true;nameBusy=true;stopped=false;contextSuggestions=[];
+ let applied=0,failed=0,conflicts=0,failureMessage='';
+ try{
+  for(const [index,entry] of selected.entries()){
+   if(stopped||pageIdentity()!==identity)break;
+   nameMessage=`문맥 재번역 중 · ${index+1}/${selected.length}장`;status(nameMessage);
+   const before=entry.result,job=entry.job;
+   try{
+    const changes=await rpc({type:'contextReview',id:job,result:before,namesOnly});
+    if(stopped||pageIdentity()!==identity)break;
+    if(entry.result!==before||entry.job!==job){++conflicts;continue;}
+    if(!Array.isArray(changes))throw Error('문맥 재번역 응답을 읽지 못했습니다.');
+    const certain=changes.filter(change=>change.apply),pending=changes.filter(change=>!change.apply);
+    if(certain.length){const result=await showContextResult(entry,certain);applied+=result.applied||0;conflicts+=result.conflicts||0;}
+    for(const change of pending)contextSuggestions.push({change,job,key:entry.key,page:entry.index+1,identity});
+   }catch(error){++failed;failureMessage=error.message;nameMessage=failureMessage;status(nameMessage);if(/서버 (400|404|409):/.test(error.message))break;}
+  }
+  nameMessage=`${stopped?'문맥 재번역 중지':'문맥 재번역 완료'} · ${applied}곳 적용 · ${contextSuggestions.length}곳 검토${failed?' · '+failed+'장 실패 · '+failureMessage:''}${conflicts?' · 바뀐 대사 '+conflicts+'곳 유지':''}`;
+  status(nameMessage);
+ }finally{running=false;nameBusy=false;queueDisplay();}
+}
+async function acceptContext(ids){
+ if(running||exporting||displayBusy||displayTask)throw Error('진행 중인 표시 작업이 끝난 뒤 다시 시도하세요.');
+ const selected=contextSuggestions.filter(p=>ids.includes(p.job+':'+p.change.id)&&p.identity===pageIdentity());
+ const groups=new Map();let applied=0,conflicts=0;
+ for(const pending of selected){
+  const entry=entries.find(e=>e.key===pending.key&&e.job===pending.job&&e.result&&!e.applyingEdit);
+  if(entry){if(!groups.has(entry))groups.set(entry,[]);groups.get(entry).push(pending.change);}
+ }
+ running=true;
+ try{
+  for(const [entry,changes]of groups){
+   const response=await showContextResult(entry,changes);
+   applied+=response.applied||0;conflicts+=response.conflicts||0;
+   contextSuggestions=contextSuggestions.filter(p=>p.job!==entry.job||!changes.includes(p.change));
+  }
+  nameMessage=`문맥 교정 · ${applied}곳 적용${conflicts?' · 바뀐 대사 '+conflicts+'곳 유지':''}`;status(nameMessage);
+ }finally{running=false;queueDisplay();}
+}
 async function correctNames(undo=false,scope='chapter'){
  if(running||exporting||displayBusy)return;
  const context=await rpc({type:'namesContext'}),work=context?.work;
@@ -456,6 +552,8 @@ async function run(keys){
        const [original,cleaned]=await Promise.all(['original.png','cleaned.png'].map(name=>rpc({type:'asset',id:e.pendingJob,name})));
        if(!active()){stopped=true;break;}
        Object.assign(e,{job:e.pendingJob,result:response.result,original,cleaned,bubbles:undefined,restoration:undefined,restored:undefined});
+       await repairDialogue(e);
+       if(!active()){stopped=true;break;}
        remember(e);break;
       }
       const phases={queued:'대기열',loading_models:'모델 준비',detecting:'영역 탐지',detecting_dark_text:'검은 배경 글자 탐지',ocr:'글자 인식',translating:'번역'};
@@ -521,9 +619,12 @@ chrome.runtime.onMessage.addListener((m,s,reply)=>{
     const light=await rpc({type:'lightweightDisplay',enabled:m.enabled});setDisplayModes(displayMode,outsideTextMode,false,light);queueDisplay();
    }
    if(m.action==='displayRetry')setDisplayMode(displayMode,true);
-   if((editOpening||entries.some(e=>e.applyingEdit))&&['run','preload','edit','export','exportStart','namesCorrect','namesUndo'].includes(m.action))throw Error('편집 화면을 준비하고 있습니다.');
-   if(['run','preload','edit','export','exportStart','namesCorrect','namesUndo'].includes(m.action)&&(displayBusy||displayTask))throw Error('표시 적용이 끝난 뒤 실행하세요.');
-   if(m.action==='nameRegions')return {regions:entries.flatMap(entry=>entry.result?(entry.result.regions||[]).filter(region=>region.text?.trim()&&region.text.length<=100).map(region=>({id:entry.job,region:region.id,page:entry.index+1,text:region.text})):[])};
+   if((editOpening||entries.some(e=>e.applyingEdit))&&['run','preload','edit','export','exportStart','namesCorrect','namesUndo','contextReview','contextAccept'].includes(m.action))throw Error('편집 화면을 준비하고 있습니다.');
+   if(['run','preload','edit','export','exportStart','namesCorrect','namesUndo','contextReview','contextAccept'].includes(m.action)&&(displayBusy||displayTask))throw Error('표시 적용이 끝난 뒤 실행하세요.');
+   if(m.action==='nameRegions')return {regions:entries.flatMap(entry=>entry.result?(entry.result.regions||[]).filter(region=>region.text?.trim()&&region.text.length<=100).map(region=>({id:entry.job,region:region.id,page:entry.index+1,text:region.text,type:region.type})):[])};
+   if(m.action==='contextReview')reviewContext(m.keys||[],m.namesOnly===true).catch(error=>{nameMessage=error.message;status(error.message);});
+   if(m.action==='contextSuggestions')return contextSuggestions.filter(p=>p.identity===pageIdentity()).map(p=>({id:p.job+':'+p.change.id,page:p.page,...p.change,key:p.job+':'+p.change.id}));
+   if(m.action==='contextAccept')await acceptContext(m.keys||[]);
    if(m.action==='namesCorrect'||m.action==='namesUndo')correctNames(m.action==='namesUndo',m.scope).catch(error=>{nameMessage=error.message;status(error.message);});
    if(m.action==='preload')preload().catch(e=>status(e.message));
    if(m.action==='run'){displayPaused=false;run(m.keys||[]).catch(e=>status(e.message));}

@@ -71,7 +71,7 @@
    </li>
   {/each}
   {#each fonts.builtIn as font (font.id)}
-   <li><span>{font.name}</span><a href={font.source} target="_blank" rel="noreferrer" aria-label={font.name + ' 배포처'}>배포처</a></li>
+   <li><span>{font.name}</span><a href={font.publisherPage} target="_blank" rel="noreferrer" aria-label={font.name + ' 배포처'}>배포처</a></li>
   {/each}
  </ul>
 </section>

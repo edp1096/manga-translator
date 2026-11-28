@@ -919,6 +919,207 @@ async function forceInkMask(result,r,allowed,source,bubble,current=()=>true){
  if(runs.length>200000)return null;
  return {width:result.width,height:result.height,bounds:[b[0]+x0,b[1]+y0,b[0]+x1,b[1]+y1],runs,layoutBox};
 }
+// A fallback for vertical captions with repeated, independently outlined glyphs.
+// Keep connected illustration strokes and protect neighboring unsplit detections.
+function captionGrid(region,result){
+ const mask=region.hitMask;
+ if(mask?.version!==1||mask.kind!=='detector-text-region'||mask.imageWidth!==result.width||mask.imageHeight!==result.height||mask.sourceText!==region.text||JSON.stringify(mask.sourceBox)!==JSON.stringify(region.bbox)||!Number.isInteger(mask.width)||!Number.isInteger(mask.height)||mask.width<3||mask.height<3||mask.width>512||mask.height>512||!Array.isArray(mask.runs)||mask.runs.length%2)return null;
+ try{return whiteMask(mask);}catch{return null;}
+}
+function outlinedCaptionEvidence(r,result){
+ if(!forceCandidate(r)||r.layoutOverride||r.panelCandidate||!validBox(r.bbox,result))return null;
+ const [x,y,X,Y]=r.bbox,w=X-x,h=Y-y;
+ const characters=[...r.text.replace(/[^\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Hangul}]/gu,'')].length;
+ if(characters<8||characters>64||h<w*1.45||w*h>Math.min(200000,result.width*result.height*.08)||w<25)return null;
+ const grid=captionGrid(r,result);
+ const duplicate=r.ocrDuplicateGeometry;
+ const confirmedFragments=duplicate?.version===1&&duplicate.method==='ocr-duplicate-box-union'&&duplicate.sourceText===r.text&&
+  JSON.stringify(duplicate.sourceBox)===JSON.stringify(r.bbox)&&Array.isArray(duplicate.fragments)&&duplicate.fragments.length>=2&&duplicate.fragments.length<=4&&
+  duplicate.fragments.every(part=>part.type==='text'&&part.text?.length>=3&&r.text.includes(part.text)&&validBox(part.bbox,result)&&intersection(part.bbox,r.bbox)>=boxArea(part.bbox)*.95);
+ if(!(grid&&r.detectorConfidence>=.8)&&!(confirmedFragments&&r.detectorConfidence>=.35))return null;
+ return {characters,grid};
+}
+const outlinedRestoreAlgorithm='outlined-caption-v1';
+function outlinedKey(r,result){
+ const source=r.ocrDuplicateGeometry;
+ const nearby=[r.bbox[0]-80,r.bbox[1]-80,r.bbox[2]+80,r.bbox[3]+80];
+ const peers=[...result.regions,...(result.preservedRegions||[])].map(q=>[q.id,q.box,q.mode,q.type,q.manual===true,q.displayOverride===true,
+  q.type==='effect'&&validBox(q.bbox,result)&&intersection(q.bbox,nearby)>0?q.hitMask||null:null]);
+ return JSON.stringify([outlinedRestoreAlgorithm,forceKey(r,result),source||null,peers,r.translation,r.fontSize,font(24,r),r.textPaint,r.outlineChoice]);
+}
+async function outlineCaption(result,r,original,current){
+ const evidence=outlinedCaptionEvidence(r,result);
+ if(!evidence)return null;
+ const im=await image(original);
+ if(!current()||im.width!==result.width||im.height!==result.height)return null;
+ const [left,top,right,bottom]=r.bbox,extent=Math.max(12,Math.min((bottom-top)/4,Math.sqrt(boxArea(r.bbox)/evidence.characters)));
+ const margin=Math.max(4,Math.ceil(extent*.48));
+ const x=Math.max(0,left-margin),y=Math.max(0,top-margin),w=Math.min(result.width,right+margin)-x,h=Math.min(result.height,bottom+margin)-y;
+ const canvas=document.createElement('canvas');canvas.width=w;canvas.height=h;
+ const ctx=canvas.getContext('2d',{willReadFrequently:true});ctx.drawImage(im,-x,-y);
+ const rgba=ctx.getImageData(0,0,w,h).data;canvas.width=canvas.height=0;
+ const bright=new Uint8Array(w*h),dark=new Uint8Array(w*h),soft=new Uint8Array(w*h),tone=new Uint8Array(w*h);
+ for(let i=0;i<dark.length;i++){
+  const j=i*4,lo=Math.min(rgba[j],rgba[j+1],rgba[j+2]),hi=Math.max(rgba[j],rgba[j+1],rgba[j+2]);
+  dark[i]=hi<150&&hi-lo<35;soft[i]=hi<205&&hi-lo<35;bright[i]=lo>=220;tone[i]=lo>=160;
+ }
+ const crop=[x,y,x+w,y+h];
+ const peers=[...result.regions,...(result.preservedRegions||[])].filter(q=>q.id!==r.id&&[q.bbox,q.box].some(box=>validBox(box,result)&&intersection(box,crop)>0));
+ const maskedEffects=new Map(peers.filter(q=>q.type==='effect'&&q.mode==='tooltip'&&!q.manual&&!q.displayOverride).map(q=>[q,captionGrid(q,result)]).filter(([,mask])=>mask));
+ const rectangular=peers.filter(q=>!maskedEffects.has(q)).flatMap(q=>[q.bbox,q.box]).filter(q=>validBox(q,result));
+ const matches=(mask,n)=>mask.bits[Math.min(mask.height-1,Math.floor((y+Math.floor(n/w)+.5)*mask.height/result.height))*mask.width+Math.min(mask.width-1,Math.floor((x+n%w+.5)*mask.width/result.width))];
+ const rectangularHit=n=>rectangular.some(b=>x+n%w>=b[0]&&x+n%w<b[2]&&y+Math.floor(n/w)>=b[1]&&y+Math.floor(n/w)<b[3]);
+ const labels=new Uint32Array(w*h),boundary=new Uint8Array(w*h),componentMetrics=[],toneParts=[];
+ let label=0,until=performance.now()+8;
+ const breathe=async()=>{await new Promise(resolve=>setTimeout(resolve,0));until=performance.now()+8;return current();};
+ for(let n=0;n<dark.length;n++){
+  if((n&4095)===4095&&performance.now()>until&&!await breathe())return null;
+  if(!dark[n]||labels[n])continue;
+  const component=[n];labels[n]=++label;let x0=w,y0=h,x1=0,y1=0,protectedInk=false,owned=0;
+  for(let index=0;index<component.length;index++){
+   const p=component[index],px=p%w,py=Math.floor(p/w);
+   x0=Math.min(x0,px);y0=Math.min(y0,py);x1=Math.max(x1,px+1);y1=Math.max(y1,py+1);
+   protectedInk||=rectangularHit(p);
+   if(evidence.grid&&matches(evidence.grid,p))owned++;
+   for(let yy=Math.max(0,py-1);yy<=Math.min(h-1,py+1);yy++)for(let xx=Math.max(0,px-1);xx<=Math.min(w-1,px+1);xx++){
+    const q=yy*w+xx;if(dark[q]&&!labels[q]){labels[q]=label;component.push(q);}
+   }
+   if((index&4095)===4095&&performance.now()>until&&!await breathe())return null;
+  }
+  if(!evidence.grid&&Math.max(x1-x0,y1-y0)>extent*2)for(const p of component)boundary[p]=1;
+  if(protectedInk||x0===0||y0===0||x1===w||y1===h||Math.max(x1-x0,y1-y0)>extent*1.13||component.length<3||component.length>extent*extent*.43)continue;
+  let rim=0,light=0,midtone=0;
+  for(const p of component){
+   const px=p%w,py=Math.floor(p/w);
+   for(let yy=Math.max(0,py-2);yy<=Math.min(h-1,py+2);yy++)for(let xx=Math.max(0,px-2);xx<=Math.min(w-1,px+2);xx++){
+    const q=yy*w+xx;if(labels[q]===label)continue;rim++;light+=bright[q];midtone+=tone[q];
+   }
+  }
+  const halo=light/Math.max(1,rim),center=(x0+x1)/2;
+  const ownership=owned/component.length;
+  if(maskedEffects.size&&ownership<.3&&[...maskedEffects.values()].some(guard=>component.filter(p=>matches(guard,p)).length>component.length*.65))continue;
+  if(!evidence.grid&&component.length>=5&&Math.max(x1-x0,y1-y0)<=extent*.32&&midtone>=rim*.68&&component.some(p=>Math.max(rgba[p*4],rgba[p*4+1],rgba[p*4+2])<100))toneParts.push({part:component,center,y0,y1});
+  if(halo<.54||center+x<left-2||center+x>=right+2||(y0+y1)/2+y<top-2||(y0+y1)/2+y>=bottom+2)continue;
+  componentMetrics.push({component,x0,y0,x1,y1,center,halo,owned:ownership});
+ }
+ const anchors=componentMetrics.filter(c=>c.component.length>=extent*extent*.047&&c.y1-c.y0>=extent*.36&&c.x1-c.x0>=extent*.3&&c.halo>=.55);
+ if(anchors.length<Math.max(5,evidence.characters*.3))return null;
+ if(evidence.grid&&anchors.filter(c=>c.owned>=.12).length<anchors.length*.65)return null;
+ const columns=[];
+ for(const anchor of anchors.sort((a,b)=>a.center-b.center)){
+  const group=columns.at(-1);
+  if(group&&anchor.center-group.at(-1).center<=extent*.37)group.push(anchor);
+  else columns.push([anchor]);
+ }
+ const aligned=columns.filter(column=>column.length>=2&&Math.max(...column.map(c=>c.y0))-Math.min(...column.map(c=>c.y0))>=extent*.65)
+  .map(column=>({x:column[Math.floor(column.length/2)].center,top:Math.min(...column.map(c=>c.y0)),bottom:Math.max(...column.map(c=>c.y1))}));
+ if(aligned.length<2||aligned.length>5||aligned.length*2>anchors.length)return null;
+ const ink=new Uint8Array(w*h);
+ for(const c of componentMetrics){
+  const column=aligned.find(col=>Math.abs(c.center-col.x)<=extent*.49&&c.y1>=col.top-extent*.35&&c.y0<=col.bottom+extent*2.6);
+  const ruby=aligned.some(col=>c.center>col.x+extent*.44&&c.center<=col.x+extent*.83&&c.y1>=col.top-extent*.22&&c.y0<=col.bottom+extent*.45&&Math.max(c.x1-c.x0,c.y1-c.y0)<extent*.46&&c.halo>=.63);
+  if((column||ruby)&&c.halo>=(c.component.length>=extent*extent*.047?.55:.61))for(const p of c.component)ink[p]=1;
+ }
+ // Small gray kana can disappear from the threshold used for the main glyphs.
+ // Require a repeated, bright-edged run beside a confirmed main column before
+ // granting the smaller fragments any pixels.
+ const rubyPixels=new Uint8Array(w*h),seen=new Uint8Array(w*h);
+ const rubyColumns=aligned.map(column=>({column,parts:[]}));
+ for(let n=0;n<soft.length;n++){
+  if((n&4095)===4095&&performance.now()>until&&!await breathe())return null;
+  if(!soft[n]||seen[n])continue;
+  const part=[n];seen[n]=1;let x0=w,y0=h,x1=0,y1=0,forbidden=false,cleared=0;
+  for(let i=0;i<part.length;i++){
+   const q=part[i],qx=q%w,qy=Math.floor(q/w);
+   x0=Math.min(x0,qx);x1=Math.max(x1,qx+1);y0=Math.min(y0,qy);y1=Math.max(y1,qy+1);
+   forbidden||=rectangularHit(q);cleared+=ink[q];
+   for(let yy=Math.max(0,qy-1);yy<=Math.min(h-1,qy+1);yy++)for(let xx=Math.max(0,qx-1);xx<=Math.min(w-1,qx+1);xx++){
+    const p=yy*w+xx;if(soft[p]&&!seen[p]){seen[p]=1;part.push(p);}
+   }
+   if((i&4095)===4095&&performance.now()>until&&!await breathe())return null;
+  }
+  if(forbidden||part.length<3||part.length>extent*extent*.13||cleared>part.length*.6||x0===0||y0===0||y1===h||x1===w||Math.max(x1-x0,y1-y0)>extent*.49)continue;
+  const center=(x0+x1)/2;
+  const owner=rubyColumns.find(({column:c})=>center>=c.x+extent*.22&&center<=c.x+extent*1.08&&y1>=c.top-extent*.3&&y0<=c.bottom+extent*.55);
+  if(!owner)continue;
+  let rim=0,lit=0;
+  for(const q of part){
+   const px=q%w,py=Math.floor(q/w);
+   for(let yy=Math.max(0,py-2);yy<=Math.min(h-1,py+2);yy++)for(let xx=Math.max(0,px-2);xx<=Math.min(w-1,px+2);xx++){
+    const p=yy*w+xx;if(!soft[p]){rim++;lit+=bright[p];}
+   }
+  }
+  if(lit>=rim*.59)owner.parts.push({part,center,y0,y1});
+ }
+ for(const {column,parts} of rubyColumns){
+  const groups=[];
+  for(const part of parts.sort((a,b)=>a.y0-b.y0)){
+   const tail=groups.at(-1);
+   if(tail&&part.y0-tail.bottom<=extent*.55){tail.parts.push(part);tail.bottom=Math.max(tail.bottom,part.y1);}
+   else groups.push({parts:[part],bottom:part.y1});
+  }
+  for(const g of groups){
+   if(g.parts.length<3||g.bottom-g.parts[0].y0<extent*.49)continue;
+   const middle=g.parts.map(p=>p.center).sort((a,b)=>a-b)[Math.floor(g.parts.length/2)];
+   for(const p of parts)if(Math.abs(p.center-middle)<=extent*.32&&p.y1>=g.parts[0].y0-extent*.35&&p.y0<=g.bottom+extent)for(const q of p.part)rubyPixels[q]=ink[q]=1;
+   for(const p of toneParts)if(p.center>=column.x+extent*.16&&Math.abs(p.center-middle)<=extent*.44&&p.y1>=g.parts[0].y0-extent*.28&&p.y0<=g.bottom+extent*.55)for(const q of p.part)rubyPixels[q]=ink[q]=1;
+  }
+ }
+ const haloRadius=Math.max(2,Math.round((evidence.grid?3:5)*Math.min(result.width,result.height)/720));
+ const pixels=new Uint8Array(w*h);let erased=0;
+ for(let p=0;p<ink.length;p++){
+  if((p&1023)===1023&&performance.now()>until&&!await breathe())return null;
+  if(!ink[p])continue;
+  const px=p%w,py=Math.floor(p/w),radius=rubyPixels[p]?Math.max(3,haloRadius):haloRadius;
+  for(let yy=Math.max(0,py-radius);yy<=Math.min(h-1,py+radius);yy++)for(let xx=Math.max(0,px-radius);xx<=Math.min(w-1,px+radius);xx++){
+   const q=yy*w+xx;
+   if(pixels[q]||(xx-px)**2+(yy-py)**2>radius*radius||dark[q]&&!ink[q]||rectangularHit(q))continue;
+   pixels[q]=1;erased++;
+  }
+ }
+ if(erased<boxArea(r.bbox)*.05||erased>boxArea(r.bbox)*.69)return null;
+ const hasNeighborInk=(bounds)=>{
+  const q=[Math.max(0,Math.floor(bounds[0]-x)),Math.max(0,Math.floor(bounds[1]-y)),Math.min(w,Math.ceil(bounds[2]-x)),Math.min(h,Math.ceil(bounds[3]-y))];
+  if(rectangular.some(b=>intersection(bounds,b)>0))return true;
+  for(let yy=q[1];yy<q[3];yy++)for(let xx=q[0];xx<q[2];xx++){
+   const n=yy*w+xx;if(boundary[n])return true;if(!dark[n]||ink[n])continue;
+   for(const guard of maskedEffects.values())if(matches(guard,n))return true;
+  }
+  return false;
+ };
+ const row={...r,mode:'restore',layoutOverride:true,displayOverride:true,rotation:0};
+ const extents=[r.bbox];
+ for(const ratio of [.2,.35,.5])for(const edge of [0,2]){
+  const b=[...r.bbox];b[edge]+=(edge===0?1:-1)*Math.round((right-left)*ratio);extents.push(b);
+ }
+ const candidates=[];
+ for(const box of extents)for(let fontSize=Math.min(r.fontSize||32,36);fontSize>=8;fontSize--){
+  if(!current()||performance.now()>until&&!await breathe())return null;
+  const layout=textLayout(row,box,fontSize,fontSize);if(!layout)continue;
+  let at=box[1]+(box[3]-box[1]-layout.height)/2;
+  const border=Math.max(2,Math.ceil(outlineWidth(row,fontSize)/2+1));let safe=true;
+  for(const m of layout.metrics){
+   const px=(box[0]+box[2]+m.left-m.right)/2,py=at+(m.height-m.ascent-m.descent)/2+m.ascent;
+   if(hasNeighborInk([px-m.left-border,py-m.ascent-border,px+m.right+border,py+m.descent+border])){safe=false;break;}
+   at+=m.height;
+  }
+  if(safe){candidates.push({box,fontSize});break;}
+ }
+ const best=candidates.sort((a,b)=>b.fontSize-a.fontSize||boxArea(b.box)-boxArea(a.box))[0];
+ if(!best)return null;
+ let x0=w,y0=h,x1=0,y1=0;
+ for(let n=0;n<pixels.length;n++)if(pixels[n]){const px=n%w,py=Math.floor(n/w);x0=Math.min(x0,px);y0=Math.min(y0,py);x1=Math.max(x1,px+1);y1=Math.max(y1,py+1);}
+ const runs=[],width=x1-x0,height=y1-y0;
+ for(let yy=y0;yy<y1;yy++){
+  let start=-1;
+  for(let xx=x0;xx<=x1;xx++){
+   if(xx<x1&&pixels[yy*w+xx]){if(start<0)start=xx;}else if(start>=0){runs.push((yy-y0)*width+start-x0,xx-start);start=-1;}
+  }
+ }
+ if(!runs.length||runs.length>200000)return null;
+ return {algorithm:outlinedRestoreAlgorithm,key:outlinedKey(r,result),row:{...row,box:best.box,fontSize:best.fontSize},mask:{width:result.width,height:result.height,bounds:[x+x0,y+y0,x+x1,y+y1],runs}};
+}
+
 function forceKey(r,result){return JSON.stringify(['source-ink-v3',r.id,r.text,r.bbox,r.sourceInkBounds||null,r.hitMask||null,result.width,result.height,[...result.regions,...(result.preservedRegions||[])].map(q=>[q.id,q.bbox])]);}
 function forcePlan(result,r){
  if(!forceCandidate(r)||!Array.isArray(r.bbox)||r.bbox.length!==4||!r.bbox.every(Number.isFinite))return null;
@@ -952,26 +1153,60 @@ function forcedTextBox(result,region,saved,geometry){
  return plan?.row.box||saved.box;
 }
 function forcePresentation(result,geometry){return {...result,regions:result.regions.map(r=>{
- if(!forceCandidate(r))return r;const saved=result.forcedRestorations?.[r.id];if(!saved||saved.key!==forceKey(r,result))return r;
- const b=forcedTextBox(result,r,saved,geometry);if(!Array.isArray(b)||b.length!==4||!b.every(Number.isFinite)||b[0]<0||b[1]<0||b[2]>result.width||b[3]>result.height||b[2]<=b[0]||b[3]<=b[1])return r;
- if([...result.regions,...(result.preservedRegions||[])].some(q=>q.id!==r.id&&[q.bbox,q.box].filter(Array.isArray).some(v=>Math.min(b[2],v[2])>Math.max(b[0],v[0])&&Math.min(b[3],v[3])>Math.max(b[1],v[1]))))return r;
- const row={...r,box:b,mode:'restore',layoutOverride:true,displayOverride:true,rotation:0};if(!textLayout(row))return r;
+ if(!forceCandidate(r))return r;
+ const saved=result.forcedRestorations?.[r.id],outlined=saved?.algorithm===outlinedRestoreAlgorithm;
+ if(!saved||saved.key!==(outlined?outlinedKey(r,result):forceKey(r,result)))return r;
+ const b=outlined?saved.box:forcedTextBox(result,r,saved,geometry);
+ if(!validBox(b,result))return r;
+ if(outlined){
+  if(!outlinedCaptionEvidence(r,result)||intersection(b,r.bbox)<boxArea(b)||!Number.isFinite(saved.fontSize)||saved.fontSize<8||saved.fontSize>36)return r;
+ }else if([...result.regions,...(result.preservedRegions||[])].some(q=>q.id!==r.id&&[q.bbox,q.box].filter(Array.isArray).some(v=>intersection(b,v)>0)))return r;
+ const row={...r,box:b,mode:'restore',layoutOverride:true,displayOverride:true,rotation:0};
+ if(outlined)row.fontSize=saved.fontSize;
+ if(!textLayout(row))return r;
  return {...row,manualRestoration:saved.ref,automaticForced:true};
 })};}
 async function forceRestore(result,job,request,current,progress,geometry){
  const saved={...(result.forcedRestorations||{})};let failed=0,source;
- for(const r of result.regions){if(!current())return null;if(!forceCandidate(r))continue;
- if(saved[r.id]?.key===forceKey(r,result)){const plan=forcePlan(result,r);if(!plan){failed++;continue;}try{const patch=await manualImage(saved[r.id].ref,result),b=saved[r.id].mask.bounds;if(patch.width!==b[2]-b[0]||patch.height!==b[3]-b[1])throw Error('복원 이미지 크기 불일치');continue;}catch{delete saved[r.id];}}
- await new Promise(resolve=>setTimeout(resolve,0));if(!current())return null;
- const plan=forcePlan(result,r);if(!plan){failed++;continue;}
- progress();try{
- source??=await request({type:'asset',id:job,name:'original.png'});if(!current())return null;
- const ink=await forceInkMask(result,r,plan.mask,source,sourceBubble(geometry,r),current);if(!current())return null;if(!ink){delete saved[r.id];failed++;continue;}plan.row.box=ink.layoutBox;delete ink.layoutBox;plan.mask=ink;
- const ref={...await request({type:'manualRestoration',id:job,mask:plan.mask}),job};if(!current())return null;
- checkedManual(ref,result);if(JSON.stringify(ref.mask.bounds)!==JSON.stringify(plan.mask.bounds)||JSON.stringify(ref.mask.runs)!==JSON.stringify(plan.mask.runs))throw Error('복원 영역 불일치');
- const patch=await manualImage(ref,result);if(!current())return null;if(patch.width!==plan.mask.bounds[2]-plan.mask.bounds[0]||patch.height!==plan.mask.bounds[3]-plan.mask.bounds[1])throw Error('복원 이미지 크기 불일치');
- saved[r.id]={key:plan.key,mask:plan.mask,box:plan.row.box,ref};
- }catch(error){if(/409|연결|fetch/i.test(error.message))throw error;failed++;}
+ if(!current())return null;
+ if(result.regions.some(forceCandidate))await globalThis.MangaFonts?.ensure(result);
+ for(const r of result.regions){
+  if(!current())return null;
+  if(!forceCandidate(r))continue;
+  const existing=saved[r.id],outlined=existing?.algorithm===outlinedRestoreAlgorithm;
+  if(existing?.key===(outlined?outlinedKey(r,result):forceKey(r,result))){
+   if(outlined?!outlinedCaptionEvidence(r,result):!forcePlan(result,r)){failed++;continue;}
+   try{
+    const patch=await manualImage(existing.ref,result),b=existing.mask.bounds;
+    if(patch.width!==b[2]-b[0]||patch.height!==b[3]-b[1])throw Error('복원 이미지 크기 불일치');
+    continue;
+   }catch{delete saved[r.id];}
+  }
+  await new Promise(resolve=>setTimeout(resolve,0));
+  if(!current())return null;
+  let plan=forcePlan(result,r);
+  if(!plan&&!outlinedCaptionEvidence(r,result)){failed++;continue;}
+  progress();
+  try{
+   source??=await request({type:'asset',id:job,name:'original.png'});
+   if(!current())return null;
+   const ink=plan&&await forceInkMask(result,r,plan.mask,source,sourceBubble(geometry,r),current);
+   if(!current())return null;
+   if(ink){
+    plan.row.box=ink.layoutBox;delete ink.layoutBox;plan.mask=ink;
+   }else plan=await outlineCaption(result,r,source,current);
+   if(!current())return null;
+   if(!plan){delete saved[r.id];failed++;continue;}
+   const ref={...await request({type:'manualRestoration',id:job,mask:plan.mask}),job};
+   if(!current())return null;
+   checkedManual(ref,result);
+   if(JSON.stringify(ref.mask.bounds)!==JSON.stringify(plan.mask.bounds)||JSON.stringify(ref.mask.runs)!==JSON.stringify(plan.mask.runs))throw Error('복원 영역 불일치');
+   const patch=await manualImage(ref,result);
+   if(!current())return null;
+   if(patch.width!==plan.mask.bounds[2]-plan.mask.bounds[0]||patch.height!==plan.mask.bounds[3]-plan.mask.bounds[1])throw Error('복원 이미지 크기 불일치');
+   saved[r.id]={key:plan.key,mask:plan.mask,box:plan.row.box,ref};
+   if(plan.algorithm)saved[r.id]={...saved[r.id],algorithm:plan.algorithm,fontSize:plan.row.fontSize};
+  }catch(error){if(/409|연결|fetch/i.test(error.message))throw error;failed++;}
  }
  return {saved,failed};
 }
@@ -1026,6 +1261,7 @@ function editedBase(result,base){
   const prior=base?.regions.find(candidate=>candidate.id===region.id);
   if(region.automaticForced&&prior){for(const k of ["mode","manualRestoration","whiteBackground","whiteScope","layoutOverride","displayOverride","box","rotation"])if(Object.hasOwn(prior,k))restored[k]=prior[k];else delete restored[k];delete restored.automaticForced;}
   if(!prior)return restored;
+  if(region.text!==prior.text||region.translation!==prior.translation)restored.textEdited=true;
   const keys=region.displayOverride?[]:['mode','whiteScope','whiteBackground','displayOverride','restorationMask'];
   if(!region.layoutOverride)keys.push('box','fontSize','color');
   for(const key of keys){

@@ -82,3 +82,30 @@ func TestAddedFontsExcludedFromExtensionZIP(t *testing.T) {
 		}
 	}
 }
+
+func TestBundledFontPublisherPages(t *testing.T) {
+	manager := &Manager{bundle: os.DirFS("../assets/bundle")}
+	fonts, err := manager.builtInFonts()
+	if err != nil {
+		t.Fatal(err)
+	}
+	explicit := map[string]string{
+		"euljiro":    "https://www.kogl.or.kr/recommend/recommendDivView.do?division=font&recommendIdx=10435",
+		"yeonsung":   "https://www.kogl.or.kr/recommend/recommendDivView.do?division=font&recommendIdx=10434",
+		"anjunggeun": "https://gscaltexmediahub.com/esg/independence_font_remind/",
+		"heejoy":     "https://heejoykim.com/fonts/heejoy",
+	}
+	for _, font := range fonts {
+		if expected, ok := explicit[font.ID]; ok {
+			if font.PublisherPage != expected || font.Source == font.PublisherPage {
+				t.Errorf("%s publisher page: %q", font.ID, font.PublisherPage)
+			}
+			delete(explicit, font.ID)
+		} else if font.PublisherPage != font.Source || !strings.HasPrefix(font.PublisherPage, "https://copyright.keris.or.kr/wft/fntDwnldView?") {
+			t.Errorf("%s publisher page: %q", font.ID, font.PublisherPage)
+		}
+	}
+	if len(explicit) != 0 {
+		t.Fatalf("missing fonts: %v", explicit)
+	}
+}

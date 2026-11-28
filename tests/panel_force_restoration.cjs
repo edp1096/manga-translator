@@ -62,7 +62,7 @@ const extension=path.resolve(__dirname,'../extension');
     const parsed=new DOMParser().parseFromString(html,'text/html');document.body.prepend(parsed.querySelector('main'));
     for(let index=1;index<=3;index++){const image=document.createElement('img');image.src=fixture.original+'#'+index;image.alt='Page '+index;image.width=400;image.height=600;document.getElementById('manga').append(image);}
    },fs.readFileSync(path.join(extension,'panel.html'),'utf8'));
-   for(const file of ['polygon.js','rotation.js','render.js','content.js','panel.js'])await page.addScriptTag({path:path.join(extension,file)});
+   for(const file of ['polygon.js','rotation.js','render.js','content.js','zip.js','panel.js'])await page.addScriptTag({path:path.join(extension,file)});
    await page.waitForFunction(async()=>{const state=await call({action:'status'});return state.items.filter(item=>item.done).every(item=>item.state.includes('복원'))&&!state.displayBusy;});
   }
   const settled=async()=>{

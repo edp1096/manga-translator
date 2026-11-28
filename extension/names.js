@@ -56,7 +56,9 @@ function validate(input){
    if(mappings.has(signature))throw Error('같은 호칭이 중복 등록되었습니다: '+entry.source);mappings.set(signature,entry.translation);
    work.entries.push(entry);continue;
   }
+  if(original.reference){const source=new URL(original.reference);if(source.protocol!=='https:'||source.username||source.password||source.href.length>1500)throw Error('명칭 출처 주소를 확인하세요.');entry.reference=source.href;}
   register(entry.source,entry.translation);
+  if(entry.kind==='person'&&original.contextual===true)entry.contextual=true;
   entry.matchReading=!!original.matchReading;
   if(entry.matchReading){if(!entry.reading)throw Error('읽기 매칭을 사용하려면 확인한 읽기를 입력하세요.');register(entry.reading,entry.translation);}
   if(entry.kind!=='person')for(const key of ['givenSource','givenTranslation','familySource','familyTranslation'])entry[key]='';

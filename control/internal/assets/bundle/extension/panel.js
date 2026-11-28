@@ -164,12 +164,14 @@ function selectionState(){
  $('lightweight-display').disabled=saving||changingDisplay;$('display-mode').disabled=saving||changingDisplay||$('lightweight-display').checked;$('outside-text-mode').disabled=saving||changingDisplay||$('lightweight-display').checked;$('display-retry').disabled=saving||changingDisplay||running||displayBusy;
  if($('name-scope'))$('name-scope').disabled=running||saving||displayBusy||!nameScopeReady||changingNameScope;
  if($('names-correct'))$('names-correct').disabled=running||saving||displayBusy||!nameScopeReady||changingNameScope||!nameWork?.entries?.some(entry=>entry.kind!=='honorific');
+ for(const id of ['names-discover','context-review','context-check'])if($(id))$(id).disabled=running||saving||displayBusy;
  if($('names-undo'))$('names-undo').disabled=running||saving||displayBusy||!nameScopeReady||changingNameScope;
  const all=$('all').querySelector('input');all.checked=known.size>0&&selected.size===known.size;all.indeterminate=selected.size>0&&selected.size<known.size;
 }
 function display(s){
  const displaySummary=$('display-tools').querySelector('summary'),namesSummary=$('name-tools').querySelector('summary');
  displaySummary.textContent='표시 옵션 · '+(s.lightweightDisplay?'경량':(s.displayMode==='white'?'흰 배경':'기본')+' / '+({tooltip:'툴팁',white:'흰 배경',restore:'복원'}[s.outsideTextMode]||'툴팁'));
+ if($('context-check')){$('context-check').hidden=!s.contextCount;$('context-check').textContent='교정 검토 ('+(s.contextCount||0)+')';}
  namesSummary.textContent='명칭 도구'+(s.nameBusy?' · 적용 중':'');namesSummary.title=s.nameMessage||'';
  running=!!s.running||!!s.editing;
  displayBusy=!!s.displayBusy;
@@ -249,6 +251,27 @@ $('outside-text-mode').onchange=async()=>{const mode=$('outside-text-mode').valu
 $('display-retry').onclick=()=>control('displayRetry');
 if($('work-fonts'))$('work-fonts').onclick=()=>rpc({type:'openWorkFonts',tabId}).catch(error=>{noticeUntil=Date.now()+6000;$('status').textContent=error.message;});
 if($('names-settings'))$('names-settings').onclick=()=>rpc({type:'openNames',tabId}).catch(error=>{$('name-status').textContent=error.message;$('name-status').hidden=false;});
+if($('names-discover'))$('names-discover').onclick=()=>rpc({type:'openNames',tabId,auto:true}).catch(error=>{$('name-status').textContent=error.message;$('name-status').hidden=false;});
+if($('context-review'))$('context-review').onclick=()=>control('contextReview',{keys:[...selected]});
+if($('context-check')){
+ $('context-check').onclick=async()=>{
+  try{
+   const items=await rpc({type:'control',tabId,action:'contextSuggestions'}),list=$('context-list');
+   list.replaceChildren(...items.map(item=>{
+    const label=document.createElement('label'),box=document.createElement('input'),page=document.createElement('small'),source=document.createElement('span'),before=document.createElement('s'),after=document.createElement('strong');
+    box.type='checkbox';box.value=item.key;page.textContent=item.page+'페이지';source.textContent=item.text;before.textContent=item.before;after.textContent=item.translation;
+    label.append(box,page,source,before,after);return label;
+   }));
+   if(items.length)$('context-dialog').showModal();
+  }catch(error){$('status').textContent=error.message;}
+ };
+ $('context-close').onclick=()=>$('context-dialog').close();
+ $('context-apply').onclick=async()=>{
+  const keys=[...$('context-list').querySelectorAll('input:checked')].map(input=>input.value);
+  if(!keys.length)return;
+  $('context-dialog').close();await control('contextAccept',{keys});
+ };
+}
 if($('names-correct'))$('names-correct').onclick=()=>control('namesCorrect',{scope:nameScope});
 if($('names-undo'))$('names-undo').onclick=()=>control('namesUndo',{scope:nameScope});
 if($('name-scope')){

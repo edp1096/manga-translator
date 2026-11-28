@@ -1,5 +1,5 @@
 const defaults = {server:'http://127.0.0.1:8793',token:'',managementServer:'',target:'Korean',selector:'',captureFallback:true,displayMode:'auto',outsideTextMode:'tooltip',lightweightDisplay:false,forceTooltipRestoration:false,nameCorrectionScope:'chapter',fontPolicy:{}};
-importScripts('server-addresses.js','fonts.js','panel_scope.js','readers.js','names.js','work-font-settings.js','job_cache.js','library.js','editor-session.js');
+importScripts('server-addresses.js','fonts.js','panel_scope.js','readers.js','names.js','glossary-search.js','work-font-settings.js','job_cache.js','library.js','editor-session.js');
 async function settings(){return {...defaults,...await chrome.storage.local.get(Object.keys(defaults))};}
 async function api(path, options={}) {
   const s=await settings();
@@ -65,7 +65,42 @@ async function checkDialectSupport(dictionary){
 async function nameTargets(url){const context=await nameContext(url);if(!context.work)return [];const stored=await MangaJobCache.pages(),server=(await settings()).server;return Object.entries(stored).filter(([key,value])=>key.startsWith('page:')&&value?.server===server&&Date.now()-value.updated<86400000&&MangaNames.forURL(context.works,key.slice(5),context.target)?.id===context.work.id).flatMap(([key,value])=>(value.items||[]).filter(item=>item.result&&!item.pendingJob&&(item.result.target||'Korean')===context.target).map(item=>({cacheKey:key,pageURL:key.slice(5),sourceURL:item.sourceURL,key:item.key,id:item.id,result:item.result})));}
 function rememberNameTarget(msg,sender){const task=cacheWrites.catch(()=>{}).then(async()=>{const context=await nameContext(sender.tab?.url||'');if(!context.work||MangaNames.forURL(context.works,msg.target.pageURL,context.target)?.id!==context.work.id||(msg.target.result?.target||'Korean')!==context.target||(msg.result?.target||'Korean')!==context.target)throw Error('다른 작품의 결과에는 적용할 수 없습니다.');const key=pageCacheKey(msg.target.pageURL),saved=(await chrome.storage.local.get(key))[key];if(saved?.server!==(await settings()).server)return false;const item=saved.items?.find(item=>item.id===msg.target.id&&item.sourceURL===msg.target.sourceURL);if(!item||JSON.stringify(item.result)!==JSON.stringify(msg.target.result))return false;item.result=msg.result;item.updated=Date.now();saved.updated=Date.now();await MangaLibrary.remember(item);await MangaJobCache.writePage(key,saved).catch(error=>console.warn('명칭 표시 캐시:',error.message));const tabs=await chrome.tabs.query({});for(const tab of tabs)if(tab.id!==sender.tab?.id&&tab.url&&pageCacheKey(tab.url)===key)chrome.tabs.sendMessage(tab.id,{type:'namesApplied',id:item.id,sourceURL:item.sourceURL,before:msg.target.result,result:msg.result}).catch(()=>{});return true;});cacheWrites=task;return task;}
 let nameWrites=Promise.resolve();
-function saveNames(work){const task=nameWrites.catch(()=>{}).then(async()=>{const validated=MangaNames.validate(work),saved=await nameContext('');const others=saved.works.filter(item=>item.id!==validated.id).map(item=>({...item,scopes:(item.scopes||[]).filter(scope=>(item.target||'Korean')!==validated.target||!validated.scopes.includes(scope))}));if(others.length>=100)throw Error('작품 사전은 100개까지 저장할 수 있습니다.');const works=[...others,validated];await chrome.storage.local.set({nameWorks:works});return{works,work:validated};});nameWrites=task;return task;}
+function saveNames(work,guard){const task=nameWrites.catch(()=>{}).then(async()=>{const validated=MangaNames.validate(work),saved=await nameContext('');if(guard){const recent=MangaNames.forURL(saved.works,guard.url,work.target);if((recent?.revision||'')!==guard.revision)throw Error('명칭 사전이 바뀌었습니다. 다시 생성하세요.');}const others=saved.works.filter(item=>item.id!==validated.id).map(item=>({...item,scopes:(item.scopes||[]).filter(scope=>(item.target||'Korean')!==validated.target||!validated.scopes.includes(scope))}));if(others.length>=100)throw Error('작품 사전은 100개까지 저장할 수 있습니다.');const works=[...others,validated];await chrome.storage.local.set({nameWorks:works});return{works,work:validated};});nameWrites=task;return task;}
+const languagePost=async(path,payload)=>await(await api(path,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload),timeout:240000})).json();
+async function discoverNames(msg,sender){
+ if(sender.url?.split('?')[0]!==chrome.runtime.getURL('names.html'))throw Error('명칭 사전 화면에서 실행하세요.');
+ const tab=await chrome.tabs.get(msg.tabId),context=await nameContext(tab.url);
+ if(context.target!=='Korean')throw Error('한국어 번역에서 사용할 수 있습니다.');
+ const work=context.work,title=MangaGlossary.cleanTitle(msg.title||work?.title||tab.title);
+ if(!title)throw Error('작품명을 입력하세요.');
+ const response=await chrome.tabs.sendMessage(tab.id,{type:'control',action:'nameRegions'});
+ if(!response?.regions?.length)throw Error('번역 결과가 있는 회차에서 실행하세요.');
+ const all=response.regions.filter(r=>r.type!=='effect').map(r=>r.text.trim()).filter(text=>text&&new TextEncoder().encode(text).length<=420);
+ if(!all.length)throw Error('저장된 원문이 없습니다.');
+ const lines=all.length<=84?all:Array.from({length:84},(_,i)=>all[Math.floor(i*all.length/84)]);
+ const known=new Set((work?.entries||[]).filter(r=>r.kind!=='honorific').flatMap(r=>[r.source,...(r.aliases||[]).map(a=>a.source)]));
+ const candidates=await languagePost('/api/language/candidates',{title,lines});
+ const searchTitle=MangaGlossary.cleanTitle(candidates.title||title);
+ const terms=MangaGlossary.lookupTerms(candidates.terms,all,known);
+ if(!terms.length)return {added:0,unchecked:0,work};
+ const corpus=all.slice(0,4000);
+ const evidence=await MangaGlossary.discover({title:searchTitle,corpus,known,terms,source:msg.source});
+ if(!evidence.length)return {added:0,unchecked:terms.length,work,sourceMissing:true,searchTerm:terms[0],searchTitle};
+ const verdicts=await languagePost('/api/language/verify',{rows:evidence.map(({term,reading,context},i)=>({id:String(i),term,reading,context}))});
+ const entries=[];
+ for(const [i,proof] of evidence.entries()){
+  const result=verdicts[String(i)],translation=result?.korean?.trim();
+  if(result?.status!=='confirmed'||!['person','place','organization','term'].includes(result.kind)||!translation||!/[가-힣]/u.test(translation)||/[ぁ-ヿ㐀-鿿\r\n\t]/u.test(translation)||[...translation].length>60||(result.kind==='person'&&!proof.reading)||known.has(proof.term))continue;
+  const aliases=proof.alias&&!known.has(proof.alias)?[{source:proof.alias,translation}]:[];
+  entries.push({kind:result.kind,source:proof.term,translation,reading:proof.reading,aliases,reference:proof.reference,contextual:result.kind==='person'&&/^[\p{Script=Han}]{2,3}$/u.test(proof.term)});known.add(proof.term);if(proof.alias)known.add(proof.alias);
+ }
+ if(!entries.length)return {added:0,unchecked:terms.length,work,searchTerm:terms[0],searchTitle};
+ if((await chrome.tabs.get(tab.id)).url!==tab.url)throw Error('만화 탭이 바뀌었습니다. 다시 실행하세요.');
+ const next={...work,id:work?.id||crypto.randomUUID(),revision:crypto.randomUUID(),title:work?.title||title,target:'Korean',scopes:[...(work?.scopes||[]),tab.url],entries:[...(work?.entries||[]),...entries]};
+ const saved=await saveNames(next,{url:tab.url,revision:work?.revision||''});
+ const state=await chrome.tabs.sendMessage(tab.id,{type:'control',action:'contextReview',namesOnly:true}).catch(()=>null);
+ return {added:entries.length,started:state?.running===true,unchecked:terms.filter(term=>!entries.some(e=>term.includes(e.source)||e.aliases.some(a=>a.source===term))).length,work:saved.works.find(w=>w.id===next.id),works:saved.works};
+}
 let cacheWrites=Promise.resolve();
 const discardedJobs=new Set();
 function rememberPage(msg,sender){
@@ -119,7 +154,39 @@ chrome.runtime.onMessage.addListener((msg,sender,respond)=>{
       case 'namesTargets':return nameTargets(sender.tab?.url||'');
       case 'namesRememberTarget':return rememberNameTarget(msg,sender);
       case 'openNames':{
-        const tab=Number.isInteger(msg.tabId)?await chrome.tabs.get(msg.tabId):sender.tab;if(!tab||!/^https?:/.test(tab.url||''))throw Error('만화 페이지에서 명칭 사전을 여세요.');await chrome.tabs.create({windowId:tab.windowId,url:chrome.runtime.getURL('names.html')+'?tab='+tab.id+'&page='+encodeURIComponent(tab.url)});return true;
+        const tab=Number.isInteger(msg.tabId)?await chrome.tabs.get(msg.tabId):sender.tab;if(!tab||!/^https?:/.test(tab.url||''))throw Error('만화 페이지에서 명칭 사전을 여세요.');const url=new URL(chrome.runtime.getURL('names.html'));url.searchParams.set('tab',tab.id);url.searchParams.set('page',tab.url);url.searchParams.set('title',MangaGlossary.cleanTitle(tab.title));if(msg.auto===true)url.searchParams.set('auto','1');await chrome.tabs.create({windowId:tab.windowId,url:url.href});return true;
+      }
+      case 'namesDiscover':return discoverNames(msg,sender);
+      case 'contextReview':{
+        if(!/^[0-9a-f-]+$/.test(msg.id)||!sender.tab?.url)throw Error('저장된 만화 페이지에서 실행하세요.');
+        const context=await nameContext(sender.tab.url,'Korean'),dictionary=MangaNames.dictionary(context.work);
+        const rows=msg.result.regions.map(({id,text,translation,manual,manualRecognition,textEdited,nameEdit,contextEdit})=>({id,text,translation,manual,manualRecognition,textEdited,nameEdit,contextEdit}));
+        // Only memoize a completed automatic review with no applicable changes.
+        // Fingerprint the visible rows and glossary so editing either re-enables it.
+        let memoKey,signature;
+        if(msg.automatic){
+          memoKey='dialogueReview:'+msg.id;
+          const input=JSON.stringify([rows,context.work?.id,context.work?.revision]);
+          const digest=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(input));
+          signature=Array.from(new Uint8Array(digest),byte=>byte.toString(16).padStart(2,'0')).join('');
+          if((await chrome.storage.session.get(memoKey))[memoKey]===signature)return [];
+        }
+        const proposals=await languagePost(`/api/jobs/${msg.id}/context-review`,{result:{regions:rows},dictionary:dictionary||{},namesOnly:msg.namesOnly===true,...(msg.automatic?{duplicateIds:msg.duplicateIds}:{})});
+        if((await nameContext(sender.tab.url,'Korean')).work?.revision!==context.work?.revision)throw Error('명칭 사전이 바뀌었습니다. 다시 실행하세요.');
+        if(memoKey&&!proposals.some(change=>change.apply))await chrome.storage.session.set({[memoKey]:signature}).catch(()=>{});
+        return proposals;
+      }
+      case 'contextApply':{
+        if(!/^[0-9a-f-]+$/.test(msg.id)||!sender.tab?.url)throw Error('저장된 만화 페이지에서 실행하세요.');
+        const response=await languagePost(`/api/jobs/${msg.id}/context-apply`,{changes:msg.changes});
+        if(response.applied>0){
+          const cache=cacheWrites.catch(()=>{}).then(async()=>{
+            const key=pageCacheKey(sender.tab.url),saved=(await chrome.storage.local.get(key))[key];
+            if(!saved?.items?.some(item=>item.id===msg.id))return;
+            const updated=Date.now();await MangaJobCache.writePage(key,{...saved,updated,items:saved.items.map(item=>item.id===msg.id?{...item,updated,result:response.result}:item)});
+          });cacheWrites=cache;await cache.catch(()=>{});
+        }
+        return response;
       }
       case 'namesSuggest':return (await api('/api/names/suggest',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({source:msg.source,translation:msg.translation}),timeout:90000})).json();
       case 'namesCorrect':{
@@ -184,7 +251,7 @@ chrome.runtime.onMessage.addListener((msg,sender,respond)=>{
         const blob=await (await fetch(msg.data)).blob(), form=new FormData();
         const options=await settings(),target=options.target,context=await nameContext(sender.tab?.url||'',target),dictionary=MangaNames.dictionary(context.work);
         if(msg.type==='submit')await checkDialectSupport(dictionary);
-        form.append('contextFonts',String(target==='Korean'&&!options.lightweightDisplay));form.append('image',blob,'page.png');form.append('target',target);form.append('pageURL',(sender.tab?.url||'').slice(0,8192));form.append('title',(sender.tab?.title||'').slice(0,1024));if(typeof msg.sourceURL==='string'&&msg.sourceURL.length<=8192)form.append('sourceURL',msg.sourceURL);if(Number.isInteger(msg.page)&&msg.page>0)form.append('page',String(msg.page));
+        form.append('contextFonts',String(target==='Korean'&&!options.lightweightDisplay));form.append('contextReview',String(target==='Korean'&&!options.lightweightDisplay));form.append('image',blob,'page.png');form.append('target',target);form.append('pageURL',(sender.tab?.url||'').slice(0,8192));form.append('title',(sender.tab?.title||'').slice(0,1024));if(typeof msg.sourceURL==='string'&&msg.sourceURL.length<=8192)form.append('sourceURL',msg.sourceURL);if(Number.isInteger(msg.page)&&msg.page>0)form.append('page',String(msg.page));
         if(msg.type==='createDraft')form.append('draft','true');
         if(dictionary?.entries.length||dictionary?.dialects)form.append('dictionary',JSON.stringify(dictionary));
         return (await api('/api/jobs',{method:'POST',body:form})).json();

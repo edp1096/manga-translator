@@ -24,11 +24,12 @@ const maxFontBytes = 24 << 20
 var addedFontID = regexp.MustCompile("^added-[a-f0-9]{64}$")
 
 type fontEntry struct {
-	ID     string `json:"id"`
-	Name   string `json:"name"`
-	Format string `json:"format,omitempty"`
-	Weight int    `json:"weight,omitempty"`
-	Source string `json:"source,omitempty"`
+	ID            string `json:"id"`
+	Name          string `json:"name"`
+	Format        string `json:"format,omitempty"`
+	Weight        int    `json:"weight,omitempty"`
+	Source        string `json:"source,omitempty"`
+	PublisherPage string `json:"publisherPage,omitempty"`
 }
 
 func fontFormat(data []byte) (string, int, error) {
@@ -110,6 +111,9 @@ func (m *Manager) builtInFonts() ([]fontEntry, error) {
 	for id, font := range sources {
 		if font.Name != "" {
 			font.ID = id
+			if font.PublisherPage == "" {
+				font.PublisherPage = font.Source
+			}
 			fonts = append(fonts, font)
 		}
 	}

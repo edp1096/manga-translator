@@ -40,25 +40,38 @@ function fileName(id,weight=400,font=addedFonts.get(id)){
 }
 function label(id){return ttf.has(id)||isAdded(id)?catalog[id]:'학교안심 '+catalog[id];}
 const impactCandidates=['impact','kimdaegeon','shower','euljiro','anjunggeun'];
+const originalWorkImpactCandidates=impactCandidates.slice(1);
 const narrationCandidates=['dialogue','narration','reflective','handwritten','stone','yeonsung','heejoy'];
 const legacy=size=>`600 ${size}px "Noto Sans CJK KR", "Malgun Gothic", sans-serif`;
 let loader,revision=0;const pending=new Map(),loaded=new Set();
 const roles=Object.freeze({dialogue:'일반 대사',narration:'독백·서술',shout:'강조·외침',impact:'강한 효과음'});
 const defaultPolicy=Object.freeze(Object.fromEntries(Object.keys(roles).map(role=>[role,{font:'auto',bold:['shout','impact'].includes(role)}])));
 function normalizePolicy(input){return Object.fromEntries(Object.keys(roles).map(role=>{const p=input?.[role];return [role,{font:p?.font==='default'||Object.hasOwn(catalog,p?.font)?p.font:'auto',bold:typeof p?.bold==='boolean'?p.bold:defaultPolicy[role].bold}];}));}
-const workPolicyVersion=2;
+const workPolicyVersion=3;
 const workPresets=Object.freeze({general:'일반',drama:'극화',slice:'생활만화'});
 function presetPolicy(preset){
  if(!Object.hasOwn(workPresets,preset))return null;
  const dialogue={general:'dialogue',drama:'narration',slice:'reflective'}[preset];
  const narration={general:'reflective',drama:'serif',slice:'heejoy'}[preset];
  const narrationOptions=preset==='drama'?['narration']:preset==='slice'?['yeonsung','reflective','handwritten']:narrationCandidates.filter(id=>!['dialogue','narration','reflective'].includes(id));
+ const shout={general:'shout',drama:'narration',slice:'reflective'}[preset];
+ const effect=preset==='slice'?'euljiro':'impact';
+ const effectOptions={general:originalWorkImpactCandidates,drama:['kimdaegeon','anjunggeun'],slice:['shower','impact']}[preset];
  return {version:workPolicyVersion,preset,roles:{
   dialogue:{fallback:dialogue,bold:false,candidates:preset==='slice'?['yeonsung']:[]},
   narration:{fallback:narration,bold:false,candidates:narrationOptions},
-  shout:{fallback:'shout',bold:true,candidates:[]},
-  impact:{fallback:'impact',bold:true,candidates:impactCandidates.filter(id=>id!=='impact')}
+  shout:{fallback:shout,bold:true,candidates:preset==='slice'?['yeonsung']:[]},
+  impact:{fallback:effect,bold:true,candidates:[...effectOptions]}
  }};
+}
+function usesPreviousRoleDefault(input,role,rule){
+ const {preset,version}=input,{fallback,candidates}=rule;
+ if(!Array.isArray(candidates))return false;
+ if(version===undefined&&preset==='slice'&&role==='dialogue')return fallback==='yeonsung'&&candidates.length===0;
+ if(version>=workPolicyVersion||preset==='general')return false;
+ if(role==='shout')return fallback==='shout'&&candidates.length===0;
+ return role==='impact'&&fallback==='impact'&&candidates.length===originalWorkImpactCandidates.length&&
+  originalWorkImpactCandidates.every(id=>candidates.includes(id));
 }
 function normalizeWorkPolicy(input){
  const defaults=presetPolicy(input?.preset);
@@ -67,13 +80,13 @@ function normalizeWorkPolicy(input){
  for(const role of Object.keys(roles)){
   const r=input.roles?.[role],d=defaults.roles[role];
   if(!r)continue;
-  // The first 생활만화 preset used 연성 as the fixed dialogue face.
-  const formerSliceDefault=input.version===undefined&&input.preset==='slice'&&role==='dialogue'&&r.fallback==='yeonsung'&&Array.isArray(r.candidates)&&r.candidates.length===0;
-  const fallback=!formerSliceDefault&&(r.fallback==='default'||valid(r.fallback))?r.fallback:d.fallback;
+  // Migrate old preset defaults while retaining custom weights and font selections.
+  const previousDefault=usesPreviousRoleDefault(input,role,r);
+  const fallback=!previousDefault&&(r.fallback==='default'||valid(r.fallback))?r.fallback:d.fallback;
   defaults.roles[role]={
    fallback,
    bold:typeof r.bold==='boolean'?r.bold:d.bold,
-   candidates:!formerSliceDefault&&Array.isArray(r.candidates)?[...new Set(r.candidates.filter(id=>valid(id)&&id!==fallback))]:d.candidates
+   candidates:!previousDefault&&Array.isArray(r.candidates)?[...new Set(r.candidates.filter(id=>valid(id)&&id!==fallback))]:d.candidates
   };
  }
  return defaults;

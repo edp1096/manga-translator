@@ -37,6 +37,7 @@ inline json checked_dictionary(const json& input,const std::string& language){
   for(const char* key:{"source","translation","givenSource","givenTranslation","familySource","familyTranslation","reading"})entry[key]=name_string(item,key);
   register_mapping(entry.at("source"),entry.at("translation"));
   entry["matchReading"]=item.value("matchReading",false);
+  if(entry.at("kind")=="person"&&item.value("contextual",false))entry["contextual"]=true;
   if(entry.at("matchReading"))register_mapping(entry.at("reading"),entry.at("translation"));
   if(entry.at("kind")!="person")for(const char* key:{"givenSource","givenTranslation","familySource","familyTranslation"})entry[key]="";
   for(const auto& pair:std::vector<std::pair<const char*,const char*>>{{"givenSource","givenTranslation"},{"familySource","familyTranslation"}}){
@@ -72,9 +73,9 @@ inline std::vector<NameRule> name_rules(const json& dictionary){
  for(const auto& entry:dictionary.at("entries")){
   const std::string full=entry.at("source"),translated=entry.at("translation");
   const auto kind=entry.value("kind",std::string("person")),reading=entry.value("reading",std::string{});
-  const size_t begin=rules.size();rules.push_back({full,translated,full,translated});
+  const size_t begin=rules.size();rules.push_back({full,translated,full,translated,entry.value("contextual",false)});
   for(const auto& pair:std::vector<std::pair<const char*,const char*>>{{"givenSource","givenTranslation"},{"familySource","familyTranslation"}}){const std::string source=entry.value(pair.first,std::string{});if(!source.empty())rules.push_back({source,entry.at(pair.second),full,translated,source!=full&&kanji_name(source)});}
-  for(const auto& alias:entry.value("aliases",json::array()))rules.push_back({alias.at("source"),alias.at("translation"),full,translated});
+  for(const auto& alias:entry.value("aliases",json::array()))rules.push_back({alias.at("source"),alias.at("translation"),full,translated,entry.value("contextual",false)});
   if(entry.value("matchReading",false)&&!reading.empty()&&reading!=full)rules.push_back({reading,translated,full,translated});
   for(size_t index=begin;index<rules.size();++index){rules[index].kind=kind;rules[index].reading=reading;}
   rules[begin].spaced_full=kind=="person"&&((!entry.value("familySource",std::string{}).empty()&&!entry.value("givenSource",std::string{}).empty())||compact_name_space(full)!=full);

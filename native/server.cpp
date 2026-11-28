@@ -101,7 +101,7 @@ const std::string listen_host=config.at("host");require(listen_host=="127.0.0.1"
  };
  server.set_pre_routing_handler([&](const httplib::Request&req,httplib::Response&res){auto origin=req.get_header_value("Origin");if(origin.rfind("chrome-extension://",0)==0){res.set_header("Access-Control-Allow-Origin",origin);res.set_header("Access-Control-Allow-Methods","GET,POST,OPTIONS");res.set_header("Access-Control-Allow-Headers","Authorization,Content-Type");res.set_header("Access-Control-Allow-Private-Network","true");res.set_header("Vary","Origin");}if(req.method=="OPTIONS"){res.status=204;return httplib::Server::HandlerResponse::Handled;}if(req.path.rfind("/api/",0)==0&&!token_equal(req.get_header_value("Authorization"),token)&&!device_authorized(req.get_header_value("Authorization"))){reply(res,{{"error","Invalid access token"}},401);return httplib::Server::HandlerResponse::Handled;}return httplib::Server::HandlerResponse::Unhandled;});
  server.set_exception_handler([&](const httplib::Request&,httplib::Response&res,std::exception_ptr ep){try{std::rethrow_exception(ep);}catch(const std::exception&e){reply(res,{{"error",std::string(e.what()).substr(0,1000)}},500);}catch(...){reply(res,{{"error","Internal error"}},500);}});
- server.Get("/health",[&](const httplib::Request&,httplib::Response&res){std::lock_guard<std::mutex> lock(mutex);reply(res,{{"ok",true},{"version","0.6.7-native"},{"native",true},{"pageOcrEngine",config.value("page_ocr_engine",std::string("default"))},{"jobLocksVersion",1},{"jobStore",jobs.u8string()},{"restorationBackend",config.value("inpaint_backend",std::string("onnx"))},{"restorationReady",bool(pipeline.resident_restorer)},{"active",active.size()+manual_active.load()},{"maxRssMiB",peak_rss_mib()},{"models",{{"layout",config.at("layout_model")},{"ocr",config.at("ocr_dir")},{"ocrBackend",config.value("ocr_backend",std::string("litert"))},{"translation",config.at("llm_model")}}}});});
+ server.Get("/health",[&](const httplib::Request&,httplib::Response&res){std::lock_guard<std::mutex> lock(mutex);reply(res,{{"ok",true},{"version","0.6.8-native"},{"native",true},{"pageOcrEngine",config.value("page_ocr_engine",std::string("default"))},{"jobLocksVersion",1},{"jobStore",jobs.u8string()},{"restorationBackend",config.value("inpaint_backend",std::string("onnx"))},{"restorationReady",bool(pipeline.resident_restorer)},{"active",active.size()+manual_active.load()},{"maxRssMiB",peak_rss_mib()},{"models",{{"layout",config.at("layout_model")},{"ocr",config.at("ocr_dir")},{"ocrBackend",config.value("ocr_backend",std::string("litert"))},{"translation",config.at("llm_model")}}}});});
  server.Post("/api/jobs",[&](const httplib::Request&req,httplib::Response&res){
   if(stopping){reply(res,{{"error","Server stopping"}},503);return;}
   if(!req.has_file("image")){reply(res,{{"error","Missing image"}},400);return;}
@@ -120,6 +120,7 @@ const std::string listen_host=config.at("host");require(listen_host=="127.0.0.1"
    write_png(folder/"original.png",im.width,im.height,3,im.rgb.data());
    json metadata={{"target",target},{"backend","native-local"},{"dictionary",dictionary},{"contextFonts",target=="Korean"&&req.has_file("contextFonts")&&req.get_file_value("contextFonts").content=="true"}};
    if(draft)metadata["draft"]=true;
+   if(target=="Korean"&&req.has_file("contextReview")&&req.get_file_value("contextReview").content=="true")metadata["contextReview"]=true;
    for(const auto* key:{"title","pageURL","sourceURL","page"})if(req.has_file(key)){
     const auto value=req.get_file_value(key).content;if(value.size()>8192)continue;
     if(std::string(key)=="page"){try{const int page=std::stoi(value);if(page>0&&page<=100000)metadata[key]=page;}catch(...){}}else metadata[key]=value;
@@ -196,13 +197,49 @@ const std::string listen_host=config.at("host");require(listen_host=="127.0.0.1"
   if(action=="correct")reply(response,pipeline.correct_names(input.at("result"),dictionary));
   else reply(response,pipeline.suggest_name(input.at("source"),input.at("translation")));
  });
- server.Get("/api/ping",[&](const httplib::Request&,httplib::Response&res){reply(res,{{"ok",true},{"version","0.6.7-native"},{"manualDraftVersion",1},{"dialectMapping",!pipeline.uses_plamo()},{"automaticDialect",!pipeline.uses_plamo()}});});
+ server.Post(R"(/api/language/(candidates|verify)|/api/jobs/([0-9a-f-]+)/context-review)",[&](const httplib::Request& req,httplib::Response& res){
+  if(req.body.size()>2*1024*1024){reply(res,{{"error","Language request is too large"}},413);return;}
+  const std::string action=req.matches[1],id=req.matches[2];std::unique_ptr<JobLease> lease;
+  json input,dictionary;
+  try{
+   input=json::parse(req.body);require(input.is_object(),"Invalid language request");
+   require(!pipeline.uses_plamo(),"이 기능은 Gemma 번역 모델에서 사용할 수 있습니다.");
+   if(!id.empty()){
+    require(valid_id(id)&&fs::is_regular_file(jobs/id/"result.json"),"저장된 번역 작업을 찾지 못했습니다.");
+    lease=std::make_unique<JobLease>(jobs,id);if(!*lease){reply(res,{{"error","페이지 작업을 사용 중입니다."}},409);return;}
+    dictionary=checked_dictionary(input.value("dictionary",json::object()),"Korean");
+   }
+  }catch(const std::exception& error){reply(res,{{"error",error.what()}},400);return;}
+  {std::lock_guard<std::mutex> state_lock(mutex);if(!active.empty()){reply(res,{{"error","진행 중인 번역이 끝난 뒤 실행하세요."}},409);return;}}
+  std::unique_lock<std::mutex> lock(inference_mutex,std::try_to_lock);
+  if(!lock.owns_lock()){reply(res,{{"error","다른 처리를 완료한 뒤 실행하세요."}},409);return;}
+  if(stopping){reply(res,{{"error","Server stopping"}},503);return;}
+  struct BusyLanguage{std::atomic<size_t>& n;BusyLanguage(std::atomic<size_t>& value):n(value){++n;}~BusyLanguage(){--n;}}busy(manual_active);
+  if(action=="candidates")reply(res,pipeline.glossary_candidates(input));
+  else if(action=="verify")reply(res,pipeline.glossary_verify(input));
+  else reply(res,pipeline.context_review(jobs/id,input,dictionary));
+ });
+ server.Post(R"(/api/jobs/([0-9a-f-]+)/context-apply)",[&](const httplib::Request& req,httplib::Response& res){
+  const std::string id=req.matches[1];if(!valid_id(id)||!fs::is_regular_file(jobs/id/"result.json")){reply(res,{{"error","저장된 페이지가 없습니다."}},404);return;}
+  if(req.body.size()>1024*1024){reply(res,{{"error","Language request is too large"}},413);return;}
+  JobLease lease(jobs,id,true);if(!lease){reply(res,{{"error","페이지를 사용 중입니다. 잠시 후 다시 적용하세요."}},409);return;}
+  try{
+   const auto input=json::parse(req.body),base=read_json(jobs/id/"result.json");
+   require(base.value("target",std::string{})=="Korean","한국어 페이지에서 실행하세요.");
+   const auto file=jobs/id/"presentation.json";
+   auto view=fs::exists(file)?read_json(file):json{{"result",base}};
+   auto outcome=context_translation::apply(base,view.at("result"),input.at("changes"));
+   if(outcome.at("applied").get<int>()>0)atomic_json(file,view);
+   outcome["result"]=view.at("result");reply(res,outcome);
+  }catch(const std::exception& error){reply(res,{{"error",error.what()}},400);}
+ });
+ server.Get("/api/ping",[&](const httplib::Request&,httplib::Response&res){reply(res,{{"ok",true},{"version","0.6.8-native"},{"manualDraftVersion",1},{"dialectMapping",!pipeline.uses_plamo()},{"automaticDialect",!pipeline.uses_plamo()},{"contextReview",!pipeline.uses_plamo()}});});
  server.Post("/api/shutdown",[&](const httplib::Request&,httplib::Response&res){reply(res,{{"ok",true}});stop_requested=1;});
  std::signal(SIGINT,request_stop);std::signal(SIGTERM,request_stop);
 #ifdef _WIN32
  SetConsoleCtrlHandler(console_stop,TRUE);
 #endif
- std::thread worker([&](){for(;;){std::pair<std::string,std::string> next;{std::unique_lock<std::mutex> lock(mutex);cv.wait(lock,[&]{return stopping||!queue.empty();});if(stopping&&queue.empty())break;next=queue.front();queue.pop_front();}auto folder=jobs/next.first;try{require(!stopping,"Server stopping; retry this page");require(available_kib()>=3*1024*1024,"Insufficient available memory; retry later");auto progress=[&](std::string phase){require(!stopping,"Server stopping; retry this page");atomic_json(folder/"status.json",{{"status",phase}});std::cerr<<next.first<<' '<<phase<<std::endl;};json result;{std::lock_guard<std::mutex> inference_lock(inference_mutex);const auto dictionary=checked_dictionary(read_json(folder/"request.json").value("dictionary",json::object()),next.second);result=pipeline.process(folder,next.second,progress,dictionary,read_json(folder/"request.json").value("contextFonts",false));if(dictionary.contains("entries")&&result.value("nameWarnings",json::array()).empty())result["nameDictionary"]={{"id",dictionary.value("id",std::string{})},{"revision",dictionary.value("revision",std::string{})}};}result["maxRssMiB"]=peak_rss_mib();atomic_json(folder/"result.json",result);atomic_json(folder/"status.json",{{"status","done"}});std::cerr<<next.first<<" done "<<result["timings"]<<std::endl;}catch(const std::exception&e){const auto message=std::string(e.what()).substr(0,1500);{std::lock_guard<std::mutex> lock(mutex);if(terminal_errors.size()>=200)terminal_errors.erase(terminal_errors.begin());terminal_errors[next.first]=message;}try{atomic_json(folder/"status.json",{{"status","error"},{"error",message}});}catch(const std::exception& save_error){std::cerr<<next.first<<" status save failed "<<save_error.what()<<std::endl;}std::cerr<<next.first<<" error "<<message<<std::endl;}release_heap();{std::lock_guard<std::mutex> lock(mutex);active.erase(next.first);job_leases.erase(next.first);}cleanup();}});
+ std::thread worker([&](){for(;;){std::pair<std::string,std::string> next;{std::unique_lock<std::mutex> lock(mutex);cv.wait(lock,[&]{return stopping||!queue.empty();});if(stopping&&queue.empty())break;next=queue.front();queue.pop_front();}auto folder=jobs/next.first;try{require(!stopping,"Server stopping; retry this page");require(available_kib()>=3*1024*1024,"Insufficient available memory; retry later");auto progress=[&](std::string phase){require(!stopping,"Server stopping; retry this page");atomic_json(folder/"status.json",{{"status",phase}});std::cerr<<next.first<<' '<<phase<<std::endl;};json result;{std::lock_guard<std::mutex> inference_lock(inference_mutex);const auto dictionary=checked_dictionary(read_json(folder/"request.json").value("dictionary",json::object()),next.second);result=pipeline.process(folder,next.second,progress,dictionary,read_json(folder/"request.json").value("contextFonts",false),read_json(folder/"request.json").value("contextReview",false));if(dictionary.contains("entries")&&result.value("nameWarnings",json::array()).empty())result["nameDictionary"]={{"id",dictionary.value("id",std::string{})},{"revision",dictionary.value("revision",std::string{})}};}result["maxRssMiB"]=peak_rss_mib();atomic_json(folder/"result.json",result);atomic_json(folder/"status.json",{{"status","done"}});std::cerr<<next.first<<" done "<<result["timings"]<<std::endl;}catch(const std::exception&e){const auto message=std::string(e.what()).substr(0,1500);{std::lock_guard<std::mutex> lock(mutex);if(terminal_errors.size()>=200)terminal_errors.erase(terminal_errors.begin());terminal_errors[next.first]=message;}try{atomic_json(folder/"status.json",{{"status","error"},{"error",message}});}catch(const std::exception& save_error){std::cerr<<next.first<<" status save failed "<<save_error.what()<<std::endl;}std::cerr<<next.first<<" error "<<message<<std::endl;}release_heap();{std::lock_guard<std::mutex> lock(mutex);active.erase(next.first);job_leases.erase(next.first);}cleanup();}});
  std::thread signal_thread([&](){while(!stopping&&!stop_requested)std::this_thread::sleep_for(std::chrono::milliseconds(100));if(stop_requested){stopping=true;cv.notify_all();server.stop();}});std::cout<<"Manga native API listening on "<<listen_host<<":"<<port<<std::endl;bool ok=server.listen(listen_host,port);stopping=true;cv.notify_all();worker.join();signal_thread.join();require(ok,"HTTP listen failed");return 0;
  }catch(const std::exception&e){std::cerr<<"ERROR "<<e.what()<<std::endl;return 1;}}
 

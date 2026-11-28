@@ -52,22 +52,26 @@
   "euljiro": {
     "source": "https://woowahan-cdn.woowahan.com/static/fonts/BMEULJIROTTF.ttf?2e60d3cf",
     "sha256": "9267f884385258c45b7e796dfa242508c756542a1a80059d03556e0d1903adf4",
-    "name": "배민 을지로"
+    "name": "배민 을지로",
+    "publisherPage": "https://www.kogl.or.kr/recommend/recommendDivView.do?division=font&recommendIdx=10435"
   },
   "yeonsung": {
     "source": "https://woowahan-cdn.woowahan.com/static/fonts/BMYEONSUNG_ttf.ttf?30f546f7",
     "sha256": "154d22ee908e6d5ac11acb3526a8dd5c6963a9379abe81330df0b1453080f63e",
-    "name": "배민 연성"
+    "name": "배민 연성",
+    "publisherPage": "https://www.kogl.or.kr/recommend/recommendDivView.do?division=font&recommendIdx=10434"
   },
   "anjunggeun": {
     "source": "https://gscaltexmediahub.com/wp-content/uploads/common/storage/%EB%8F%85%EB%A6%BD%EC%84%9C%EC%B2%B4_%EC%95%88%EC%A4%91%EA%B7%BC_GS.ttf",
     "sha256": "3af7d111686d5b8fa248bd853e3233fd1c74bdf40de08f4715686142e796be54",
-    "name": "독립서체 안중근"
+    "name": "독립서체 안중근",
+    "publisherPage": "https://gscaltexmediahub.com/esg/independence_font_remind/"
   },
   "heejoy": {
     "source": "https://heejoykim.com/font-assets/heejoy/1.002/HEEJOY-1.002.zip",
     "sha256": "3fc51ba75ce773533a82c9a61d42d624e8262121f13b76ab5170ee2f8f17abdd",
-    "name": "히조이체"
+    "name": "히조이체",
+    "publisherPage": "https://heejoykim.com/fonts/heejoy"
   },
   "heejoy-bold": {
     "source": "https://heejoykim.com/font-assets/heejoy/1.002/HEEJOY-1.002.zip",
